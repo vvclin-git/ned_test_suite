@@ -3,3 +3,4 @@ from Frames.Distortion import Distortion
 from Frames.Grille import Grille
 from Frames.Lum import Lum
 from Frames.SMTF import SMTF
+from Frames.NetsFrame import NetsFrame

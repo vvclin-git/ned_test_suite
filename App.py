@@ -19,7 +19,8 @@ class NED_Test_Suite(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title('NED Test Suite')
-        self.geometry('300x200')
+        self.geometry('1440x930')
+        self.resizable(width=False, height=False)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)                
         
@@ -27,50 +28,9 @@ class NED_Test_Suite(tk.Tk):
         # Styling
         style = Style()
         style.theme_use('clam')
-        style.configure("Timer.TFrame", background=COLOUR_PRIMARY)
-        # style.configure("Background.TFrame", background=COLOUR_PRIMARY)
-        style.configure(
-            "TimerText.TLabel",
-            background=COLOUR_PRIMARY,
-            foreground=COLOUR_LIGHT_TEXT,
-            font="Courier 38",
-            anchor=tk.CENTER
-        )
-
-        style.configure(
-            "LightText.TLabel",
-            background=COLOUR_PRIMARY,
-            foreground=COLOUR_LIGHT_TEXT,
-            font=("Calibri", 16)
-        )
-
-        style.configure(
-            "SettingsLightText.TLabel",
-            background=COLOUR_PRIMARY,
-            foreground=COLOUR_LIGHT_TEXT,
-            font=("Calibri", 12)
-        )
-
-        style.configure(
-            "NETSButton.TButton",
-            background=COLOUR_SECONDARY,
-            foreground=COLOUR_LIGHT_TEXT,
-            font=("Calibri", 11)
-        )
-
-        # style.configure(
-        #     "TNotebook.Tab",
-        #     background=COLOUR_SECONDARY,
-        #     foreground=COLOUR_DARK_TEXT,
-        #     font=("Calibri", 11)
-        # )
-
-        style.map(
-            "PomodoroButton.TButton",
-            background=[("active", COLOUR_PRIMARY), ("disabled", COLOUR_LIGHT_TEXT)]
-        )
-        self["background"] = COLOUR_PRIMARY
-               
+        style.configure('Preview.TFrame', background='red')
+        style.configure('Settings.TFrame', background='green')
+        style.configure('Buttons.TFrame', background='blue')               
 
         container = Frame(self)
         container.grid(row=0, column=0, sticky='NSEW')

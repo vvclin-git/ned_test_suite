@@ -1,14 +1,17 @@
+import imp
 import tkinter as tk
+from Frames.NetsFrame import NetsFrame
 from tkinter.ttk import *
 
-class TestCharts(Frame):
+class TestCharts(NetsFrame):
     def __init__(self, window):
         super().__init__(window)
         
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(0, weight=1)
-        # Styling
-        self["style"] = "Background.TFrame"        
+        
+
+
+        # # Styling
+        # self["style"] = "Background.TFrame"        
 
         
     
