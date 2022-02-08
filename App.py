@@ -19,7 +19,7 @@ class NED_Test_Suite(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title('NED Test Suite')
-        self.geometry('1440x930')
+        self.geometry('1480x990')
         self.resizable(width=False, height=False)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)                
@@ -28,9 +28,12 @@ class NED_Test_Suite(tk.Tk):
         # Styling
         style = Style()
         style.theme_use('clam')
-        style.configure('Preview.TFrame', background='red')
+        style.configure('Output.TFrame', background='red')
         style.configure('Settings.TFrame', background='green')
-        style.configure('Buttons.TFrame', background='blue')               
+        style.configure('Buttons.TFrame', background='blue')
+        style.configure('MessageBox.TLabel', background="#fff")                
+        style.configure('TLabelframe', relief='groove', borderwidth=2)
+
 
         container = Frame(self)
         container.grid(row=0, column=0, sticky='NSEW')
