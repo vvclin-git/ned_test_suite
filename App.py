@@ -30,10 +30,8 @@ class NED_Test_Suite(tk.Tk):
         style.theme_use('clam')
         style.configure('Output.TFrame', background='red')
         style.configure('Settings.TFrame', background='green')
-        style.configure('Buttons.TFrame', background='blue')
-        style.configure('MessageBox.TLabel', background="#fff")                
+        style.configure('Buttons.TFrame', background='blue')                        
         style.configure('TLabelframe', relief='groove', borderwidth=2)
-
 
         container = Frame(self)
         container.grid(row=0, column=0, sticky='NSEW')

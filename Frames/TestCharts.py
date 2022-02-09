@@ -17,7 +17,9 @@ class TestCharts(NetsFrame):
 
         msg_test_btn = Button(self.buttons, text='Update Message', command=self.update_msg_test)
         msg_test_btn.pack()
-
+        
+        msg_clr_btn = Button(self.buttons, text='Clear Message', command=self.console_clr)
+        msg_clr_btn.pack()
         # # Styling
         # self["style"] = "Background.TFrame"        
     

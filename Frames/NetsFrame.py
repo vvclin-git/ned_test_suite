@@ -33,9 +33,12 @@ class NetsFrame(Frame):
         msg_frame.pack(side='bottom')
         msg_frame.pack_propagate(0)
 
-        self.msg_output = Label(msg_frame, textvariable=self.msg, style='MessageBox.TLabel')
+        # self.msg_output = Label(msg_frame, textvariable=self.msg, style='MessageBox.TLabel')
+        self.msg_output = tk.Text(msg_frame, height=8, state='disabled')
+
         self.msg_output.pack(side=tk.LEFT, expand=True, fill='both')
-        msg_scroll = Scrollbar(msg_frame, orient=tk.VERTICAL)
+        msg_scroll = Scrollbar(msg_frame, orient=tk.VERTICAL, command=self.msg_output.yview)
+        self.msg_output['yscrollcommand'] = msg_scroll.set
         msg_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         
         self.settings = Frame(self, style='Settings.TFrame', width=500, height=720)
@@ -44,12 +47,17 @@ class NetsFrame(Frame):
         
         self.buttons = Frame(self, style='Buttons.TFrame', width=500, height=240)
         self.buttons.grid(row=1, column=1)
-
+    
     def console(self, msg):
-        old_msg = self.msg.get()
-        new_msg = old_msg + '\n' + msg
-        self.msg.set(new_msg)
+        self.msg_output.config(state='normal')
+        self.msg_output.insert('end', msg + '\n')
+        self.msg_output.config(state='disabled')
         return
+    
+    def console_clr(self):
+        self.msg_output.config(state='normal')
+        self.msg_output.delete('1.0', 'end')
+        self.msg_output.config(state='disabled')
     
     def update_img(self, img):
         self.preview_canvas.itemconfig(self.preview_img_box, image=img)
