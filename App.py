@@ -14,7 +14,6 @@ COLOUR_LIGHT_BACKGROUND = "#fff"
 COLOUR_LIGHT_TEXT = "#eee"
 COLOUR_DARK_TEXT = "#8095a8"
 
-
 class NED_Test_Suite(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -32,7 +31,11 @@ class NED_Test_Suite(tk.Tk):
         style.configure('Settings.TFrame', background='green')
         style.configure('Buttons.TFrame', background='blue')                        
         style.configure('TLabelframe', relief='groove', borderwidth=2)
-
+        style.configure('Test.TLabelframe', relief='groove', borderwidth=2, background='green')
+        style.configure("Treeview.Heading", background="#ededed", foreground="black", relief='flat', bordercolor='black', borderwidth=2)
+        style.configure('Treeview', bordercolor='black', borderwidth=2)
+        
+        
         container = Frame(self)
         container.grid(row=0, column=0, sticky='NSEW')
         container.columnconfigure(0, weight=1)
