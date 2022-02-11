@@ -58,7 +58,7 @@ class TestCharts(NetsFrame):
         
         # chart parameter settings
         self.chart_settings_frame = LabelFrame(self.settings, text='Chart Parameter Settings', padding=(5, 5, 5, 5))
-        self.chart_settings_frame.pack(expand=True, fill='x', pady=10)
+        self.chart_settings_frame.pack(expand=True, fill='x', pady=10, side='top')
         self.chart_settings_frame.columnconfigure(0, weight=1)
         self.chart_settings_frame.columnconfigure(1, weight=4)        
 
@@ -76,12 +76,12 @@ class TestCharts(NetsFrame):
         # chart output settings
         
         self.chart_output_frame = LabelFrame(self.settings, text='Chart Output Settings', padding=(5, 5, 5, 5))
-        self.chart_output_frame.pack(expand=True, fill='x', pady=10)
+        self.chart_output_frame.pack(expand=True, fill='x', pady=10, side='top')
         self.chart_output_frame.columnconfigure(0, weight=1)
-        self.chart_output_frame.columnconfigure(1, weight=4)   
+        self.chart_output_frame.columnconfigure(1, weight=10)   
         self.chart_output_frame.columnconfigure(2, weight=1)
 
-        self.output_path_label = Label(self.chart_output_frame, text='Output Path', width=12)        
+        self.output_path_label = Label(self.chart_output_frame, text='Output Path')        
         self.output_path_label.grid(row=0, column=0, sticky='W')
         self.output_path_input = Entry(self.chart_output_frame, textvariable=self.output_path)
         self.output_path_input.grid(row=0, column=1, sticky='EW', ipady=5)
