@@ -4,6 +4,7 @@ from tkinter.constants import CENTER
 from tkinter.ttk import *
 from Frames import TestCharts, Distortion, Lum, SMTF, Grille
 from windows import set_dpi_awareness
+from tkinter import filedialog
 
 set_dpi_awareness()
 
@@ -34,7 +35,8 @@ class NED_Test_Suite(tk.Tk):
         style.configure('Test.TLabelframe', relief='groove', borderwidth=2, background='green')
         style.configure("Treeview.Heading", background="#ededed", foreground="black", relief='flat', bordercolor='black', borderwidth=2)
         style.configure('Treeview', bordercolor='black', borderwidth=2)
-        
+        style.configure('Buttons.TButton')
+        style.configure('PathEntry.TEntry', ipad=5)
         
         container = Frame(self)
         container.grid(row=0, column=0, sticky='NSEW')
@@ -50,16 +52,7 @@ class NED_Test_Suite(tk.Tk):
         tab_control.add(tab_lum, text='Luminance Analysis')
         tab_control.pack(expand=1, fill='both')
 
-        # timer_frame = Timer(container, self, lambda: self.show_frame(Settings))
-        # timer_frame.grid(row=0, column=0, sticky='NSEW')
-        # settings_frame = Settings(container, self, lambda: self.show_frame(Timer))
-        # settings_frame.grid(row=0, column=0, sticky='NSEW')
-
-        # self.frames = {}
-        # self.frames[Settings] = settings_frame
-        # self.frames[Timer] = timer_frame
-
-        # self.show_frame(Timer)
+       
 
     # def show_frame(self, container):
     #     frame = self.frames[container]

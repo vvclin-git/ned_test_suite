@@ -77,18 +77,19 @@ class ParameterTab(ttk.Frame):
     def output_values(self):
         output = []
         for p in self.tree.get_children():
-            output.append(self.tree.item(p)['values'][1])
+            output.append(self.tree.item(p)['values'])
         return output
     
     def clear(self):
         self.tree.delete(*self.tree.get_children())
         return
     
-    def parameter_chg(self, parameters):
+    def parameter_chg(self, selected_parameters, chart_type_selected):
         self.clear()
-        for p in parameters:
+        self.parameters = selected_parameters
+        for p in selected_parameters:
             print(p)            
-            self.tree.insert("", "end", values=(p, parameters[p]['value']), tags=parameters[p]['type'])
+            self.tree.insert("", "end", values=(p, selected_parameters[p]['value']), tags=selected_parameters[p]['type'])
         return
 
 if __name__ == '__main__':
