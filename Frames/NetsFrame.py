@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 from tkinter.ttk import *
 from PIL import Image, ImageTk
+from ZoomCanvas import *
 
 class NetsFrame(Frame):
     def __init__(self, window):
@@ -18,23 +19,20 @@ class NetsFrame(Frame):
         output.pack_propagate(0)
         
         preview_frame = LabelFrame(output, text='Preview Image', width=960, height=740, style='TLabelframe')        
-        preview_frame.pack(side='top')
-        
+        preview_frame.pack(side='top', expand=True, fill='both', pady=(0, 20))      
+                
         img = np.zeros([720, 960, 3], dtype=np.uint8)
         cv2.putText(img, 'Preview Image', (400, 330), fontFace=cv2.FONT_HERSHEY_SIMPLEX, color=(0, 255, 0), fontScale=1, thickness=1)        
-        img = Image.fromarray(img)
-        self.preview_img = ImageTk.PhotoImage(img)        
+        # img = Image.fromarray(img)
+
+        self.preview_img = Image.fromarray(img)        
+        self.preview_canvas = Zoom_Advanced(preview_frame, self.preview_img)     
         
-        self.preview_canvas = tk.Canvas(preview_frame, width=960, height=720, relief='flat', highlightthickness=0, borderwidth=0)
-        self.preview_img_box = self.preview_canvas.create_image(0, 0, image=self.preview_img, anchor=tk.NW)                           
-        self.preview_canvas.image = self.preview_img
-        self.preview_canvas.pack()
-        
-        msg_frame = LabelFrame(output, width=960, height=180, text='Output Message', style='TLabelframe')        
+        msg_frame = LabelFrame(output, width=960, height=160, text='Output Message', style='TLabelframe')        
         msg_frame.pack(side='bottom')
         msg_frame.pack_propagate(0)
         
-        self.msg_output = tk.Text(msg_frame, height=8, state='disabled')
+        self.msg_output = tk.Text(msg_frame, height=6, state='disabled')
         self.msg_output.pack(side=tk.LEFT, expand=True, fill='both')
         msg_scroll = Scrollbar(msg_frame, orient=tk.VERTICAL, command=self.msg_output.yview)
         self.msg_output['yscrollcommand'] = msg_scroll.set
@@ -59,8 +57,7 @@ class NetsFrame(Frame):
         self.msg_output.config(state='disabled')
     
     def update_img(self, img):
-        self.preview_canvas.itemconfig(self.preview_img_box, image=img)
-        self.preview_canvas.image = img
+        self.preview_canvas.update_image(img)
         return
 
 

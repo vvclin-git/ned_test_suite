@@ -3,20 +3,21 @@ from Frames.NetsFrame import *
 from ParameterTab import *
 import os
 from tkinter import filedialog
+from NED_Chart import *
 # from tkinter.ttk import *
 
 CHART_TYPES = ('Reticle', 'Circle Grid', 'Checkerboard', 'Grille', 'Slanted Edge MTF')
 
 RETICLE_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
-                'Line Color': {'value':'green', 'type':'value', 'options':None},
+                'Line Color': {'value':'0,255,0', 'type':'value', 'options':None},
                 'Line Thickness': {'value':2, 'type':'value', 'options':None},
-                'Cross Size': {'value':5, 'type':'value', 'options':None},
-                'Marker Size': {'value':1, 'type':'value', 'options':None}}
+                'Cross Size': {'value':20, 'type':'value', 'options':None},
+                'Marker Size': {'value':10, 'type':'value', 'options':None}}
 
 CIRCLE_GRID_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
-                'Grid Dimension': {'value':'2560x1440', 'type':'value', 'options':None},                
-                'Marker Size': {'value':1, 'type':'value', 'options':None},
-                'Padding': {'value':1, 'type':'value', 'options':None}}
+                'Grid Dimension': {'value':'256x144', 'type':'value', 'options':None},                
+                'Marker Size': {'value':5, 'type':'value', 'options':None},
+                'Padding': {'value':10, 'type':'value', 'options':None}}
 
 CHECKERBOARD_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
                 'Grid Dimension': {'value':'2560x1440', 'type':'value', 'options':None},                
@@ -46,6 +47,12 @@ CHART_CHK_PARAS = {}
 for c in CHART_TYPES:
     CHART_CHK_PARAS[c] = {'value':'Yes', 'type':'list', 'options':('Yes', 'No')}
 
+CHART_FN_DICT = {'Reticle': gen_reticle, 
+                    'Circle Grid': gen_circle_grid, 
+                    'Checkerboard': gen_checkerboard, 
+                    'Grille': gen_grille, 
+                    'Slanted Edge MTF': gen_se_MTF}
+
 class TestCharts(NetsFrame):
     def __init__(self, window):
         super().__init__(window)
@@ -60,18 +67,22 @@ class TestCharts(NetsFrame):
         self.chart_settings_frame = LabelFrame(self.settings, text='Chart Parameter Settings', padding=(5, 5, 5, 5))
         self.chart_settings_frame.pack(expand=True, fill='x', pady=10, side='top')
         self.chart_settings_frame.columnconfigure(0, weight=1)
-        self.chart_settings_frame.columnconfigure(1, weight=4)        
+        self.chart_settings_frame.columnconfigure(1, weight=4)
+        self.chart_settings_frame.columnconfigure(2, weight=1)        
 
-        self.chart_selector_label = Label(self.chart_settings_frame, text='Chart Type', width=12)        
+        self.chart_selector_label = Label(self.chart_settings_frame, text='Chart Type')        
         self.chart_selector_label.grid(row=0, column=0, sticky='W')
 
         self.chart_selector = tk.OptionMenu(self.chart_settings_frame, self.chart_type, *CHART_TYPES, command=self.init_parameters)
-        self.chart_selector.configure(anchor='w', width=20)                
+        self.chart_selector.configure(anchor='w', width=30)                
         self.chart_selector.grid(row=0, column=1, stick='EW')
 
         self.chart_settings = ParameterTab(self.chart_settings_frame, CHART_PARAMETERS[CHART_TYPES[0]])       
         self.chart_settings.tree.configure(height=6)                    
-        self.chart_settings.grid(row=1, column=0, columnspan=2, sticky='EW', pady=5)
+        self.chart_settings.grid(row=1, column=0, columnspan=3, sticky='EW', pady=5)
+        
+        preview_test_btn = Button(self.chart_settings_frame, text='Preview Chart', command=self.preview_chart)
+        preview_test_btn.grid(row=0, column=2, stick='E')
 
         # chart output settings
         
@@ -97,10 +108,13 @@ class TestCharts(NetsFrame):
         self.chart_output_chk.grid(row=1, column=0, columnspan=3, sticky='EW', pady=5)
 
         # Output Test
-        img1 = ImageTk.PhotoImage(file='.\Temp\img01.png')
-        img2 = ImageTk.PhotoImage(file='.\Temp\img02.png')
-        img3 = ImageTk.PhotoImage(file='.\Temp\img03.png')
-        self.img_list = [img1, img2, img3]
+
+        img1 = Image.open('.\Temp\img01.png')
+        img2 = Image.open('.\Temp\img02.png')
+        img3 = Image.open('.\Temp\img03.png')
+        img4 = Image.open('.\Temp\img_large.png')
+        
+        self.img_list = [img4]
 
         img_test_btn = Button(self.buttons, text='Change Image', command=self.rotate_imgs)
         img_test_btn.pack()
@@ -110,6 +124,13 @@ class TestCharts(NetsFrame):
         
         msg_clr_btn = Button(self.buttons, text='Clear Message', command=self.console_clr)
         msg_clr_btn.pack()
+        
+        preview_test_btn = Button(self.buttons, text='Preview Chart', command=self.preview_chart)
+        preview_test_btn.pack()
+
+        output_test_btn = Button(self.buttons, text='Output Charts', command=self.output_charts)
+        output_test_btn.pack()
+        
         # # Styling
         # self["style"] = "Background.TFrame"        
     
@@ -127,8 +148,7 @@ class TestCharts(NetsFrame):
         # save current settings before cleaning
         for p in self.chart_settings.output_values():
             self.saved_chart_paras[self.cur_chart_type][p[0]]['value'] = p[1]
-        
-        
+                
         self.chart_settings.clear()
         self.cur_chart_type = self.chart_type.get()
         print(self.saved_chart_paras[self.cur_chart_type])
@@ -146,4 +166,35 @@ class TestCharts(NetsFrame):
         # if len(temp_path) > 0:
         #     print ("You chose: %s" % tempdir)
         self.output_path.set(temp_path)
+        return
+    
+    def gen_chart(self, para_list):        
+        parsed_paras = []        
+        for p in para_list:
+            # print(f'{p[0]}, {type(p[1])}')
+            parsed = p[1]
+            if type(p[1]) == str: 
+                if p[0] == 'Resolution':
+                    parsed = (int(p[1].split('x')[0]), int(p[1].split('x')[1]))
+                elif p[0] == 'Line Type':
+                    parsed = {'filled':cv2.FILLED, 'line_4':cv2.LINE_4, 'line_8':cv2.LINE_8, 'line_AA':cv2.LINE_AA}[p[1]]  
+                elif p[0] == 'Line Color':
+                    parsed_str = p[1].split(',')
+                    parsed = (int(parsed_str[0]), int(parsed_str[1]), int(parsed_str[2]))
+            
+            parsed_paras.append(parsed)
+        # print(parsed_paras)
+        chart_im = CHART_FN_DICT[self.chart_type.get()](*parsed_paras)
+        return chart_im
+
+    def preview_chart(self):        
+        chart_im = self.gen_chart(self.chart_settings.output_values())
+        # cv2.imwrite('chart_im_cv.png', chart_im)         
+        chart_im_preview = Image.fromarray((chart_im).astype(np.uint8))
+        # chart_im_preview.save('chart_im.png')
+        self.preview_canvas.update_image(chart_im_preview)
+        return
+
+    def output_charts(self):
+
         return
