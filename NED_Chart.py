@@ -140,7 +140,9 @@ class Grid(Coords):
         return Grid(self.coords, self.grid_dim)
     
 def gen_circle_grid(chart_res, grid_dim, marker_size, padding):            
-    grid_dim = np.array(grid_dim).astype('uint')        
+    grid_dim = np.array(grid_dim).astype('uint')
+    chart_res = np.array(chart_res).astype('uint')
+    padding = np.array(padding).astype('uint')
     grid_x = np.linspace(0 + padding[0], chart_res[0] - padding[0], grid_dim[0]) 
     grid_y = np.linspace(0 + padding[1], chart_res[1] - padding[1], grid_dim[1])
     grid_xx, grid_yy = np.meshgrid(grid_x, grid_y)    
@@ -155,7 +157,7 @@ def gen_circle_grid(chart_res, grid_dim, marker_size, padding):
     for i in range(len(grid_coords)):
         cv2.circle(chart_im, (grid_coords[i, 0], grid_coords[i, 1]), marker_size, (255, 255, 255), -1)
     
-    return Grid(grid_coords, grid_dim), chart_im
+    return chart_im, Grid(grid_coords, grid_dim)
 
 def gen_grille(chart_res, width, orient):
     if orient == 'vertical':
@@ -183,9 +185,11 @@ def gen_grille(chart_res, width, orient):
         pt_2 = pt_1 + grille_size - 1
         cv2.rectangle(chart_im, [*pt_1], [*pt_2], (255), -1)
         
-    return grid_coords, chart_im
+    return chart_im, grid_coords
 
 def gen_checkerboard(chart_res, grid_dim, begin_with, padding):
+    chart_res = np.array(chart_res).astype('uint')
+    padding = np.array(padding).astype('uint')
     grid_dim = np.array(grid_dim).astype('uint')        
     grid_x = np.linspace(0 + padding[0], chart_res[0] - padding[0], grid_dim[0], endpoint=False) 
     grid_y = np.linspace(0 + padding[1], chart_res[1] - padding[1], grid_dim[1], endpoint=False)
@@ -216,7 +220,7 @@ def gen_checkerboard(chart_res, grid_dim, begin_with, padding):
     
     grid_coords = (grid_coords + grid_pitch * 0.5).astype('uint')
 
-    return grid_coords, chart_im
+    return chart_im, grid_coords
 
 def draw_se_MTF_pattern(chart_im, center, edge_angle, pattern_size, line_type):    
     anchor = center - 0.5 * pattern_size
@@ -224,12 +228,14 @@ def draw_se_MTF_pattern(chart_im, center, edge_angle, pattern_size, line_type):
     pt2 = pt1 + np.array([0.5 * pattern_size * (1 - np.tan(np.radians(edge_angle))), 0])
     pt3 = pt2 + np.array([0.5 * pattern_size * (np.tan(np.radians(edge_angle))), -pattern_size])    
     pts = np.array([anchor, pt1, pt2, pt3, anchor]).astype('int32')
-    pts = np.expand_dims(pts, axis=1)    
+    pts = np.expand_dims(pts, axis=1)  
     cv2.fillPoly(chart_im, [pts], color=(255, 255, 255), lineType=line_type)
-    return chart_im
+    return chart_im, None
 
 def gen_se_MTF(chart_res, grid_dim, edge_angle, pattern_size, padding, line_type):
     grid_dim = np.array(grid_dim).astype('uint')        
+    chart_res = np.array(chart_res).astype('uint')
+    padding = np.array(padding).astype('uint')
     grid_x = np.linspace(0 + padding[0], chart_res[0] - padding[0], grid_dim[0], endpoint=False) 
     grid_y = np.linspace(0 + padding[1], chart_res[1] - padding[1], grid_dim[1], endpoint=False)
     grid_xx, grid_yy = np.meshgrid(grid_x, grid_y)    
@@ -242,9 +248,9 @@ def gen_se_MTF(chart_res, grid_dim, edge_angle, pattern_size, padding, line_type
     grid_coords = (grid_coords + np.array([pattern_size * 0.5, pattern_size * 0.5])).astype('uint')
     
     for p in grid_coords:
-        chart_im = draw_se_MTF_pattern(chart_im, p, edge_angle, pattern_size, line_type)    
+        chart_im, _ = draw_se_MTF_pattern(chart_im, p, edge_angle, pattern_size, line_type)    
 
-    return grid_coords, chart_im
+    return chart_im, grid_coords
 
 
 
@@ -284,7 +290,7 @@ def gen_reticle(chart_res, color, cross_size, marker_size, thickness):
     center = (np.array([chart_res[0], chart_res[1]]) + np.array([marker_size * -0.5, marker_size * -0.5])).astype('uint')
     cv2.circle(chart_im, center, int(marker_size * 0.5), color=color, thickness=thickness)
     # cv2.drawMarker(chart_im, np.array([chart_res[0], chart_res[1]], dtype='uint'), markerType=cv2.MARKER_TILTED_CROSS, color=color, markerSize=size, thickness=thickness)
-    return chart_im
+    return chart_im, None
 
 # def gen_reticle(chart_res, rect_color, cross_color, thickness, filled):
 #     chart_im = np.zeros((chart_res[1], chart_res[0], 3))

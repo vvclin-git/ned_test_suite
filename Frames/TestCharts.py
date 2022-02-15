@@ -4,25 +4,27 @@ from ParameterTab import *
 import os
 from tkinter import filedialog
 from NED_Chart import *
+import re
+import time
 # from tkinter.ttk import *
 
 CHART_TYPES = ('Reticle', 'Circle Grid', 'Checkerboard', 'Grille', 'Slanted Edge MTF')
 
 RETICLE_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
                 'Line Color': {'value':'0,255,0', 'type':'value', 'options':None},
-                'Line Thickness': {'value':2, 'type':'value', 'options':None},
                 'Cross Size': {'value':20, 'type':'value', 'options':None},
-                'Marker Size': {'value':10, 'type':'value', 'options':None}}
+                'Marker Size': {'value':10, 'type':'value', 'options':None},
+                'Line Thickness': {'value':2, 'type':'value', 'options':None}}
 
 CIRCLE_GRID_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
-                'Grid Dimension': {'value':'256x144', 'type':'value', 'options':None},                
+                'Grid Dimension': {'value':'64x36', 'type':'value', 'options':None},                
                 'Marker Size': {'value':5, 'type':'value', 'options':None},
-                'Padding': {'value':10, 'type':'value', 'options':None}}
+                'Padding': {'value':'10x10', 'type':'value', 'options':None}}
 
 CHECKERBOARD_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
-                'Grid Dimension': {'value':'2560x1440', 'type':'value', 'options':None},                
+                'Grid Dimension': {'value':'32x18', 'type':'value', 'options':None},                
                 'Begin with': {'value':'black', 'type':'list', 'options':('black', 'white')},
-                'Padding': {'value':0, 'type':'value', 'options':None}}
+                'Padding': {'value':'0x0', 'type':'value', 'options':None}}
 
 GRILLE_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
                 'Grille Width': {'value':4, 'type':'value', 'options':None},                
@@ -30,11 +32,11 @@ GRILLE_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':No
                 }
 
 SE_MTF_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
-                'Grid Dimension': {'value':'2560x1440', 'type':'value', 'options':None},
+                'Grid Dimension': {'value':'32x18', 'type':'value', 'options':None},
                 'Edge Angle': {'value':5, 'type':'value', 'options':None},
-                'Pattern Size': {'value':5, 'type':'value', 'options':None},
-                'Padding': {'value':5, 'type':'value', 'options':None},                
-                'Line type': {'value':'line8', 'type':'list', 'options':('line8', 'line4')},
+                'Pattern Size': {'value':80, 'type':'value', 'options':None},
+                'Padding': {'value':'10x10', 'type':'value', 'options':None},                
+                'Line Type': {'value':'line_8', 'type':'list', 'options':('line_8', 'line_4', 'line_AA', 'filled')},
                 }
 
 CHART_PARAMETERS = {'Reticle': RETICLE_PARAS, 
@@ -53,6 +55,14 @@ CHART_FN_DICT = {'Reticle': gen_reticle,
                     'Grille': gen_grille, 
                     'Slanted Edge MTF': gen_se_MTF}
 
+OUTPUT_PATH = f'{os.getcwd()}\\Output'
+
+
+regex_coord = re.compile(r'\d+x\d+')
+regex_color = re.compile(r'\d+,\d+,\d+')
+
+
+
 class TestCharts(NetsFrame):
     def __init__(self, window):
         super().__init__(window)
@@ -61,7 +71,7 @@ class TestCharts(NetsFrame):
         self.cur_chart_type = self.chart_type.get()
         self.saved_chart_paras = CHART_PARAMETERS
         self.output_path = tk.StringVar()
-        self.output_path.set(os.getcwd())
+        self.output_path.set(OUTPUT_PATH)
         
         # chart parameter settings
         self.chart_settings_frame = LabelFrame(self.settings, text='Chart Parameter Settings', padding=(5, 5, 5, 5))
@@ -98,7 +108,6 @@ class TestCharts(NetsFrame):
         self.output_path_input.grid(row=0, column=1, sticky='EW', ipady=5)
         self.output_path_btn = Button(self.chart_output_frame, text='Browse...', style='Buttons.TButton', command=self.path_browse)
         self.output_path_btn.grid(row=0, column=2, sticky='E')
-
 
         self.chart_output_chk = ParameterTab(self.chart_output_frame, CHART_CHK_PARAS)
         self.chart_output_chk.tree.heading("1", text="Chart Type")
@@ -144,14 +153,14 @@ class TestCharts(NetsFrame):
         return
         
     def init_parameters(self, dummy):
-        
+        # print(self.chart_settings.output_values())
         # save current settings before cleaning
         for p in self.chart_settings.output_values():
             self.saved_chart_paras[self.cur_chart_type][p[0]]['value'] = p[1]
                 
         self.chart_settings.clear()
         self.cur_chart_type = self.chart_type.get()
-        print(self.saved_chart_paras[self.cur_chart_type])
+        # print(self.saved_chart_paras[self.cur_chart_type])
         self.chart_settings.parameter_chg(self.saved_chart_paras[self.cur_chart_type], self.cur_chart_type)
         # self.chart_settings.delete(*self.chart_settings.get_children())
         # chart_type_selected = self.chart_type.get()
@@ -168,33 +177,58 @@ class TestCharts(NetsFrame):
         self.output_path.set(temp_path)
         return
     
-    def gen_chart(self, para_list):        
+    def gen_chart(self, chart_type, para_list):        
         parsed_paras = []        
         for p in para_list:
             # print(f'{p[0]}, {type(p[1])}')
             parsed = p[1]
             if type(p[1]) == str: 
-                if p[0] == 'Resolution':
-                    parsed = (int(p[1].split('x')[0]), int(p[1].split('x')[1]))
-                elif p[0] == 'Line Type':
-                    parsed = {'filled':cv2.FILLED, 'line_4':cv2.LINE_4, 'line_8':cv2.LINE_8, 'line_AA':cv2.LINE_AA}[p[1]]  
-                elif p[0] == 'Line Color':
+                if regex_color.search(p[1]):                    
                     parsed_str = p[1].split(',')
                     parsed = (int(parsed_str[0]), int(parsed_str[1]), int(parsed_str[2]))
+                elif regex_coord.search(p[1]):
+                    parsed_str = p[1].split('x')
+                    parsed = (int(p[1].split('x')[0]), int(p[1].split('x')[1]))               
+                elif p[0] == 'Line Type':
+                    parsed = {'filled':cv2.FILLED, 'line_4':cv2.LINE_4, 'line_8':cv2.LINE_8, 'line_AA':cv2.LINE_AA}[p[1]]                 
             
             parsed_paras.append(parsed)
-        # print(parsed_paras)
-        chart_im = CHART_FN_DICT[self.chart_type.get()](*parsed_paras)
+        print(parsed_paras)
+        # chart_im, _ = CHART_FN_DICT[self.chart_type.get()](*parsed_paras)
+        chart_im, _ = CHART_FN_DICT[chart_type](*parsed_paras)
+        # print(type(chart_im))
         return chart_im
 
     def preview_chart(self):        
-        chart_im = self.gen_chart(self.chart_settings.output_values())
+        chart_type = self.chart_type.get()
+        chart_im = self.gen_chart(chart_type, self.chart_settings.output_values())
+        np.save('chart_im', chart_im)
         # cv2.imwrite('chart_im_cv.png', chart_im)         
-        chart_im_preview = Image.fromarray((chart_im).astype(np.uint8))
+        if len(chart_im[0][0]) == 3:
+            chart_im_preview = Image.fromarray((chart_im).astype(np.uint8))
+        else:
+            chart_im_preview = Image.fromarray((chart_im[:, :, 0]).astype(np.uint8))
         # chart_im_preview.save('chart_im.png')
         self.preview_canvas.update_image(chart_im_preview)
         return
 
     def output_charts(self):
-
+        para_list = []
+        output_path = self.output_path.get()
+        output_name = ''
+        timestr = time.strftime("%Y%m%d-%H-%M-%S")
+        for c in self.chart_output_chk.output_values():
+            if c[1] == 'Yes':
+                output_name = c[0].replace(' ', '_')
+                # print(c[0], self.saved_chart_paras[c[0]])
+                for k in self.saved_chart_paras[c[0]].keys():
+                    # print([k, self.saved_chart_paras[c[0]][k]['value']])
+                    value = self.saved_chart_paras[c[0]][k]['value']
+                    if k == 'Resolution' or k == 'Grid Dimension':
+                        output_name += f'_{value}'
+                    para_list.append([k, value])
+                # print(para_list)
+                chart_im = self.gen_chart(c[0], para_list)
+                cv2.imwrite(f'{output_path}\\{output_name}_{timestr}.png', chart_im)
+            para_list = []
         return

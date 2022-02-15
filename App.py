@@ -5,6 +5,7 @@ from tkinter.ttk import *
 from Frames import TestCharts, Distortion, Lum, SMTF, Grille
 from windows import set_dpi_awareness
 from tkinter import filedialog
+import time
 
 set_dpi_awareness()
 
