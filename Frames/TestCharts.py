@@ -193,16 +193,16 @@ class TestCharts(NetsFrame):
                     parsed = {'filled':cv2.FILLED, 'line_4':cv2.LINE_4, 'line_8':cv2.LINE_8, 'line_AA':cv2.LINE_AA}[p[1]]                 
             
             parsed_paras.append(parsed)
-        print(parsed_paras)
+        # print(parsed_paras)
         # chart_im, _ = CHART_FN_DICT[self.chart_type.get()](*parsed_paras)
-        chart_im, _ = CHART_FN_DICT[chart_type](*parsed_paras)
+        chart_im, output_msg, _ = CHART_FN_DICT[chart_type](*parsed_paras)
         # print(type(chart_im))
-        return chart_im
+        return chart_im, output_msg
 
     def preview_chart(self):        
         chart_type = self.chart_type.get()
-        chart_im = self.gen_chart(chart_type, self.chart_settings.output_values())
-        np.save('chart_im', chart_im)
+        chart_im, output_msg = self.gen_chart(chart_type, self.chart_settings.output_values())
+        # np.save('chart_im', chart_im)
         # cv2.imwrite('chart_im_cv.png', chart_im)         
         if len(chart_im[0][0]) == 3:
             chart_im_preview = Image.fromarray((chart_im).astype(np.uint8))
@@ -210,6 +210,7 @@ class TestCharts(NetsFrame):
             chart_im_preview = Image.fromarray((chart_im[:, :, 0]).astype(np.uint8))
         # chart_im_preview.save('chart_im.png')
         self.preview_canvas.update_image(chart_im_preview)
+        self.console(output_msg)
         return
 
     def output_charts(self):
@@ -228,7 +229,11 @@ class TestCharts(NetsFrame):
                         output_name += f'_{value}'
                     para_list.append([k, value])
                 # print(para_list)
-                chart_im = self.gen_chart(c[0], para_list)
+                self.console(f'Generating {c[0]}...', cr=False)
+                chart_im, output_msg = self.gen_chart(c[0], para_list)
+                self.console(f'Exporting...', cr=False)
                 cv2.imwrite(f'{output_path}\\{output_name}_{timestr}.png', chart_im)
+                self.console(f'Done', cr=True)
+
             para_list = []
         return

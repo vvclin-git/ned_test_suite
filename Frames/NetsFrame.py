@@ -45,9 +45,12 @@ class NetsFrame(Frame):
         self.buttons = Frame(self, style='Buttons.TFrame', width=500, height=240)
         self.buttons.grid(row=1, column=1)
     
-    def console(self, msg):
+    def console(self, msg, cr=True):
         self.msg_output.config(state='normal')
-        self.msg_output.insert('end', msg + '\n')
+        if cr:
+            self.msg_output.insert('end', msg + '\n')
+        else:
+            self.msg_output.insert('end', msg)
         self.msg_output.config(state='disabled')
         return
     

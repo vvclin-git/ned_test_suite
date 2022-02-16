@@ -147,6 +147,11 @@ def gen_circle_grid(chart_res, grid_dim, marker_size, padding):
     grid_y = np.linspace(0 + padding[1], chart_res[1] - padding[1], grid_dim[1])
     grid_xx, grid_yy = np.meshgrid(grid_x, grid_y)    
     grid_pitch = (chart_res - 2 * padding) / (grid_dim - 1)
+    output_msg = 'Chart Type: Circle Grid\n'
+    output_msg += f'Resolution: {chart_res[0]} x {chart_res[1]}\n'
+    output_msg += f'Grid Dimension: {grid_dim[0]} x {grid_dim[1]}, Grid Pitch: {grid_pitch[0]} x {grid_pitch[1]}\n'
+    output_msg += f'Dot Size: {marker_size}\n'
+    output_msg += f'Padding: {padding[0]}x{padding[1]}\n'
     print(f'Grid Dimension: {grid_dim[0]} x {grid_dim[1]}, ', end='')
     print(f'Grid Pitch: {grid_pitch[0]} x {grid_pitch[1]}')
     print(f'Dot Size: {marker_size}')
@@ -157,7 +162,7 @@ def gen_circle_grid(chart_res, grid_dim, marker_size, padding):
     for i in range(len(grid_coords)):
         cv2.circle(chart_im, (grid_coords[i, 0], grid_coords[i, 1]), marker_size, (255, 255, 255), -1)
     
-    return chart_im, Grid(grid_coords, grid_dim)
+    return chart_im, output_msg, Grid(grid_coords, grid_dim)
 
 def gen_grille(chart_res, width, orient):
     if orient == 'vertical':
@@ -173,6 +178,10 @@ def gen_grille(chart_res, width, orient):
     grid_y = np.linspace(0, chart_res[1], grid_dim[1])
     grid_xx, grid_yy = np.meshgrid(grid_x, grid_y)    
     grid_pitch = (chart_res) / (grid_dim - 1)
+    output_msg = 'Chart Type: Grille\n'
+    output_msg += f'Resolution: {chart_res[0]} x {chart_res[1]}\n'
+    output_msg += f'Grid Dimension: {grid_dim[0]} x {grid_dim[1]}, Grid Pitch: {grid_pitch[0]} x {grid_pitch[1]}\n'
+    output_msg += f'Grille Size: {grille_size[0]} x {grille_size[1]}\n'
     
     print(f'Grid Dimension: {grid_dim[0]} x {grid_dim[1]}, ', end='')
     print(f'Grid Pitch: {grid_pitch[0]} x {grid_pitch[1]}')
@@ -185,7 +194,7 @@ def gen_grille(chart_res, width, orient):
         pt_2 = pt_1 + grille_size - 1
         cv2.rectangle(chart_im, [*pt_1], [*pt_2], (255), -1)
         
-    return chart_im, grid_coords
+    return chart_im, output_msg, grid_coords
 
 def gen_checkerboard(chart_res, grid_dim, begin_with, padding):
     chart_res = np.array(chart_res).astype('uint')
@@ -195,6 +204,11 @@ def gen_checkerboard(chart_res, grid_dim, begin_with, padding):
     grid_y = np.linspace(0 + padding[1], chart_res[1] - padding[1], grid_dim[1], endpoint=False)
     grid_xx, grid_yy = np.meshgrid(grid_x, grid_y)    
     grid_pitch = ((chart_res - 2 * padding) / (grid_dim)).astype('uint')
+    output_msg = 'Chart Type: Checkerboard\n'
+    output_msg += f'Resolution: {chart_res[0]} x {chart_res[1]}\n'
+    output_msg += f'Grid Dimension: {grid_dim[0]} x {grid_dim[1]}, Square Size: {grid_pitch[0]} x {grid_pitch[1]}\n'
+    output_msg += f'Padding: {padding[0]}x{padding[1]}\n'
+    
     print(f'Grid Dimension: {grid_dim[0]} x {grid_dim[1]}, ', end='')
     print(f'Square Size: {grid_pitch[0]} x {grid_pitch[1]}')    
     print(f'Padding: {padding[0]}x{padding[1]}')
@@ -220,7 +234,7 @@ def gen_checkerboard(chart_res, grid_dim, begin_with, padding):
     
     grid_coords = (grid_coords + grid_pitch * 0.5).astype('uint')
 
-    return chart_im, grid_coords
+    return chart_im, output_msg, grid_coords
 
 def draw_se_MTF_pattern(chart_im, center, edge_angle, pattern_size, line_type):    
     anchor = center - 0.5 * pattern_size
@@ -240,6 +254,11 @@ def gen_se_MTF(chart_res, grid_dim, edge_angle, pattern_size, padding, line_type
     grid_y = np.linspace(0 + padding[1], chart_res[1] - padding[1], grid_dim[1], endpoint=False)
     grid_xx, grid_yy = np.meshgrid(grid_x, grid_y)    
     grid_pitch = ((chart_res - 2 * padding) / (grid_dim)).astype('uint')
+    output_msg = 'Chart Type: Slanted Edge MTF\n'
+    output_msg += f'Resolution: {chart_res[0]} x {chart_res[1]}\n'
+    output_msg += f'Grid Dimension: {grid_dim[0]} x {grid_dim[1]}, Square Size: {grid_pitch[0]} x {grid_pitch[1]}\n'
+    output_msg += f'Padding: {padding[0]}x{padding[1]}\n'
+    
     print(f'Grid Dimension: {grid_dim[0]} x {grid_dim[1]}, ', end='')
     print(f'Square Size: {grid_pitch[0]} x {grid_pitch[1]}')    
     print(f'Padding: {padding[0]}x{padding[1]}')
@@ -250,7 +269,7 @@ def gen_se_MTF(chart_res, grid_dim, edge_angle, pattern_size, padding, line_type
     for p in grid_coords:
         chart_im, _ = draw_se_MTF_pattern(chart_im, p, edge_angle, pattern_size, line_type)    
 
-    return chart_im, grid_coords
+    return chart_im, output_msg, grid_coords
 
 
 
@@ -290,7 +309,12 @@ def gen_reticle(chart_res, color, cross_size, marker_size, thickness):
     center = (np.array([chart_res[0], chart_res[1]]) + np.array([marker_size * -0.5, marker_size * -0.5])).astype('uint')
     cv2.circle(chart_im, center, int(marker_size * 0.5), color=color, thickness=thickness)
     # cv2.drawMarker(chart_im, np.array([chart_res[0], chart_res[1]], dtype='uint'), markerType=cv2.MARKER_TILTED_CROSS, color=color, markerSize=size, thickness=thickness)
-    return chart_im, None
+    output_msg = 'Chart Type: Reticle\n'
+    output_msg += f'Resolution: {chart_res[0]} x {chart_res[1]}\n'
+    output_msg += f'Cross size: {cross_size}, Marker Size: {marker_size}\n'
+    
+    
+    return chart_im, output_msg, None
 
 # def gen_reticle(chart_res, rect_color, cross_color, thickness, filled):
 #     chart_im = np.zeros((chart_res[1], chart_res[0], 3))
