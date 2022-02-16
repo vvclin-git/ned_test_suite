@@ -38,6 +38,9 @@ class NED_Test_Suite(tk.Tk):
         style.configure('Treeview', bordercolor='black', borderwidth=2)
         style.configure('Buttons.TButton')
         style.configure('PathEntry.TEntry', ipad=5)
+        style.configure('TestLabel1.TLabel', background='red')
+        style.configure('TestLabel2.TLabel', background='green')
+        style.configure('TestLabel3.TLabel', background='blue')
         
         container = Frame(self)
         container.grid(row=0, column=0, sticky='NSEW')

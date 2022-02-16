@@ -56,7 +56,7 @@ CHART_FN_DICT = {'Reticle': gen_reticle,
                     'Slanted Edge MTF': gen_se_MTF}
 
 OUTPUT_PATH = f'{os.getcwd()}\\Output'
-
+PRESET_PATH = f'{os.getcwd()}\\default.json'
 
 regex_coord = re.compile(r'\d+x\d+')
 regex_color = re.compile(r'\d+,\d+,\d+')
@@ -72,8 +72,32 @@ class TestCharts(NetsFrame):
         self.saved_chart_paras = CHART_PARAMETERS
         self.output_path = tk.StringVar()
         self.output_path.set(OUTPUT_PATH)
+        self.preset_path = tk.StringVar()
+        self.preset_path.set(PRESET_PATH)
         
         # chart parameter settings
+        self.chart_preset_frame = LabelFrame(self.settings, text='Chart Parameter Preset', padding=(5, 5, 5, 5))
+        self.chart_preset_frame.pack(expand=True, fill='x', pady=10, side='top')                
+        self.chart_preset_frame.rowconfigure(0, weight=1)
+        self.chart_preset_frame.rowconfigure(1, weight=1)
+        self.chart_preset_frame.columnconfigure(0, weight=1)
+
+        self.output_path_input = Entry(self.chart_preset_frame, textvariable=self.output_path, width=20)
+        self.output_path_input.grid(row=0, column=0, sticky='EW', ipady=5)
+        # self.output_path_input.pack(side='top', expand=True, fill='both')
+
+        output_btn_frame = Frame(self.chart_preset_frame)
+        # output_btn_frame.pack(side='top', expand=True, fill='both')
+        output_btn_frame.grid(row=1, column=0, sticky='EW')
+
+        output_save_btn = Button(output_btn_frame, text='Save As...', style='Buttons.TButton', command=None)
+        output_save_btn.pack(side='right', pady=5)
+        output_load_btn = Button(output_btn_frame, text='Load...', style='Buttons.TButton', command=None)
+        output_load_btn.pack(side='right', padx=5, pady=5)
+         
+
+
+
         self.chart_settings_frame = LabelFrame(self.settings, text='Chart Parameter Settings', padding=(5, 5, 5, 5))
         self.chart_settings_frame.pack(expand=True, fill='x', pady=10, side='top')
         self.chart_settings_frame.columnconfigure(0, weight=1)
@@ -118,15 +142,15 @@ class TestCharts(NetsFrame):
 
         # Output Test
 
-        img1 = Image.open('.\Temp\img01.png')
-        img2 = Image.open('.\Temp\img02.png')
-        img3 = Image.open('.\Temp\img03.png')
-        img4 = Image.open('.\Temp\img_large.png')
+        # img1 = Image.open('.\Temp\img01.png')
+        # img2 = Image.open('.\Temp\img02.png')
+        # img3 = Image.open('.\Temp\img03.png')
+        # img4 = Image.open('.\Temp\img_large.png')
         
-        self.img_list = [img4]
+        # self.img_list = [img4]
 
-        img_test_btn = Button(self.buttons, text='Change Image', command=self.rotate_imgs)
-        img_test_btn.pack()
+        # img_test_btn = Button(self.buttons, text='Change Image', command=self.rotate_imgs)
+        # img_test_btn.pack()
 
         msg_test_btn = Button(self.buttons, text='Update Message', command=self.update_msg_test)
         msg_test_btn.pack()
@@ -137,8 +161,9 @@ class TestCharts(NetsFrame):
         preview_test_btn = Button(self.buttons, text='Preview Chart', command=self.preview_chart)
         preview_test_btn.pack()
 
-        output_test_btn = Button(self.buttons, text='Output Charts', command=self.output_charts)
-        output_test_btn.pack()
+        output_test_btn = Button(self.chart_output_frame, text='Output Charts', command=self.output_charts)
+        # output_test_btn.pack()
+        output_test_btn.grid(row=2, column=2, sticky='E')
         
         # # Styling
         # self["style"] = "Background.TFrame"        
