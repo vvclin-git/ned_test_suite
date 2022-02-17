@@ -6,48 +6,49 @@ from tkinter import filedialog
 from NED_Chart import *
 import re
 import time
-# from tkinter.ttk import *
+import json
+from tkinter.ttk import *
 
-CHART_TYPES = ('Reticle', 'Circle Grid', 'Checkerboard', 'Grille', 'Slanted Edge MTF')
+# CHART_TYPES = ('Reticle', 'Circle Grid', 'Checkerboard', 'Grille', 'Slanted Edge MTF')
 
-RETICLE_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
-                'Line Color': {'value':'0,255,0', 'type':'value', 'options':None},
-                'Cross Size': {'value':20, 'type':'value', 'options':None},
-                'Marker Size': {'value':10, 'type':'value', 'options':None},
-                'Line Thickness': {'value':2, 'type':'value', 'options':None}}
+# RETICLE_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
+#                 'Line Color': {'value':'0,255,0', 'type':'value', 'options':None},
+#                 'Cross Size': {'value':20, 'type':'value', 'options':None},
+#                 'Marker Size': {'value':10, 'type':'value', 'options':None},
+#                 'Line Thickness': {'value':2, 'type':'value', 'options':None}}
 
-CIRCLE_GRID_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
-                'Grid Dimension': {'value':'64x36', 'type':'value', 'options':None},                
-                'Marker Size': {'value':5, 'type':'value', 'options':None},
-                'Padding': {'value':'10x10', 'type':'value', 'options':None}}
+# CIRCLE_GRID_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
+#                 'Grid Dimension': {'value':'64x36', 'type':'value', 'options':None},                
+#                 'Marker Size': {'value':5, 'type':'value', 'options':None},
+#                 'Padding': {'value':'10x10', 'type':'value', 'options':None}}
 
-CHECKERBOARD_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
-                'Grid Dimension': {'value':'32x18', 'type':'value', 'options':None},                
-                'Begin with': {'value':'black', 'type':'list', 'options':('black', 'white')},
-                'Padding': {'value':'0x0', 'type':'value', 'options':None}}
+# CHECKERBOARD_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
+#                 'Grid Dimension': {'value':'32x18', 'type':'value', 'options':None},                
+#                 'Begin with': {'value':'black', 'type':'list', 'options':('black', 'white')},
+#                 'Padding': {'value':'0x0', 'type':'value', 'options':None}}
 
-GRILLE_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
-                'Grille Width': {'value':4, 'type':'value', 'options':None},                
-                'Orientation': {'value':'vertical', 'type':'list', 'options':('vertical', 'horizontal')},
-                }
+# GRILLE_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
+#                 'Grille Width': {'value':4, 'type':'value', 'options':None},                
+#                 'Orientation': {'value':'vertical', 'type':'list', 'options':('vertical', 'horizontal')},
+#                 }
 
-SE_MTF_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
-                'Grid Dimension': {'value':'32x18', 'type':'value', 'options':None},
-                'Edge Angle': {'value':5, 'type':'value', 'options':None},
-                'Pattern Size': {'value':80, 'type':'value', 'options':None},
-                'Padding': {'value':'10x10', 'type':'value', 'options':None},                
-                'Line Type': {'value':'line_8', 'type':'list', 'options':('line_8', 'line_4', 'line_AA', 'filled')},
-                }
+# SE_MTF_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
+#                 'Grid Dimension': {'value':'32x18', 'type':'value', 'options':None},
+#                 'Edge Angle': {'value':5, 'type':'value', 'options':None},
+#                 'Pattern Size': {'value':80, 'type':'value', 'options':None},
+#                 'Padding': {'value':'10x10', 'type':'value', 'options':None},                
+#                 'Line Type': {'value':'line_8', 'type':'list', 'options':('line_8', 'line_4', 'line_AA', 'filled')},
+#                 }
 
-CHART_PARAMETERS = {'Reticle': RETICLE_PARAS, 
-                    'Circle Grid': CIRCLE_GRID_PARAS, 
-                    'Checkerboard': CHECKERBOARD_PARAS, 
-                    'Grille': GRILLE_PARAS, 
-                    'Slanted Edge MTF': SE_MTF_PARAS}
+# CHART_PARAMETERS = {'Reticle': RETICLE_PARAS, 
+#                     'Circle Grid': CIRCLE_GRID_PARAS, 
+#                     'Checkerboard': CHECKERBOARD_PARAS, 
+#                     'Grille': GRILLE_PARAS, 
+#                     'Slanted Edge MTF': SE_MTF_PARAS}
 
-CHART_CHK_PARAS = {}
-for c in CHART_TYPES:
-    CHART_CHK_PARAS[c] = {'value':'Yes', 'type':'list', 'options':('Yes', 'No')}
+# CHART_CHK_PARAS = {}
+# for c in CHART_TYPES:
+#     CHART_CHK_PARAS[c] = {'value':'Yes', 'type':'list', 'options':('Yes', 'No')}
 
 CHART_FN_DICT = {'Reticle': gen_reticle, 
                     'Circle Grid': gen_circle_grid, 
@@ -66,40 +67,46 @@ regex_color = re.compile(r'\d+,\d+,\d+')
 class TestCharts(NetsFrame):
     def __init__(self, window):
         super().__init__(window)
+        f = open('default.json', 'r')
+        self.presets = json.load(f)
+        f.close()
+        
+        self.chart_types = self.presets['chart_types']
+        self.saved_chart_paras = self.presets['chart_parameters']
+        self.chart_chk_paras = self.presets['chart_chk_paras']
+        
+        # print(self.saved_chart_paras[self.chart_types[0]])
+
         self.chart_type = tk.StringVar()
-        self.chart_type.set(CHART_TYPES[0])
+        self.chart_type.set(self.chart_types[0])
         self.cur_chart_type = self.chart_type.get()
-        self.saved_chart_paras = CHART_PARAMETERS
+        # self.saved_chart_paras = CHART_PARAMETERS        
         self.output_path = tk.StringVar()
         self.output_path.set(OUTPUT_PATH)
         self.preset_path = tk.StringVar()
         self.preset_path.set(PRESET_PATH)
         
-        # chart parameter settings
+        # chart preset 
         self.chart_preset_frame = LabelFrame(self.settings, text='Chart Parameter Preset', padding=(5, 5, 5, 5))
-        self.chart_preset_frame.pack(expand=True, fill='x', pady=10, side='top')                
-        self.chart_preset_frame.rowconfigure(0, weight=1)
-        self.chart_preset_frame.rowconfigure(1, weight=1)
-        self.chart_preset_frame.columnconfigure(0, weight=1)
+        self.chart_preset_frame.pack(expand=True, fill='x', pady=5, side='top')
+        self.chart_preset_frame.columnconfigure(0, weight=5, uniform=1)
+        self.chart_preset_frame.columnconfigure(1, weight=2, uniform=1)
+        self.chart_preset_frame.columnconfigure(2, weight=2, uniform=1)
 
-        self.output_path_input = Entry(self.chart_preset_frame, textvariable=self.output_path, width=20)
-        self.output_path_input.grid(row=0, column=0, sticky='EW', ipady=5)
-        # self.output_path_input.pack(side='top', expand=True, fill='both')
+        self.output_path_input = Entry(self.chart_preset_frame, textvariable=self.preset_path)
+        self.output_path_input.grid(row=0, column=0, columnspan=3, sticky='EW', ipady=5)
+        
+        output_browse_btn = Button(self.chart_preset_frame, text='Browse...', style='Buttons.TButton', command=self.file_browse)
+        output_browse_btn.grid(row=1, column=0, sticky='E', padx=0, pady=5)
+        output_load_btn = Button(self.chart_preset_frame, text='Load...', style='Buttons.TButton', command=self.load_preset)
+        output_load_btn.grid(row=1, column=1, sticky='E', padx=0, pady=5)
+        output_save_btn = Button(self.chart_preset_frame, text='Save As...', style='Buttons.TButton', command=self.save_preset)        
+        output_save_btn.grid(row=1, column=2, sticky='E', padx=0, pady=5)
 
-        output_btn_frame = Frame(self.chart_preset_frame)
-        # output_btn_frame.pack(side='top', expand=True, fill='both')
-        output_btn_frame.grid(row=1, column=0, sticky='EW')
-
-        output_save_btn = Button(output_btn_frame, text='Save As...', style='Buttons.TButton', command=None)
-        output_save_btn.pack(side='right', pady=5)
-        output_load_btn = Button(output_btn_frame, text='Load...', style='Buttons.TButton', command=None)
-        output_load_btn.pack(side='right', padx=5, pady=5)
          
-
-
-
+        # chart parameter settings
         self.chart_settings_frame = LabelFrame(self.settings, text='Chart Parameter Settings', padding=(5, 5, 5, 5))
-        self.chart_settings_frame.pack(expand=True, fill='x', pady=10, side='top')
+        self.chart_settings_frame.pack(expand=True, fill='x', pady=5, side='top')
         self.chart_settings_frame.columnconfigure(0, weight=1)
         self.chart_settings_frame.columnconfigure(1, weight=4)
         self.chart_settings_frame.columnconfigure(2, weight=1)        
@@ -107,21 +114,20 @@ class TestCharts(NetsFrame):
         self.chart_selector_label = Label(self.chart_settings_frame, text='Chart Type')        
         self.chart_selector_label.grid(row=0, column=0, sticky='W')
 
-        self.chart_selector = tk.OptionMenu(self.chart_settings_frame, self.chart_type, *CHART_TYPES, command=self.init_parameters)
+        self.chart_selector = tk.OptionMenu(self.chart_settings_frame, self.chart_type, *self.chart_types, command=self.init_parameters)
         self.chart_selector.configure(anchor='w', width=30)                
         self.chart_selector.grid(row=0, column=1, stick='EW')
 
-        self.chart_settings = ParameterTab(self.chart_settings_frame, CHART_PARAMETERS[CHART_TYPES[0]])       
+        self.chart_settings = ParameterTab(self.chart_settings_frame, self.saved_chart_paras[self.chart_types[0]])       
         self.chart_settings.tree.configure(height=6)                    
         self.chart_settings.grid(row=1, column=0, columnspan=3, sticky='EW', pady=5)
         
         preview_test_btn = Button(self.chart_settings_frame, text='Preview Chart', command=self.preview_chart)
         preview_test_btn.grid(row=0, column=2, stick='E')
 
-        # chart output settings
-        
+        # chart output settings        
         self.chart_output_frame = LabelFrame(self.settings, text='Chart Output Settings', padding=(5, 5, 5, 5))
-        self.chart_output_frame.pack(expand=True, fill='x', pady=10, side='top')
+        self.chart_output_frame.pack(expand=True, fill='x', pady=5, side='top')
         self.chart_output_frame.columnconfigure(0, weight=1)
         self.chart_output_frame.columnconfigure(1, weight=10)   
         self.chart_output_frame.columnconfigure(2, weight=1)
@@ -133,10 +139,10 @@ class TestCharts(NetsFrame):
         self.output_path_btn = Button(self.chart_output_frame, text='Browse...', style='Buttons.TButton', command=self.path_browse)
         self.output_path_btn.grid(row=0, column=2, sticky='E')
 
-        self.chart_output_chk = ParameterTab(self.chart_output_frame, CHART_CHK_PARAS)
+        self.chart_output_chk = ParameterTab(self.chart_output_frame, self.chart_chk_paras)
         self.chart_output_chk.tree.heading("1", text="Chart Type")
         self.chart_output_chk.tree.heading("2", text="Output")
-        self.chart_output_chk.tree.configure(height=len(CHART_TYPES))
+        self.chart_output_chk.tree.configure(height=len(self.chart_types))
         # self.chart_output_chk.pack(side='top')
         self.chart_output_chk.grid(row=1, column=0, columnspan=3, sticky='EW', pady=5)
 
@@ -202,6 +208,16 @@ class TestCharts(NetsFrame):
         self.output_path.set(temp_path)
         return
     
+    def file_browse(self):
+        cur_path = os.getcwd()
+        temp_path = filedialog.askopenfilename(parent=self, initialdir=cur_path, title='Please select a JSON file', filetypes=[("JSON files","*.json")])
+        # if len(temp_path) > 0:
+        #     print ("You chose: %s" % tempdir)
+        if len(temp_path) > 0:            
+            self.preset_path.set(temp_path)
+        return
+
+
     def gen_chart(self, chart_type, para_list):        
         parsed_paras = []        
         for p in para_list:
@@ -261,4 +277,23 @@ class TestCharts(NetsFrame):
                 self.console(f'Done', cr=True)
 
             para_list = []
+        return
+
+    def load_preset(self):
+        f = open(self.preset_path.get(), 'r')
+        chart_parameters = json.load(f)
+        f.close()
+        self.console(f'Preset File: {self.preset_path.get()} Loaded')
+        return chart_parameters
+
+    def save_preset(self):
+        if os.path.isfile(self.preset_path.get()):
+            chk_overwrite = tk.messagebox.askquestion(title='Confirm Overwrite', message='File already exists, overwrite?')
+            if not chk_overwrite:
+                return                
+        f = open(self.preset_path.get(), 'w')
+        save_preset = {'chart_types':self.chart_types, 'chart_parameters':self.saved_chart_paras, 'chart_chk_paras':self.chart_chk_paras}
+        json.dump(save_preset, f)
+        f.close()
+        self.console(f'Preset File: {self.preset_path.get()} Saved')
         return

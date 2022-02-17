@@ -39,11 +39,11 @@ class NetsFrame(Frame):
         msg_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         
         self.settings = Frame(self, style='Settings.TFrame', width=500, height=720)
-        
-        self.settings.grid(row=0, column=1)
+        # self.pack_propagate(0)
+        self.settings.grid(row=0, column=1, sticky='EW')
         
         self.buttons = Frame(self, style='Buttons.TFrame', width=500, height=240)
-        self.buttons.grid(row=1, column=1)
+        self.buttons.grid(row=1, column=1, sticky='EW')
     
     def console(self, msg, cr=True):
         self.msg_output.config(state='normal')
