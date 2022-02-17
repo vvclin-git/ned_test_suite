@@ -9,46 +9,6 @@ import time
 import json
 from tkinter.ttk import *
 
-# CHART_TYPES = ('Reticle', 'Circle Grid', 'Checkerboard', 'Grille', 'Slanted Edge MTF')
-
-# RETICLE_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
-#                 'Line Color': {'value':'0,255,0', 'type':'value', 'options':None},
-#                 'Cross Size': {'value':20, 'type':'value', 'options':None},
-#                 'Marker Size': {'value':10, 'type':'value', 'options':None},
-#                 'Line Thickness': {'value':2, 'type':'value', 'options':None}}
-
-# CIRCLE_GRID_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
-#                 'Grid Dimension': {'value':'64x36', 'type':'value', 'options':None},                
-#                 'Marker Size': {'value':5, 'type':'value', 'options':None},
-#                 'Padding': {'value':'10x10', 'type':'value', 'options':None}}
-
-# CHECKERBOARD_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
-#                 'Grid Dimension': {'value':'32x18', 'type':'value', 'options':None},                
-#                 'Begin with': {'value':'black', 'type':'list', 'options':('black', 'white')},
-#                 'Padding': {'value':'0x0', 'type':'value', 'options':None}}
-
-# GRILLE_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
-#                 'Grille Width': {'value':4, 'type':'value', 'options':None},                
-#                 'Orientation': {'value':'vertical', 'type':'list', 'options':('vertical', 'horizontal')},
-#                 }
-
-# SE_MTF_PARAS = {'Resolution': {'value':'2560x1440', 'type':'value', 'options':None},
-#                 'Grid Dimension': {'value':'32x18', 'type':'value', 'options':None},
-#                 'Edge Angle': {'value':5, 'type':'value', 'options':None},
-#                 'Pattern Size': {'value':80, 'type':'value', 'options':None},
-#                 'Padding': {'value':'10x10', 'type':'value', 'options':None},                
-#                 'Line Type': {'value':'line_8', 'type':'list', 'options':('line_8', 'line_4', 'line_AA', 'filled')},
-#                 }
-
-# CHART_PARAMETERS = {'Reticle': RETICLE_PARAS, 
-#                     'Circle Grid': CIRCLE_GRID_PARAS, 
-#                     'Checkerboard': CHECKERBOARD_PARAS, 
-#                     'Grille': GRILLE_PARAS, 
-#                     'Slanted Edge MTF': SE_MTF_PARAS}
-
-# CHART_CHK_PARAS = {}
-# for c in CHART_TYPES:
-#     CHART_CHK_PARAS[c] = {'value':'Yes', 'type':'list', 'options':('Yes', 'No')}
 
 CHART_FN_DICT = {'Reticle': gen_reticle, 
                     'Circle Grid': gen_circle_grid, 
@@ -61,8 +21,6 @@ PRESET_PATH = f'{os.getcwd()}\\default.json'
 
 regex_coord = re.compile(r'\d+x\d+')
 regex_color = re.compile(r'\d+,\d+,\d+')
-
-
 
 class TestCharts(NetsFrame):
     def __init__(self, window):
