@@ -145,14 +145,16 @@ class Grid(Coords):
 
 
 class Distortion_Eval():
-    def __init__(self):
-        self.std_grid = None
-        self.dist_grid = None
+    def __init__(self):        
         self.raw_img = None
         self.thresh = None
         self.labeled_img = None
+        self.indexed_img = None
+        self.std_grid = None
+        self.dist_grid = None
         self.grid_dim = None
-    
+        self.dist_coords = None
+        self.extracted_pts_count = 0    
     
     def std_grid_gen(self, chart_res, grid_dim, padding):    
         chart_res = np.array(chart_res).astype('uint')
@@ -169,26 +171,30 @@ class Distortion_Eval():
         # for i in range(len(grid_coords)):
         #     cv2.circle(chart_im, (grid_coords[i, 0], grid_coords[i, 1]), marker_size, (255, 255, 255), -1)
         self.std_grid = Grid(grid_coords, grid_dim)
+        self.std_grid.sorted = True
         self.grid_dim = grid_dim
         return    
     
-    def img_grid_extract(self, thresh_low, thresh_high, blur_kernel, dist_angle, max_ratio):
+    def img_grid_extract(self, thresh_low, thresh_high, blur_kernel):
         _, thresh = cv2.threshold(self.raw_img, thresh_low, thresh_high, cv2.THRESH_BINARY)
         self.thresh = cv2.medianBlur(thresh, blur_kernel)
-        _, labels, stat, centroids = cv2.connectedComponentsWithStats(thresh, connectivity=8)
+        _, labels, stat, centroids = cv2.connectedComponentsWithStats(self.thresh, connectivity=8)
         labels[labels > 0] = 255
-        labels_out = np.stack((np.zeros_like(labels), labels, self.thresh), -1)        
-        output_msg = f'{len(centroids)} connected components extracted from the image'
+        labels_out = np.stack((np.zeros_like(labels), labels, self.thresh), -1)
+        self.labeled_img = labels_out                
+        self.extracted_pts_count = len(centroids)
+        self.dist_coords = centroids
+        output_msg = f'{self.extracted_pts_count} connected components extracted from the image'        
         print(output_msg)
-        dist_coords = centroids
-        
-        self.dist_grid = Grid(dist_coords[1:, :], self.grid_dim)
-        self.labeled_img = labels_out
-        self.dist_grid.sort(dist_angle, max_ratio)        
-        return output_msg
-       
+        return output_msg    
+    
+    def sort_dist_grid(self, dist_angle, max_ratio):
+        self.dist_grid = Grid(self.dist_coords[1:, :], self.grid_dim)
+        self.dist_grid.sort(dist_angle, max_ratio)
+        self.dist_coords = self.dist_grid.coords
+        return
 
-    def dist_eval(self):
+    def dist_eval(self):                
         if not (self.dist_grid.sorted and self.std_grid.sorted):
             print('The grid must be sorted first')
             return None
@@ -197,10 +203,26 @@ class Distortion_Eval():
         std_center_dist = self.std_grid.get_pt_dist(self.std_grid.coords[self.dist_grid.center_ind].squeeze())
         dist_center_dist = self.dist_grid.get_pt_dist(self.dist_grid.coords[self.dist_grid.center_ind].squeeze())
         dist_diff = dist_center_dist - std_center_dist
-        dist_rel = dist_diff / std_center_dist
+        out = np.zeros_like(std_center_dist)
+        np.divide(dist_diff, std_center_dist, out=out, where=std_center_dist!=0)
+        # dist_rel = dist_diff / std_center_dist
+        dist_rel = out
         print(f'Max relative distortion: {(np.nanmax(abs(dist_rel)) * 100)} %')    
         print(f'Max absolute distortion: {np.max(abs(dist_diff))}')
         return dist_rel, dist_diff
+
+    def draw_coords_index(self, pad_ratio):
+        chart_res = (self.raw_img.shape[1], self.raw_img.shape[0])        
+        coords_dim = (((self.dist_coords[:, 0].max() - self.dist_coords[:, 0].min())), ((self.dist_coords[:, 1].max() - self.dist_coords[:, 1].min())))    
+        scale_factor = (chart_res[0] / coords_dim[0] * pad_ratio, chart_res[1] / coords_dim[1] * pad_ratio)       
+        coords_scaled = np.vstack((self.dist_coords[:, 0] * scale_factor[0], self.dist_coords[:, 1] * scale_factor[1])).transpose()    
+        coords_scaled_center = np.array([(np.average(coords_scaled[:, 0]), np.average(coords_scaled[:, 1]))])    
+        coords_shift = np.array([chart_res]) / 2 - coords_scaled_center    
+        coords_output = (coords_scaled + np.tile(coords_shift, (len(coords_scaled), 1))).astype('uint')
+        self.indexed_img = np.zeros((chart_res[1], chart_res[0], 3))    
+        for i, p in enumerate(coords_output):        
+            cv2.putText(self.indexed_img, str(i), (p[0], p[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 255, 255), 1, cv2.LINE_AA)
+        return
 
 if __name__=='__main__':
     img = cv2.imread('Freeform_Image_65x37.png', cv2.IMREAD_GRAYSCALE)
@@ -208,9 +230,12 @@ if __name__=='__main__':
     dist_eval = Distortion_Eval()
     dist_eval.raw_img = img
     dist_eval.std_grid_gen((2560, 1440), (65, 37), (0, 0))
-    dist_eval.img_grid_extract(25, 255, 5, 30, 1.5)
-    dist_rel, dist_diff = dist_eval.dist_eval()
-
+    dist_eval.img_grid_extract(25, 255, 5)
+    dist_eval.sort_dist_grid(30, 1.5)
+    dist_eval.draw_coords_index(0.8)
+    cv2.imwrite('indexed_img.png', dist_eval.indexed_img)
+    dist_eval, dist_diff = dist_eval.dist_eval()
+    # cv2.imwrite('labeled_img.png', dist_eval.labeled_img)
 # def coords_compare(coords_1, coords_2):
 #     fig, ax = plt.subplots()
 #     coords_1 = np.atleast_2d(coords_1)
