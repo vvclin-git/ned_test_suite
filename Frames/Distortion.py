@@ -21,7 +21,7 @@ class Distortion(NetsFrame):
         self.presets = json.load(f)
         f.close()
         self.dist_eval = Distortion_Eval()
-        self.dist_grid_paras = self.presets['dist_grid_paras']        
+        # self.dist_grid_paras = self.presets['dist_grid_paras']        
         self.grid_extract_paras = self.presets['grid_extract_paras']
         self.grid_sort_paras = self.presets['grid_sort_paras']
         
@@ -33,21 +33,21 @@ class Distortion(NetsFrame):
         self.raw_img = None
 
         # analysis preset 
-        self.analysis_preset_frame = LabelFrame(self.settings, text='Analysis Parameter Preset', padding=(5, 5, 5, 5))
-        self.analysis_preset_frame.pack(expand=True, fill='x', pady=5, side='top')
-        self.analysis_preset_frame.columnconfigure(0, weight=5, uniform=1)
-        self.analysis_preset_frame.columnconfigure(1, weight=2, uniform=1)
-        self.analysis_preset_frame.columnconfigure(2, weight=2, uniform=1)
+        # self.analysis_preset_frame = LabelFrame(self.settings, text='Analysis Parameter Preset', padding=(5, 5, 5, 5))
+        # self.analysis_preset_frame.pack(expand=True, fill='x', pady=5, side='top')
+        # self.analysis_preset_frame.columnconfigure(0, weight=5, uniform=1)
+        # self.analysis_preset_frame.columnconfigure(1, weight=2, uniform=1)
+        # self.analysis_preset_frame.columnconfigure(2, weight=2, uniform=1)
 
-        self.output_path_input = Entry(self.analysis_preset_frame, textvariable=self.preset_path)
-        self.output_path_input.grid(row=0, column=0, columnspan=3, sticky='EW', ipady=5)
+        # self.output_path_input = Entry(self.analysis_preset_frame, textvariable=self.preset_path)
+        # self.output_path_input.grid(row=0, column=0, columnspan=3, sticky='EW', ipady=5)
         
-        output_browse_btn = Button(self.analysis_preset_frame, text='Browse...', style='Buttons.TButton', command=self.preset_browse)
-        output_browse_btn.grid(row=1, column=0, sticky='E', padx=0, pady=5)
-        output_load_btn = Button(self.analysis_preset_frame, text='Load...', style='Buttons.TButton', command=self.preset_load)
-        output_load_btn.grid(row=1, column=1, sticky='E', padx=0, pady=5)
-        output_save_btn = Button(self.analysis_preset_frame, text='Save As...', style='Buttons.TButton', command=self.preset_save)        
-        output_save_btn.grid(row=1, column=2, sticky='E', padx=0, pady=5)
+        # output_browse_btn = Button(self.analysis_preset_frame, text='Browse...', style='Buttons.TButton', command=self.preset_browse)
+        # output_browse_btn.grid(row=1, column=0, sticky='E', padx=0, pady=5)
+        # output_load_btn = Button(self.analysis_preset_frame, text='Load...', style='Buttons.TButton', command=self.preset_load)
+        # output_load_btn.grid(row=1, column=1, sticky='E', padx=0, pady=5)
+        # output_save_btn = Button(self.analysis_preset_frame, text='Save As...', style='Buttons.TButton', command=self.preset_save)        
+        # output_save_btn.grid(row=1, column=2, sticky='E', padx=0, pady=5)
 
         # Image Loading 
         self.img_load_frame = LabelFrame(self.settings, text='Image Loading', padding=(5, 5, 5, 5))
@@ -56,6 +56,9 @@ class Distortion(NetsFrame):
         self.img_load_frame.columnconfigure(1, weight=2, uniform=1)
         self.img_load_frame.columnconfigure(2, weight=2, uniform=1)
         
+        # self.img_path_label = Label(self.img_load_frame, text='Image Path')
+
+
         self.img_path_input = Entry(self.img_load_frame, textvariable=self.img_path)
         self.img_path_input.grid(row=0, column=0, sticky='EW', ipady=5)
         # self.img_path_input.pack(side='left', expand=True, fill='x')
@@ -69,17 +72,17 @@ class Distortion(NetsFrame):
         # img_browse_btn.pack(side='left', expand=True, fill='x')
 
         # Distortion Grid Settings
-        self.dist_grid_frame = LabelFrame(self.settings, text='Distortion Grid Settings', padding=(5, 5, 5, 5))
-        self.dist_grid_frame.pack(expand=True, fill='x', pady=5, side='top')
-        self.dist_grid_settings = ParameterTab(self.dist_grid_frame, self.dist_grid_paras)
-        self.dist_grid_settings.tree.configure(height=3)
-        self.dist_grid_settings.pack(expand=True, fill='x', pady=5, side='top')
+        # self.dist_grid_frame = LabelFrame(self.settings, text='Distortion Grid Settings', padding=(5, 5, 5, 5))
+        # self.dist_grid_frame.pack(expand=True, fill='x', pady=5, side='top')
+        # self.dist_grid_settings = ParameterTab(self.dist_grid_frame, self.dist_grid_paras)
+        # self.dist_grid_settings.tree.configure(height=3)
+        # self.dist_grid_settings.pack(expand=True, fill='x', pady=5, side='top')
 
         # Grid Extraction Settings
         self.grid_extract_frame = LabelFrame(self.settings, text='Grid Extraction Settings', padding=(5, 5, 5, 5))
         self.grid_extract_frame.pack(expand=True, fill='x', pady=5, side='top')
         self.grid_extract_settings = ParameterTab(self.grid_extract_frame, self.grid_extract_paras)
-        self.grid_extract_settings.tree.configure(height=3)
+        self.grid_extract_settings.tree.configure(height=6)
         self.grid_extract_settings.pack(expand=True, fill='x', pady=5, side='top')
         self.grid_extract_btn = Button(self.grid_extract_frame, text='Extract Grid', style='Buttons.TButton', command=None)
         self.grid_extract_btn.pack(side='top')
@@ -145,3 +148,13 @@ class Distortion(NetsFrame):
             self.update_img(Image.fromarray((self.raw_img).astype(np.uint8)))
             self.console(f'Image File: {img_path} Loaded')
         return
+    
+    def extract_grid(self):
+        grid_extract_paras = self.grid_extract_settings.output_parsed_vals()        
+        output_msg = self.dist_eval.std_grid_gen(*grid_extract_paras[0:3])
+        self.console(output_msg)
+        output_msg = self.dist_eval.img_grid_extract(*grid_extract_paras[3:])
+        self.console(output_msg)
+        return
+    
+    

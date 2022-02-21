@@ -1,6 +1,10 @@
 
 import tkinter as tk
 from tkinter import ttk
+import re
+
+regex_coord = re.compile(r'\d+x\d+')
+regex_color = re.compile(r'\d+,\d+,\d+')
 
 class ParameterTab(ttk.Frame):
     def __init__(self, parent, parameters):
@@ -80,6 +84,23 @@ class ParameterTab(ttk.Frame):
             output.append(self.tree.item(p)['values'])
         return output
     
+    def output_parsed_vals(self):
+        output_vals = self.output_values()
+        parsed_paras = []
+        for p in output_vals:
+            parsed = p[1]
+            if type(p[1]) == str: 
+                if regex_color.search(p[1]):                    
+                    parsed_str = p[1].split(',')
+                    parsed = (int(parsed_str[0]), int(parsed_str[1]), int(parsed_str[2]))
+                elif regex_coord.search(p[1]):
+                    parsed_str = p[1].split('x')
+                    parsed = (int(p[1].split('x')[0]), int(p[1].split('x')[1]))               
+                elif p[0] == 'Line Type':
+                    parsed = {'filled':cv2.FILLED, 'line_4':cv2.LINE_4, 'line_8':cv2.LINE_8, 'line_AA':cv2.LINE_AA}[p[1]]  
+            parsed_paras.append(parsed)
+        return parsed_paras
+
     def clear(self):
         self.tree.delete(*self.tree.get_children())
         return

@@ -45,21 +45,21 @@ class TestCharts(NetsFrame):
         self.preset_path.set(PRESET_PATH)
         
         # chart preset 
-        self.chart_preset_frame = LabelFrame(self.settings, text='Chart Parameter Preset', padding=(5, 5, 5, 5))
-        self.chart_preset_frame.pack(expand=True, fill='x', pady=5, side='top')
-        self.chart_preset_frame.columnconfigure(0, weight=5, uniform=1)
-        self.chart_preset_frame.columnconfigure(1, weight=2, uniform=1)
-        self.chart_preset_frame.columnconfigure(2, weight=2, uniform=1)
+        # self.chart_preset_frame = LabelFrame(self.settings, text='Chart Parameter Preset', padding=(5, 5, 5, 5))
+        # self.chart_preset_frame.pack(expand=True, fill='x', pady=5, side='top')
+        # self.chart_preset_frame.columnconfigure(0, weight=5, uniform=1)
+        # self.chart_preset_frame.columnconfigure(1, weight=2, uniform=1)
+        # self.chart_preset_frame.columnconfigure(2, weight=2, uniform=1)
 
-        self.output_path_input = Entry(self.chart_preset_frame, textvariable=self.preset_path)
-        self.output_path_input.grid(row=0, column=0, columnspan=3, sticky='EW', ipady=5)
+        # self.output_path_input = Entry(self.chart_preset_frame, textvariable=self.preset_path)
+        # self.output_path_input.grid(row=0, column=0, columnspan=3, sticky='EW', ipady=5)
         
-        output_browse_btn = Button(self.chart_preset_frame, text='Browse...', style='Buttons.TButton', command=self.file_browse)
-        output_browse_btn.grid(row=1, column=0, sticky='E', padx=0, pady=5)
-        output_load_btn = Button(self.chart_preset_frame, text='Load...', style='Buttons.TButton', command=self.load_preset)
-        output_load_btn.grid(row=1, column=1, sticky='E', padx=0, pady=5)
-        output_save_btn = Button(self.chart_preset_frame, text='Save As...', style='Buttons.TButton', command=self.save_preset)        
-        output_save_btn.grid(row=1, column=2, sticky='E', padx=0, pady=5)
+        # output_browse_btn = Button(self.chart_preset_frame, text='Browse...', style='Buttons.TButton', command=self.file_browse)
+        # output_browse_btn.grid(row=1, column=0, sticky='E', padx=0, pady=5)
+        # output_load_btn = Button(self.chart_preset_frame, text='Load...', style='Buttons.TButton', command=self.load_preset)
+        # output_load_btn.grid(row=1, column=1, sticky='E', padx=0, pady=5)
+        # output_save_btn = Button(self.chart_preset_frame, text='Save As...', style='Buttons.TButton', command=self.save_preset)        
+        # output_save_btn.grid(row=1, column=2, sticky='E', padx=0, pady=5)
 
          
         # chart parameter settings
@@ -116,18 +116,18 @@ class TestCharts(NetsFrame):
         # img_test_btn = Button(self.buttons, text='Change Image', command=self.rotate_imgs)
         # img_test_btn.pack()
 
-        msg_test_btn = Button(self.buttons, text='Update Message', command=self.update_msg_test)
-        msg_test_btn.pack()
+        # msg_test_btn = Button(self.buttons, text='Update Message', command=self.update_msg_test)
+        # msg_test_btn.pack()
         
-        msg_clr_btn = Button(self.buttons, text='Clear Message', command=self.console_clr)
-        msg_clr_btn.pack()
+        # msg_clr_btn = Button(self.buttons, text='Clear Message', command=self.console_clr)
+        # msg_clr_btn.pack()
         
-        preview_test_btn = Button(self.buttons, text='Preview Chart', command=self.preview_chart)
-        preview_test_btn.pack()
+        # preview_test_btn = Button(self.buttons, text='Preview Chart', command=self.preview_chart)
+        # preview_test_btn.pack()
 
-        output_test_btn = Button(self.chart_output_frame, text='Output Charts', command=self.output_charts)
+        # output_test_btn = Button(self.chart_output_frame, text='Output Charts', command=self.output_charts)
         # output_test_btn.pack()
-        output_test_btn.grid(row=2, column=2, sticky='E')
+        # output_test_btn.grid(row=2, column=2, sticky='E')
         
         # # Styling
         # self["style"] = "Background.TFrame"        

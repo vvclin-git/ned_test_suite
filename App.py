@@ -20,8 +20,8 @@ class NED_Test_Suite(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title('NED Test Suite')
-        # self.geometry('1480x990')
-        self.geometry('1680x990')
+        self.geometry('1480x990')
+        # self.geometry('1680x990')
         # self.resizable(width=False, height=False)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)                

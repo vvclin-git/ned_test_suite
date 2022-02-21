@@ -164,7 +164,9 @@ class Distortion_Eval():
         grid_y = np.linspace(0 + padding[1], chart_res[1] - padding[1], grid_dim[1])
         grid_xx, grid_yy = np.meshgrid(grid_x, grid_y)    
         grid_pitch = (chart_res - 2 * padding) / (grid_dim - 1)
-        # print(f'Grid Dimension: {grid_dim[0]} x {grid_dim[1]}, ', end='')
+        output_msg = f'Grid Dimension: {grid_dim[0]} x {grid_dim[1]}, '
+        output_msg += f'{grid_dim[0] * grid_dim[1]} points\n'
+        output_msg += f'Grid Pitch: {grid_pitch[0]} x {grid_pitch[1]}'
         # print(f'Grid Pitch: {grid_pitch[0]} x {grid_pitch[1]}')
         # chart_im = np.zeros((chart_res[1], chart_res[0], 3))
         grid_coords = np.vstack((grid_xx.flatten(), grid_yy.flatten())).transpose().astype('int')        
@@ -173,7 +175,7 @@ class Distortion_Eval():
         self.std_grid = Grid(grid_coords, grid_dim)
         self.std_grid.sorted = True
         self.grid_dim = grid_dim
-        return    
+        return output_msg   
     
     def img_grid_extract(self, thresh_low, thresh_high, blur_kernel):
         _, thresh = cv2.threshold(self.raw_img, thresh_low, thresh_high, cv2.THRESH_BINARY)
