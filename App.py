@@ -21,6 +21,7 @@ class NED_Test_Suite(tk.Tk):
         super().__init__()
         self.title('NED Test Suite')
         self.geometry('1480x990')
+        preview_img_size = (960, 740)
         # self.geometry('1680x990')
         # self.resizable(width=False, height=False)
         self.columnconfigure(0, weight=1)
@@ -49,8 +50,8 @@ class NED_Test_Suite(tk.Tk):
         container.rowconfigure(0, weight=1)
         
         tab_control = ttk.Notebook(container)
-        tab_test_charts = TestCharts(tab_control)
-        tab_distortion = Distortion(tab_control)
+        tab_test_charts = TestCharts(tab_control, preview_img_size)
+        tab_distortion = Distortion(tab_control, preview_img_size)
         tab_lum = Lum(tab_control)
         tab_control.add(tab_test_charts, text='Test Charts', )
         tab_control.add(tab_distortion, text='Distortion Analysis')

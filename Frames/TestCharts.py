@@ -23,8 +23,8 @@ regex_coord = re.compile(r'\d+x\d+')
 regex_color = re.compile(r'\d+,\d+,\d+')
 
 class TestCharts(NetsFrame):
-    def __init__(self, window):
-        super().__init__(window)
+    def __init__(self, window, preview_img_size):
+        super().__init__(window, preview_img_size)
         f = open('default.json', 'r')
         self.presets = json.load(f)
         f.close()
@@ -40,31 +40,18 @@ class TestCharts(NetsFrame):
         self.cur_chart_type = self.chart_type.get()
         # self.saved_chart_paras = CHART_PARAMETERS        
         self.output_path = tk.StringVar()
-        self.output_path.set(OUTPUT_PATH)
-        self.preset_path = tk.StringVar()
+        self.output_path.set(OUTPUT_PATH)        
         self.preset_path.set(PRESET_PATH)
         
-        # chart preset 
-        # self.chart_preset_frame = LabelFrame(self.settings, text='Chart Parameter Preset', padding=(5, 5, 5, 5))
-        # self.chart_preset_frame.pack(expand=True, fill='x', pady=5, side='top')
-        # self.chart_preset_frame.columnconfigure(0, weight=5, uniform=1)
-        # self.chart_preset_frame.columnconfigure(1, weight=2, uniform=1)
-        # self.chart_preset_frame.columnconfigure(2, weight=2, uniform=1)
-
-        # self.output_path_input = Entry(self.chart_preset_frame, textvariable=self.preset_path)
-        # self.output_path_input.grid(row=0, column=0, columnspan=3, sticky='EW', ipady=5)
+        # preset button event handler config
+        self.preset_save_btn.configure(command=self.save_preset)
+        self.preset_load_btn.configure(command=self.load_preset)
         
-        # output_browse_btn = Button(self.chart_preset_frame, text='Browse...', style='Buttons.TButton', command=self.file_browse)
-        # output_browse_btn.grid(row=1, column=0, sticky='E', padx=0, pady=5)
-        # output_load_btn = Button(self.chart_preset_frame, text='Load...', style='Buttons.TButton', command=self.load_preset)
-        # output_load_btn.grid(row=1, column=1, sticky='E', padx=0, pady=5)
-        # output_save_btn = Button(self.chart_preset_frame, text='Save As...', style='Buttons.TButton', command=self.save_preset)        
-        # output_save_btn.grid(row=1, column=2, sticky='E', padx=0, pady=5)
 
-         
+
         # chart parameter settings
         self.chart_settings_frame = LabelFrame(self.settings, text='Chart Parameter Settings', padding=(5, 5, 5, 5))
-        self.chart_settings_frame.pack(expand=True, fill='x', pady=5, side='top')
+        self.chart_settings_frame.pack(expand=True, fill='x', pady=10, side='top')
         self.chart_settings_frame.columnconfigure(0, weight=1)
         self.chart_settings_frame.columnconfigure(1, weight=4)
         self.chart_settings_frame.columnconfigure(2, weight=1)        
@@ -85,7 +72,7 @@ class TestCharts(NetsFrame):
 
         # chart output settings        
         self.chart_output_frame = LabelFrame(self.settings, text='Chart Output Settings', padding=(5, 5, 5, 5))
-        self.chart_output_frame.pack(expand=True, fill='x', pady=5, side='top')
+        self.chart_output_frame.pack(expand=True, fill='x', pady=10, side='top')
         self.chart_output_frame.columnconfigure(0, weight=1)
         self.chart_output_frame.columnconfigure(1, weight=10)   
         self.chart_output_frame.columnconfigure(2, weight=1)
@@ -105,13 +92,6 @@ class TestCharts(NetsFrame):
         self.chart_output_chk.grid(row=1, column=0, columnspan=3, sticky='EW', pady=5)
 
         # Output Test
-
-        # img1 = Image.open('.\Temp\img01.png')
-        # img2 = Image.open('.\Temp\img02.png')
-        # img3 = Image.open('.\Temp\img03.png')
-        # img4 = Image.open('.\Temp\img_large.png')
-        
-        # self.img_list = [img4]
 
         # img_test_btn = Button(self.buttons, text='Change Image', command=self.rotate_imgs)
         # img_test_btn.pack()
@@ -239,10 +219,14 @@ class TestCharts(NetsFrame):
 
     def load_preset(self):
         f = open(self.preset_path.get(), 'r')
-        chart_parameters = json.load(f)
-        f.close()
+        self.presets = json.load(f)
+        f.close()        
+        self.chart_types = self.presets['chart_types']
+        self.saved_chart_paras = self.presets['chart_parameters']
+        self.chart_chk_paras = self.presets['chart_chk_paras']
         self.console(f'Preset File: {self.preset_path.get()} Loaded')
-        return chart_parameters
+        self.init_parameters(dummy=None)
+        return
 
     def save_preset(self):
         if os.path.isfile(self.preset_path.get()):
