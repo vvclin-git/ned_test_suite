@@ -105,7 +105,7 @@ class ParameterTab(ttk.Frame):
         self.tree.delete(*self.tree.get_children())
         return
     
-    def parameter_chg(self, selected_parameters, chart_type_selected):
+    def parameter_chg(self, selected_parameters):
         self.clear()
         self.parameters = selected_parameters
         for p in selected_parameters:

@@ -48,28 +48,38 @@ class Distortion(NetsFrame):
         self.img_path_input = Entry(self.img_load_input_frame, textvariable=self.img_path)        
         self.img_path_input.pack(side='left', expand=True, fill='x', padx=5, pady=5)
 
-        img_browse_btn = Button(self.img_load_btn_frame, text='Browse...', style='Buttons.TButton', command=self.img_browse)        
-        img_browse_btn.pack(side='right', padx=2, pady=5)
         img_load_btn = Button(self.img_load_btn_frame, text='Load', style='Buttons.TButton', command=self.img_load)
         img_load_btn.pack(side='right', padx=2, pady=5)
+        img_browse_btn = Button(self.img_load_btn_frame, text='Browse...', style='Buttons.TButton', command=self.img_browse)        
+        img_browse_btn.pack(side='right', padx=2, pady=5)
         
         # Grid Extraction Settings
         self.grid_extract_frame = LabelFrame(self.settings, text='Grid Extraction Settings', padding=(5, 5, 5, 5))
         self.grid_extract_frame.pack(expand=True, fill='x', pady=10, side='top')
+        
         self.grid_extract_settings = ParameterTab(self.grid_extract_frame, self.grid_extract_paras)
         self.grid_extract_settings.tree.configure(height=6)
         self.grid_extract_settings.pack(expand=True, fill='x', pady=5, side='top')
-        self.grid_extract_btn = Button(self.grid_extract_frame, text='Extract Grid', style='Buttons.TButton', command=None)
-        self.grid_extract_btn.pack(side='top')
-        
+
+        self.grid_extract_btn_frame = Frame(self.grid_extract_frame)
+        self.grid_extract_btn_frame.pack(side='top', expand=True, fill='both')
+        self.grid_extract_btn = Button(self.grid_extract_btn_frame, text='Extract Grid', style='Buttons.TButton', command=self.extract_grid)
+        self.grid_extract_btn.pack(side='right', padx=2, pady=5)
+        self.extract_preview_btn = Button(self.grid_extract_btn_frame, text='Preview', style='Buttons.TButton', command=None)
+        self.extract_preview_btn.pack(side='right', padx=2, pady=5)
         # Grid Sorting Settings
         self.grid_sort_frame = LabelFrame(self.settings, text='Grid Sorting Settings', padding=(5, 5, 5, 5))
         self.grid_sort_frame.pack(expand=True, fill='x', pady=10, side='top')
         self.grid_sort_settings = ParameterTab(self.grid_sort_frame, self.grid_sort_paras)
         self.grid_sort_settings.tree.configure(height=3)
         self.grid_sort_settings.pack(expand=True, fill='x', pady=5, side='top')
-        self.grid_sort_btn = Button(self.grid_sort_frame, text='Sort Grid', style='Buttons.TButton', command=None)
-        self.grid_sort_btn.pack(side='top')
+        
+        self.grid_sort_btn_frame = Frame(self.grid_sort_frame)
+        self.grid_sort_btn_frame.pack(side='top', expand=True, fill='both')
+        self.grid_sort_btn = Button(self.grid_sort_btn_frame, text='Sort Grid', style='Buttons.TButton', command=None)
+        self.grid_sort_btn.pack(side='right', padx=2, pady=5)
+        self.sort_preview_btn = Button(self.grid_sort_btn_frame, text='Preview', style='Buttons.TButton', command=None)
+        self.sort_preview_btn.pack(side='right', padx=2, pady=5)
     
     # def path_browse(self):
     #     cur_path = os.getcwd()
@@ -119,6 +129,7 @@ class Distortion(NetsFrame):
         grid_extract_paras = self.grid_extract_settings.output_parsed_vals()        
         output_msg = self.dist_eval.std_grid_gen(*grid_extract_paras[0:3])
         self.console(output_msg)
+        print([*grid_extract_paras[3:]])
         output_msg = self.dist_eval.img_grid_extract(*grid_extract_paras[3:])
         self.console(output_msg)
         return

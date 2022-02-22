@@ -52,45 +52,45 @@ class TestCharts(NetsFrame):
         # chart parameter settings
         self.chart_settings_frame = LabelFrame(self.settings, text='Chart Parameter Settings', padding=(5, 5, 5, 5))
         self.chart_settings_frame.pack(expand=True, fill='x', pady=10, side='top')
-        self.chart_settings_frame.columnconfigure(0, weight=1)
-        self.chart_settings_frame.columnconfigure(1, weight=4)
-        self.chart_settings_frame.columnconfigure(2, weight=1)        
+     
+        self.chart_selector_frame = Frame(self.chart_settings_frame)
+        self.chart_selector_frame.pack(side='top', expand=True, fill='both')        
+        
+        self.chart_selector_label = Label(self.chart_selector_frame, text='Chart Type')        
+        self.chart_selector_label.pack(side='left', padx=5, pady=5)
 
-        self.chart_selector_label = Label(self.chart_settings_frame, text='Chart Type')        
-        self.chart_selector_label.grid(row=0, column=0, sticky='W')
-
-        self.chart_selector = tk.OptionMenu(self.chart_settings_frame, self.chart_type, *self.chart_types, command=self.init_parameters)
-        self.chart_selector.configure(anchor='w', width=30)                
-        self.chart_selector.grid(row=0, column=1, stick='EW')
+        self.chart_selector = tk.OptionMenu(self.chart_selector_frame, self.chart_type, *self.chart_types, command=self.init_parameters)
+        self.chart_selector.configure(anchor='w', width=30)
+        self.chart_selector.pack(side='left', expand=True, fill='x', padx=5, pady=5)
+        
+        preview_test_btn = Button(self.chart_selector_frame, text='Preview Chart', command=self.preview_chart)        
+        preview_test_btn.pack(side='left', expand=True, fill='x', padx=5, pady=5)
 
         self.chart_settings = ParameterTab(self.chart_settings_frame, self.saved_chart_paras[self.chart_types[0]])       
-        self.chart_settings.tree.configure(height=6)                    
-        self.chart_settings.grid(row=1, column=0, columnspan=3, sticky='EW', pady=5)
+        self.chart_settings.tree.configure(height=6)        
+        self.chart_settings.pack(side='top', expand=True, fill='x')
         
-        preview_test_btn = Button(self.chart_settings_frame, text='Preview Chart', command=self.preview_chart)
-        preview_test_btn.grid(row=0, column=2, stick='E')
-
         # chart output settings        
         self.chart_output_frame = LabelFrame(self.settings, text='Chart Output Settings', padding=(5, 5, 5, 5))
         self.chart_output_frame.pack(expand=True, fill='x', pady=10, side='top')
-        self.chart_output_frame.columnconfigure(0, weight=1)
-        self.chart_output_frame.columnconfigure(1, weight=10)   
-        self.chart_output_frame.columnconfigure(2, weight=1)
-
-        self.output_path_label = Label(self.chart_output_frame, text='Output Path')        
-        self.output_path_label.grid(row=0, column=0, sticky='W')
-        self.output_path_input = Entry(self.chart_output_frame, textvariable=self.output_path)
-        self.output_path_input.grid(row=0, column=1, sticky='EW', ipady=5)
-        self.output_path_btn = Button(self.chart_output_frame, text='Browse...', style='Buttons.TButton', command=self.path_browse)
-        self.output_path_btn.grid(row=0, column=2, sticky='E')
-
+        
+        self.output_path_frame = Frame(self.chart_output_frame)
+        self.output_path_frame.pack(side='top', expand=True, fill='both')
+        
+        self.output_path_label = Label(self.output_path_frame, text='Output Path')
+        self.output_path_label.pack(side='left', padx=5, pady=5)
+        
+        self.output_path_input = Entry(self.output_path_frame, textvariable=self.output_path)
+        self.output_path_input.pack(side='left', expand=True, fill='x', padx=5, pady=5)
+        
+        self.output_path_btn = Button(self.output_path_frame, text='Browse...', style='Buttons.TButton', command=self.path_browse)
+        self.output_path_btn.pack(side='left', padx=5, pady=5)
+        
         self.chart_output_chk = ParameterTab(self.chart_output_frame, self.chart_chk_paras)
         self.chart_output_chk.tree.heading("1", text="Chart Type")
         self.chart_output_chk.tree.heading("2", text="Output")
         self.chart_output_chk.tree.configure(height=len(self.chart_types))
-        # self.chart_output_chk.pack(side='top')
-        self.chart_output_chk.grid(row=1, column=0, columnspan=3, sticky='EW', pady=5)
-
+        self.chart_output_chk.pack(side='top', expand=True, fill='x')
         # Output Test
 
         # img_test_btn = Button(self.buttons, text='Change Image', command=self.rotate_imgs)
@@ -130,7 +130,7 @@ class TestCharts(NetsFrame):
         self.chart_settings.clear()
         self.cur_chart_type = self.chart_type.get()
         # print(self.saved_chart_paras[self.cur_chart_type])
-        self.chart_settings.parameter_chg(self.saved_chart_paras[self.cur_chart_type], self.cur_chart_type)
+        self.chart_settings.parameter_chg(self.saved_chart_paras[self.cur_chart_type])
         # self.chart_settings.delete(*self.chart_settings.get_children())
         # chart_type_selected = self.chart_type.get()
         # for p in CHART_PARAMETERS[chart_type_selected]:            
@@ -225,15 +225,18 @@ class TestCharts(NetsFrame):
         self.saved_chart_paras = self.presets['chart_parameters']
         self.chart_chk_paras = self.presets['chart_chk_paras']
         self.console(f'Preset File: {self.preset_path.get()} Loaded')
-        self.init_parameters(dummy=None)
+        self.chart_settings.parameter_chg(self.saved_chart_paras[self.cur_chart_type])
+        self.chart_output_chk.parameter_chg(self.chart_chk_paras)
         return
 
     def save_preset(self):
         if os.path.isfile(self.preset_path.get()):
-            chk_overwrite = tk.messagebox.askquestion(title='Confirm Overwrite', message='File already exists, overwrite?')
-            if not chk_overwrite:
+            chk_overwrite = tk.messagebox.askquestion(title='Confirm Overwrite', message='File already exists, overwrite?')            
+            if chk_overwrite == 'no':
                 return                
         f = open(self.preset_path.get(), 'w')
+        for p in self.chart_settings.output_values():
+            self.saved_chart_paras[self.cur_chart_type][p[0]]['value'] = p[1]
         save_preset = {'chart_types':self.chart_types, 'chart_parameters':self.saved_chart_paras, 'chart_chk_paras':self.chart_chk_paras}
         json.dump(save_preset, f)
         f.close()
