@@ -202,8 +202,8 @@ class Distortion_Eval():
 
     def dist_eval(self):                
         if not (self.dist_grid.sorted and self.std_grid.sorted):
-            print('The grid must be sorted first')
-            return None
+            output_msg = 'The grid must be sorted first'
+            return output_msg
         self.dist_grid.normalize()
         self.std_grid.normalize()
         std_center_dist = self.std_grid.get_pt_dist(self.std_grid.coords[self.dist_grid.center_ind].squeeze())
@@ -213,9 +213,9 @@ class Distortion_Eval():
         np.divide(dist_diff, std_center_dist, out=out, where=std_center_dist!=0)
         # dist_rel = dist_diff / std_center_dist
         dist_rel = out
-        print(f'Max relative distortion: {(np.nanmax(abs(dist_rel)) * 100)} %')    
-        print(f'Max absolute distortion: {np.max(abs(dist_diff))}')
-        return dist_rel, dist_diff
+        output_msg = f'Max relative distortion: {(np.nanmax(abs(dist_rel)) * 100)} %\n'
+        output_msg += f'Max absolute distortion: {np.max(abs(dist_diff))} %'
+        return output_msg
 
     def draw_coords_index(self, pad_ratio):
         chart_res = (self.raw_img.shape[1], self.raw_img.shape[0])        
@@ -228,9 +228,10 @@ class Distortion_Eval():
         self.indexed_img = np.zeros((chart_res[1], chart_res[0], 3))    
         for i, p in enumerate(coords_output):        
             cv2.putText(self.indexed_img, str(i), (p[0], p[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 255, 255), 1, cv2.LINE_AA)
+        
         return
 
-    
+
 
 if __name__=='__main__':
     img = cv2.imread('Freeform_Image_65x37.png', cv2.IMREAD_GRAYSCALE)
@@ -242,21 +243,29 @@ if __name__=='__main__':
     dist_eval.sort_dist_grid(30, 1.5)
     dist_eval.draw_coords_index(0.8)
     cv2.imwrite('indexed_img.png', dist_eval.indexed_img)
-    dist_eval, dist_diff = dist_eval.dist_eval()
-    # cv2.imwrite('labeled_img.png', dist_eval.labeled_img)
-# def coords_compare(coords_1, coords_2):
-#     fig, ax = plt.subplots()
-#     coords_1 = np.atleast_2d(coords_1)
-#     coords_2 = np.atleast_2d(coords_2)
-#     ax.scatter(coords_1[:, 0], coords_1[:, 1], marker='x', s=1.5, c='red', linewidths=0.3, label='coords_1')
-#     ax.scatter(coords_2[:, 0], coords_2[:, 1], marker='o', s=1, c='blue', linewidths=0.3, label='coords_2')
-#     # ax.legend()
-#     fig.legend(loc='upper center', ncol=2)
-#     fig.tight_layout()
-#     fig.subplots_adjust(top=0.9)
-#     plt.show()
-#     return fig, ax
 
+    dist_grid_norm = dist_eval.dist_grid.copy()
+    std_grid_norm = dist_eval.std_grid.copy()
+    dist_grid_norm.normalize()
+    std_grid_norm.normalize()
+    dist_grid_norm.sort(30, 1.5)
+    dist_grid_norm.center_grid(std_grid_norm)
+
+    # dist_eval, dist_diff = dist_eval.dist_eval()
+    # cv2.imwrite('labeled_img.png', dist_eval.labeled_img)
+    def coords_compare(coords_1, coords_2):
+        fig, ax = plt.subplots()
+        coords_1 = np.atleast_2d(coords_1)
+        coords_2 = np.atleast_2d(coords_2)
+        ax.scatter(coords_1[:, 0], coords_1[:, 1], marker='x', s=1.5, c='red', linewidths=0.3, label='coords_1')
+        ax.scatter(coords_2[:, 0], coords_2[:, 1], marker='o', s=1, c='blue', linewidths=0.3, label='coords_2')
+        # ax.legend()
+        fig.legend(loc='upper center', ncol=2)
+        fig.tight_layout()
+        fig.subplots_adjust(top=0.9)
+        plt.show()
+        return fig, ax
+    coords_compare(dist_grid_norm.coords, std_grid_norm.coords)
 # def plot_coords_mesh(coords_val, grid_dim, chart_res, vmax, vmin, cmap='viridis'):
 #     fig, ax = plt.subplots()    
 #     x = np.linspace(0, chart_res[0], grid_dim[0])

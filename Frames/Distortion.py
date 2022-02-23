@@ -89,14 +89,24 @@ class Distortion(NetsFrame):
         
         self.grid_sort_btn = Button(self.grid_sort_btn_frame, text='Sort Grid', style='Buttons.TButton', command=self.sort_grid)
         self.grid_sort_btn.pack(side='right', padx=2, pady=5)
-
+        
+        # Distortion Analysis
+        self.dist_analysis_frame = Frame(self.settings)
+        self.dist_analysis_frame.pack(side='top', expand=True, fill='x')
+        self.dist_analyze_btn = Button(self.dist_analysis_frame, text='Evaluate Distortion', command=self.dist_evaluate)
+        self.dist_analyze_btn.pack(side='right', pady=5)
         
     def load_preset(self):
         f = open(self.preset_path.get(), 'r')
-        chart_parameters = json.load(f)
+        self.presets = json.load(f)
         f.close()
+        self.grid_extract_paras = self.presets['grid_extract_paras']
+        self.grid_sort_paras = self.presets['grid_sort_paras']
+        self.grid_extract_settings.parameter_chg(self.grid_extract_paras)
+        self.grid_sort_settings.parameter_chg(self.grid_sort_paras)
+        
         self.console(f'Preset File: {self.preset_path.get()} Loaded')
-        return chart_parameters
+        return 
 
     def save_preset(self):
         if os.path.isfile(self.preset_path.get()):
@@ -104,7 +114,12 @@ class Distortion(NetsFrame):
             if not chk_overwrite:
                 return                
         f = open(self.preset_path.get(), 'w')
-        save_preset = {'grid_extract_paras':self.grid_extract_paras, 'grid_extract_paras':self.grid_extract_paras}
+        for p in self.grid_extract_settings.output_values():
+            self.grid_extract_paras[p[0]]['value'] = p[1]
+        for p in self.grid_sort_settings.output_values():
+            self.grid_sort_paras[p[0]]['value'] = p[1]
+        
+        save_preset = {'grid_extract_paras':self.grid_extract_paras, 'grid_sort_paras':self.grid_sort_paras}
         json.dump(save_preset, f)
         f.close()
         self.console(f'Preset File: {self.preset_path.get()} Saved')
@@ -169,5 +184,9 @@ class Distortion(NetsFrame):
         self.update_img(Image.fromarray((self.dist_eval.indexed_img).astype(np.uint8)))
         return
 
-
+    def dist_evaluate(self):
+        output_msg = self.dist_eval.dist_eval()
+        print(output_msg)
+        self.console(output_msg)
+        return
     
