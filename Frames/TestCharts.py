@@ -91,6 +91,14 @@ class TestCharts(NetsFrame):
         self.chart_output_chk.tree.heading("2", text="Output")
         self.chart_output_chk.tree.configure(height=len(self.chart_types))
         self.chart_output_chk.pack(side='top', expand=True, fill='x')
+        
+        self.chart_output_btn_frame = Frame(self.chart_output_frame)
+        self.chart_output_btn_frame.pack(side='top', expand=True, fill='x')
+
+        output_all_btn = Button(self.chart_output_btn_frame, text='Output Selected Charts', command=self.output_charts)
+        output_all_btn.pack(side='right', pady=5)
+        
+        
         # Output Test
 
         # img_test_btn = Button(self.buttons, text='Change Image', command=self.rotate_imgs)

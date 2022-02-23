@@ -154,7 +154,8 @@ class Distortion_Eval():
         self.dist_grid = None
         self.grid_dim = None
         self.dist_coords = None
-        self.extracted_pts_count = 0    
+        self.extracted_pts_count = None
+        self.std_grid_pts_count = None    
     
     def std_grid_gen(self, chart_res, grid_dim, padding):    
         chart_res = np.array(chart_res).astype('uint')
@@ -175,16 +176,19 @@ class Distortion_Eval():
         self.std_grid = Grid(grid_coords, grid_dim)
         self.std_grid.sorted = True
         self.grid_dim = grid_dim
+        self.std_grid_pts_count = int(grid_dim[0] * grid_dim[1])
         return output_msg   
     
     def img_grid_extract(self, thresh_low, thresh_high, blur_kernel):
         _, thresh = cv2.threshold(self.raw_img, thresh_low, thresh_high, cv2.THRESH_BINARY)
+        print(thresh.shape)
+        print(blur_kernel)
         self.thresh = cv2.medianBlur(thresh, blur_kernel)
         _, labels, stat, centroids = cv2.connectedComponentsWithStats(self.thresh, connectivity=8)
         labels[labels > 0] = 255
         labels_out = np.stack((np.zeros_like(labels), labels, self.thresh), -1)
         self.labeled_img = labels_out                
-        self.extracted_pts_count = len(centroids)
+        self.extracted_pts_count = len(centroids) - 1
         self.dist_coords = centroids
         output_msg = f'{self.extracted_pts_count} connected components extracted from the image'        
         print(output_msg)
@@ -225,6 +229,8 @@ class Distortion_Eval():
         for i, p in enumerate(coords_output):        
             cv2.putText(self.indexed_img, str(i), (p[0], p[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 255, 255), 1, cv2.LINE_AA)
         return
+
+    
 
 if __name__=='__main__':
     img = cv2.imread('Freeform_Image_65x37.png', cv2.IMREAD_GRAYSCALE)

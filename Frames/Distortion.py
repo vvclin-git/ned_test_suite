@@ -8,6 +8,7 @@ import re
 import time
 import json
 from tkinter.ttk import *
+from ToggleBtn import *
 # from NED_Chart import *
 
 OUTPUT_PATH = f'{os.getcwd()}\\Output'
@@ -63,10 +64,14 @@ class Distortion(NetsFrame):
 
         self.grid_extract_btn_frame = Frame(self.grid_extract_frame)
         self.grid_extract_btn_frame.pack(side='top', expand=True, fill='both')
+        # self.extract_preview_btn = Button(self.grid_extract_btn_frame, text='Preview', style='Buttons.TButton', command=None)
+        # self.extract_preview_btn.pack(side='right', padx=2, pady=5)
+        self.extract_preview_btn = ToggleBtn(self.grid_extract_btn_frame, 'Preview On', 'Preview Off', self.preview_grid_on, self.preview_grid_off)
+        self.extract_preview_btn.pack(side='right', padx=2, pady=5)
+        
         self.grid_extract_btn = Button(self.grid_extract_btn_frame, text='Extract Grid', style='Buttons.TButton', command=self.extract_grid)
         self.grid_extract_btn.pack(side='right', padx=2, pady=5)
-        self.extract_preview_btn = Button(self.grid_extract_btn_frame, text='Preview', style='Buttons.TButton', command=None)
-        self.extract_preview_btn.pack(side='right', padx=2, pady=5)
+
         # Grid Sorting Settings
         self.grid_sort_frame = LabelFrame(self.settings, text='Grid Sorting Settings', padding=(5, 5, 5, 5))
         self.grid_sort_frame.pack(expand=True, fill='x', pady=10, side='top')
@@ -76,18 +81,15 @@ class Distortion(NetsFrame):
         
         self.grid_sort_btn_frame = Frame(self.grid_sort_frame)
         self.grid_sort_btn_frame.pack(side='top', expand=True, fill='both')
-        self.grid_sort_btn = Button(self.grid_sort_btn_frame, text='Sort Grid', style='Buttons.TButton', command=None)
-        self.grid_sort_btn.pack(side='right', padx=2, pady=5)
-        self.sort_preview_btn = Button(self.grid_sort_btn_frame, text='Preview', style='Buttons.TButton', command=None)
+        # self.sort_preview_btn = Button(self.grid_sort_btn_frame, text='Preview', style='Buttons.TButton', command=None)
+        # self.sort_preview_btn.pack(side='right', padx=2, pady=5)
+        
+        self.sort_preview_btn = ToggleBtn(self.grid_sort_btn_frame, 'Preview On', 'Preview Off', self.preview_sort_on, self.preview_sort_off)
         self.sort_preview_btn.pack(side='right', padx=2, pady=5)
-    
-    # def path_browse(self):
-    #     cur_path = os.getcwd()
-    #     temp_path = filedialog.askdirectory(parent=self, initialdir=cur_path, title='Please select a directory')
-    #     # if len(temp_path) > 0:
-    #     #     print ("You chose: %s" % tempdir)
-    #     self.output_path.set(temp_path)
-    #     return
+        
+        self.grid_sort_btn = Button(self.grid_sort_btn_frame, text='Sort Grid', style='Buttons.TButton', command=self.sort_grid)
+        self.grid_sort_btn.pack(side='right', padx=2, pady=5)
+
         
     def load_preset(self):
         f = open(self.preset_path.get(), 'r')
@@ -120,18 +122,52 @@ class Distortion(NetsFrame):
     def img_load(self):        
         img_path = self.img_path.get()
         if len(img_path) > 0:
-            self.raw_img = cv2.imread(img_path)
-            self.update_img(Image.fromarray((self.raw_img).astype(np.uint8)))
+            self.dist_eval.raw_img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+            self.update_img(Image.fromarray((self.dist_eval.raw_img).astype(np.uint8)))
             self.console(f'Image File: {img_path} Loaded')
         return
     
     def extract_grid(self):
-        grid_extract_paras = self.grid_extract_settings.output_parsed_vals()        
+        grid_extract_paras = self.grid_extract_settings.output_parsed_vals()                
         output_msg = self.dist_eval.std_grid_gen(*grid_extract_paras[0:3])
         self.console(output_msg)
-        print([*grid_extract_paras[3:]])
         output_msg = self.dist_eval.img_grid_extract(*grid_extract_paras[3:])
         self.console(output_msg)
         return
     
+    def sort_grid(self):
+        if self.dist_eval.extracted_pts_count == self.dist_eval.std_grid_pts_count:
+            grid_sort_paras = self.grid_sort_settings.output_parsed_vals()
+            self.dist_eval.sort_dist_grid(*grid_sort_paras)
+            self.dist_eval.draw_coords_index(0.8)
+            self.console('Extracted Grid Sorted')
+        else:
+            self.console(f'Incorrect extracted point count (std_grid: {self.dist_eval.std_grid_pts_count}, extracted: {self.dist_eval.extracted_pts_count})')
+        return
+
+    def preview_grid_on(self):
+        if self.dist_eval.labeled_img is None:
+            return
+        self.update_img(Image.fromarray((self.dist_eval.labeled_img).astype(np.uint8)))
+        return
+
+    def preview_grid_off(self):
+        if self.dist_eval.labeled_img is None:
+            return
+        self.update_img(Image.fromarray((self.dist_eval.raw_img).astype(np.uint8)))
+        return
+    
+    def preview_sort_on(self):
+        if self.dist_eval.indexed_img is None:
+            return
+        self.update_img(Image.fromarray((self.dist_eval.indexed_img).astype(np.uint8)))
+        return
+
+    def preview_sort_off(self):
+        if self.dist_eval.indexed_img is None:
+            return
+        self.update_img(Image.fromarray((self.dist_eval.indexed_img).astype(np.uint8)))
+        return
+
+
     

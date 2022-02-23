@@ -58,7 +58,6 @@ class NED_Test_Suite(tk.Tk):
         tab_control.add(tab_lum, text='Luminance Analysis')
         tab_control.pack(expand=1, fill='both')
 
-       
 
     # def show_frame(self, container):
     #     frame = self.frames[container]
