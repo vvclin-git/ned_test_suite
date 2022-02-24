@@ -9,6 +9,8 @@ import time
 import json
 from tkinter.ttk import *
 from ToggleBtn import *
+import matplotlib
+from matplotlib import pyplot as plt
 # from NED_Chart import *
 
 OUTPUT_PATH = f'{os.getcwd()}\\Output'
@@ -95,6 +97,8 @@ class Distortion(NetsFrame):
         self.dist_analysis_frame.pack(side='top', expand=True, fill='x')
         self.dist_analyze_btn = Button(self.dist_analysis_frame, text='Evaluate Distortion', command=self.dist_evaluate)
         self.dist_analyze_btn.pack(side='right', pady=5)
+        self.dist_mesh_btn = Button(self.dist_analysis_frame, text='Distortion Mesh', command=self.show_dist_mesh)
+        self.dist_mesh_btn.pack(side='right', pady=5)
         
     def load_preset(self):
         f = open(self.preset_path.get(), 'r')
@@ -190,3 +194,26 @@ class Distortion(NetsFrame):
         self.console(output_msg)
         return
     
+    def show_dist_mesh(self):
+        dist_rel = self.dist_eval.dist_rel
+        dist_eval = self.dist_eval.dist_diff
+        
+        top_dist_rel_ind = np.argsort(-1 * abs(dist_rel))[0:10]
+        top_dist_diff_ind = np.argsort(-1 * abs(dist_eval))[0:10]
+        grid_extract_paras = self.grid_extract_settings.output_parsed_vals()
+        grid_dim = grid_extract_paras[1]
+        chart_res = grid_extract_paras[0]
+        fig, _ = self.plot_coords_mesh((dist_rel) * 100, grid_dim, chart_res, 5, -5, 'coolwarm')
+        # fig.savefig(output_path + 'distorted_dist_rel.png', dpi=600)
+        fig.show()
+        return
+
+    def plot_coords_mesh(self, coords_val, grid_dim, chart_res, vmax, vmin, cmap='viridis'):
+        fig, ax = plt.subplots()    
+        x = np.linspace(0, chart_res[0], grid_dim[0])
+        y = np.linspace(0, chart_res[1], grid_dim[1])
+        xx, yy = np.meshgrid(x, y)
+        coords_val_mesh = coords_val.reshape((grid_dim[1], grid_dim[0]))    
+        c = ax.pcolormesh(xx, yy, coords_val_mesh, cmap=cmap, vmax=vmax, vmin=vmin)        
+        fig.colorbar(c, ax=ax, fraction=0.046, pad=0.04)
+        return fig, ax

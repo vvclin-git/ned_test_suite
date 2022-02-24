@@ -156,6 +156,8 @@ class Distortion_Eval():
         self.dist_coords = None
         self.extracted_pts_count = None
         self.std_grid_pts_count = None    
+        self.dist_rel = None
+        self.dist_diff = None
     
     def std_grid_gen(self, chart_res, grid_dim, padding):    
         chart_res = np.array(chart_res).astype('uint')
@@ -213,6 +215,8 @@ class Distortion_Eval():
         np.divide(dist_diff, std_center_dist, out=out, where=std_center_dist!=0)
         # dist_rel = dist_diff / std_center_dist
         dist_rel = out
+        self.dist_rel = dist_rel
+        self.dist_diff = dist_diff
         output_msg = f'Max relative distortion: {(np.nanmax(abs(dist_rel)) * 100)} %\n'
         output_msg += f'Max absolute distortion: {np.max(abs(dist_diff))} %'
         return output_msg
@@ -266,12 +270,13 @@ if __name__=='__main__':
         plt.show()
         return fig, ax
     coords_compare(dist_grid_norm.coords, std_grid_norm.coords)
-# def plot_coords_mesh(coords_val, grid_dim, chart_res, vmax, vmin, cmap='viridis'):
-#     fig, ax = plt.subplots()    
-#     x = np.linspace(0, chart_res[0], grid_dim[0])
-#     y = np.linspace(0, chart_res[1], grid_dim[1])
-#     xx, yy = np.meshgrid(x, y)
-#     coords_val_mesh = coords_val.reshape((grid_dim[1], grid_dim[0]))    
-#     c = ax.pcolormesh(xx, yy, coords_val_mesh, cmap=cmap, vmax=vmax, vmin=vmin)        
-#     fig.colorbar(c, ax=ax, fraction=0.046, pad=0.04)
-#     return fig, ax
+
+    def plot_coords_mesh(coords_val, grid_dim, chart_res, vmax, vmin, cmap='viridis'):
+        fig, ax = plt.subplots()    
+        x = np.linspace(0, chart_res[0], grid_dim[0])
+        y = np.linspace(0, chart_res[1], grid_dim[1])
+        xx, yy = np.meshgrid(x, y)
+        coords_val_mesh = coords_val.reshape((grid_dim[1], grid_dim[0]))    
+        c = ax.pcolormesh(xx, yy, coords_val_mesh, cmap=cmap, vmax=vmax, vmin=vmin)        
+        fig.colorbar(c, ax=ax, fraction=0.046, pad=0.04)
+        return fig, ax
