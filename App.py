@@ -52,9 +52,11 @@ class NED_Test_Suite(tk.Tk):
         tab_control = ttk.Notebook(container)
         tab_test_charts = TestCharts(tab_control, preview_img_size)
         tab_distortion = Distortion(tab_control, preview_img_size)
+        tab_grille = Grille(tab_control, preview_img_size)
         tab_lum = Lum(tab_control)
         tab_control.add(tab_test_charts, text='Test Charts', )
         tab_control.add(tab_distortion, text='Distortion Analysis')
+        tab_control.add(tab_grille, text='Grille Contrast Analysis')
         tab_control.add(tab_lum, text='Luminance Analysis')
         tab_control.pack(expand=1, fill='both')
 
