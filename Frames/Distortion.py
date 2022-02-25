@@ -11,10 +11,12 @@ from tkinter.ttk import *
 from ToggleBtn import *
 import matplotlib
 from matplotlib import pyplot as plt
+from functools import partial
 # from NED_Chart import *
 
 OUTPUT_PATH = f'{os.getcwd()}\\Output'
 PRESET_PATH = f'{os.getcwd()}\\dist_default.json'
+MESH_OUTPUT_PATH = f'{os.getcwd()}\\Output'
 
 class Distortion(NetsFrame):
     def __init__(self, window, preview_img_size):
@@ -27,10 +29,14 @@ class Distortion(NetsFrame):
         self.grid_extract_paras = self.presets['grid_extract_paras']
         self.grid_sort_paras = self.presets['grid_sort_paras']
         
-        self.output_path = tk.StringVar()
+        self.output_path = tk.StringVar()        
         self.output_path.set(OUTPUT_PATH)        
         self.preset_path.set(PRESET_PATH)
+        self.mesh_output_path = tk.StringVar()
+        self.mesh_output_path.set(MESH_OUTPUT_PATH)
         self.img_path = tk.StringVar()
+        self.mesh_output_type = tk.IntVar()
+        self.mesh_output_type.set(1)        
         self.raw_img = None
         
         # preset button event handler config
@@ -93,12 +99,37 @@ class Distortion(NetsFrame):
         self.grid_sort_btn.pack(side='right', padx=2, pady=5)
         
         # Distortion Analysis
-        self.dist_analysis_frame = Frame(self.settings)
-        self.dist_analysis_frame.pack(side='top', expand=True, fill='x')
-        self.dist_analyze_btn = Button(self.dist_analysis_frame, text='Evaluate Distortion', command=self.dist_evaluate)
+        self.dist_analysis_frame = LabelFrame(self.settings, text='Distortion Analysis', padding=(5, 5, 5, 5))
+        self.dist_analysis_frame.pack(side='top', expand=True, fill='x', pady=10)
+        
+        self.dist_analysis_btn_frame = Frame(self.dist_analysis_frame)
+        self.dist_analysis_btn_frame.pack(side='top', expand=True, fill='x')
+        self.dist_analyze_btn = Button(self.dist_analysis_btn_frame, text='Evaluate Distortion', command=self.dist_evaluate)
         self.dist_analyze_btn.pack(side='right', pady=5)
-        self.dist_mesh_btn = Button(self.dist_analysis_frame, text='Distortion Mesh', command=self.show_dist_mesh)
+
+        self.mesh_output_frame = Frame(self.dist_analysis_frame)
+        self.mesh_output_frame.pack(side='top', expand=True, fill='both')
+        
+        self.mesh_output_label = Label(self.mesh_output_frame, text='Mesh Output Path')
+        self.mesh_output_label.pack(side='left', padx=5, pady=5)
+        
+        self.mesh_output_input = Entry(self.mesh_output_frame, textvariable=self.mesh_output_path)
+        self.mesh_output_input.pack(side='left', expand=True, fill='x', padx=5, pady=5)
+        
+        self.mesh_output_btn = Button(self.mesh_output_frame, text='Browse...', style='Buttons.TButton', command=partial(self.path_browse, path_var=self.mesh_output_path))
+        self.mesh_output_btn.pack(side='left', padx=(5, 0), pady=5)
+        
+        self.show_mesh_frame = Frame(self.dist_analysis_frame)
+        self.show_mesh_frame.pack(side='top', expand=True, fill='x')        
+        self.dist_rel_mesh_rbtn = Radiobutton(self.show_mesh_frame, text='Relative Mesh', value=1, variable=self.mesh_output_type)
+        self.dist_rel_mesh_rbtn.pack(side='left', padx=5)
+        self.dist_diff_mesh_rbtn = Radiobutton(self.show_mesh_frame, text='Absolute Mesh', value=2, variable=self.mesh_output_type)
+        self.dist_diff_mesh_rbtn.pack(side='left', padx=5)        
+        self.dist_mesh_btn = Button(self.show_mesh_frame, text='Show Mesh', command=partial(self.show_dist_mesh, mesh_output_type=self.mesh_output_type))
         self.dist_mesh_btn.pack(side='right', pady=5)
+
+
+
         
     def load_preset(self):
         f = open(self.preset_path.get(), 'r')
@@ -128,7 +159,15 @@ class Distortion(NetsFrame):
         f.close()
         self.console(f'Preset File: {self.preset_path.get()} Saved')
         return
-    
+
+    def path_browse(self, path_var):
+        cur_path = os.getcwd()
+        temp_path = filedialog.askdirectory(parent=self, initialdir=cur_path, title='Please select a directory')
+        # if len(temp_path) > 0:
+        #     print ("You chose: %s" % tempdir)
+        path_var.set(temp_path)
+        return
+
     def img_browse(self):
         cur_path = os.getcwd()
         temp_path = filedialog.askopenfilename(parent=self, initialdir=cur_path, title='Please select a image file', filetypes=[("PNG","*.png"), ("bmp","*.bmp"), ("JPG","*.jpg")])
@@ -194,22 +233,28 @@ class Distortion(NetsFrame):
         self.console(output_msg)
         return
     
-    def show_dist_mesh(self):
+    def show_dist_mesh(self, mesh_output_type):
         dist_rel = self.dist_eval.dist_rel
-        dist_eval = self.dist_eval.dist_diff
-        
-        top_dist_rel_ind = np.argsort(-1 * abs(dist_rel))[0:10]
-        top_dist_diff_ind = np.argsort(-1 * abs(dist_eval))[0:10]
+        dist_eval = self.dist_eval.dist_diff                
+        # top_dist_rel_ind = np.argsort(-1 * abs(dist_rel))[0:10]
+        # top_dist_diff_ind = np.argsort(-1 * abs(dist_eval))[0:10]
         grid_extract_paras = self.grid_extract_settings.output_parsed_vals()
         grid_dim = grid_extract_paras[1]
         chart_res = grid_extract_paras[0]
-        fig, _ = self.plot_coords_mesh((dist_rel) * 100, grid_dim, chart_res, 5, -5, 'coolwarm')
+        if mesh_output_type.get() == 1:
+            title = 'Relative Distortion %'
+            fig, _ = self.plot_coords_mesh(title, (dist_rel) * 100, grid_dim, chart_res, 5, -5, 'coolwarm')
+            
+        elif mesh_output_type.get() == 2:
+            title = 'Absolute Distortion %'
+            fig, _ = self.plot_coords_mesh(title, (dist_eval) * 100, grid_dim, chart_res, 5, -5, 'coolwarm')
         # fig.savefig(output_path + 'distorted_dist_rel.png', dpi=600)
         fig.show()
         return
 
-    def plot_coords_mesh(self, coords_val, grid_dim, chart_res, vmax, vmin, cmap='viridis'):
-        fig, ax = plt.subplots()    
+    def plot_coords_mesh(self, title, coords_val, grid_dim, chart_res, vmax, vmin, cmap='viridis'):        
+        fig, ax = plt.subplots()            
+        ax.set_title(title)
         x = np.linspace(0, chart_res[0], grid_dim[0])
         y = np.linspace(0, chart_res[1], grid_dim[1])
         xx, yy = np.meshgrid(x, y)
