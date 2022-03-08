@@ -114,12 +114,25 @@ class Distortion(NetsFrame):
         self.mesh_output_btn = Button(self.mesh_output_frame, text='Browse...', style='Buttons.TButton', command=partial(self.path_browse, path_var=self.mesh_output_path))
         self.mesh_output_btn.pack(side='left', padx=2, pady=5)
         
+        
+
         self.show_mesh_frame = Frame(self.dist_analysis_frame)
-        self.show_mesh_frame.pack(side='top', expand=True, fill='x')        
-        self.dist_rel_mesh_rbtn = Radiobutton(self.show_mesh_frame, text='Relative Mesh', value=1, variable=self.mesh_output_type)
-        self.dist_rel_mesh_rbtn.pack(side='left', padx=5)
-        self.dist_diff_mesh_rbtn = Radiobutton(self.show_mesh_frame, text='Absolute Mesh', value=2, variable=self.mesh_output_type)
-        self.dist_diff_mesh_rbtn.pack(side='left', padx=5)        
+        self.show_mesh_frame.pack(side='right', expand=True, fill='x')        
+        
+        self.mesh_rbtn_frame = Frame(self.dist_analysis_frame)
+        self.mesh_rbtn_frame.pack(side='left', expand=True, fill='x') 
+        self.mesh_rbtn_frame.columnconfigure(0, weight=1)
+        self.dist_rel_mesh_rbtn = Radiobutton(self.mesh_rbtn_frame, text='Relative Mesh', value=1, variable=self.mesh_output_type)
+        # self.dist_rel_mesh_rbtn.pack(side='top', padx=5)
+        self.dist_rel_mesh_rbtn.grid(row=0, column=0, sticky='W', padx=5)
+        self.dist_diff_mesh_rbtn = Radiobutton(self.mesh_rbtn_frame, text='Absolute Mesh', value=2, variable=self.mesh_output_type)
+        # self.dist_diff_mesh_rbtn.pack(side='top', padx=5)   
+        self.dist_diff_mesh_rbtn.grid(row=1, column=0, sticky='W', padx=5)         
+        
+        
+        self.save_mesh_btn = Button(self.show_mesh_frame, text='Save Mesh', command=self.save_mesh)
+        self.save_mesh_btn.pack(side='right', padx=2, pady=5)
+        
         self.dist_mesh_btn = Button(self.show_mesh_frame, text='Show Mesh', command=partial(self.show_dist_mesh, mesh_output_type=self.mesh_output_type))
         self.dist_mesh_btn.pack(side='right', padx=2, pady=5)
 
@@ -260,3 +273,6 @@ class Distortion(NetsFrame):
         c = ax.pcolormesh(xx, yy, coords_val_mesh, cmap=cmap, vmax=vmax, vmin=vmin)        
         fig.colorbar(c, ax=ax, fraction=0.046, pad=0.04)
         return fig, ax
+
+    def save_mesh(self):
+        return
