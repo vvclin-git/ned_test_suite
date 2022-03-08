@@ -1,8 +1,12 @@
 
 import cv2
+from cv2 import COLOR_GRAY2RGB
 import matplotlib.pyplot as plt
 import numpy as np
 import time
+from scipy import signal
+
+
 
 class Coords:
     def __init__(self, coords):
@@ -183,8 +187,8 @@ class Distortion_Eval():
     
     def img_grid_extract(self, thresh_low, thresh_high, blur_kernel):
         _, thresh = cv2.threshold(self.raw_img, thresh_low, thresh_high, cv2.THRESH_BINARY)
-        print(thresh.shape)
-        print(blur_kernel)
+        # print(thresh.shape)
+        # print(blur_kernel)
         self.thresh = cv2.medianBlur(thresh, blur_kernel)
         _, labels, stat, centroids = cv2.connectedComponentsWithStats(self.thresh, connectivity=8)
         labels[labels > 0] = 255
@@ -237,26 +241,70 @@ class Distortion_Eval():
 
 
 
-if __name__=='__main__':
-    img = cv2.imread('Freeform_Image_65x37.png', cv2.IMREAD_GRAYSCALE)
+class Grille_Eval():
+    def __init__(self):        
+        self.raw_img = None        
+        self.labeled_img = None        
+        
+        self.img_roi_size = None
+        self.grille_mc = None
+        self.roi_grid_coords = None
     
-    dist_eval = Distortion_Eval()
-    dist_eval.raw_img = img
-    dist_eval.std_grid_gen((2560, 1440), (65, 37), (0, 0))
-    dist_eval.img_grid_extract(25, 255, 5)
-    dist_eval.sort_dist_grid(30, 1.5)
-    dist_eval.draw_coords_index(0.8)
-    cv2.imwrite('indexed_img.png', dist_eval.indexed_img)
+    def gen_mc_grid(self, fov_anchor, fov_size, grid_dim):        
+        fov_anchor = np.array(fov_anchor).astype('uint')
+        fov_size = np.array(fov_size).astype('uint')
+        grid_dim = np.array(grid_dim).astype('uint')
+        self.img_roi_size = (fov_size / grid_dim).astype('uint')
+        # roi_grid_shape = (fov_size / self.img_roi_size).astype('uint')
+        roi_grid_x = np.linspace(fov_anchor[0],fov_anchor[0] + fov_size[0], grid_dim[0], endpoint=False, dtype='uint')
+        roi_grid_y = np.linspace(fov_anchor[1], fov_anchor[1] + fov_size[1], grid_dim[1], endpoint=False, dtype='uint')
 
-    dist_grid_norm = dist_eval.dist_grid.copy()
-    std_grid_norm = dist_eval.std_grid.copy()
-    dist_grid_norm.normalize()
-    std_grid_norm.normalize()
-    dist_grid_norm.sort(30, 1.5)
-    dist_grid_norm.center_grid(std_grid_norm)
+        roi_grid_xx, roi_grid_yy = np.meshgrid(roi_grid_x, roi_grid_y)
+        self.roi_grid_coords = np.vstack((roi_grid_xx.flatten(), roi_grid_yy.flatten())).transpose()
 
-    # dist_eval, dist_diff = dist_eval.dist_eval()
-    # cv2.imwrite('labeled_img.png', dist_eval.labeled_img)
+        self.grille_mc = np.zeros((grid_dim[1], grid_dim[0]))
+
+        for i, c in enumerate(self.roi_grid_coords):
+            cv2.rectangle(self.labeled_img, c, c + self.img_roi_size, (0, 255, 0), 1)            
+            # cv2.imwrite(roi_path + f'ROI_{i}.png', roi)                
+        output_msg = f'Grille Contrast Merit Grid Generated\n'
+        output_msg += f'FoV Anchor: ({fov_anchor[0]}, {fov_anchor[1]}), FoV Size: {fov_size[0]}x{fov_size[1]}\n'
+        output_msg += f'Grid Dimension: {grid_dim[0]}x{grid_dim[1]}, Cell Size: {self.img_roi_size[0]}x{self.img_roi_size[1]}\n'
+        return output_msg
+
+    def grille_eval(self):
+        if self.roi_grid_coords is None:
+            output_msg = 'Merit grid not initialized!'
+            return output_msg
+        else:
+            for i, c in enumerate(self.roi_grid_coords):
+                # cv2.rectangle(self.labeled_img, c, c + self.img_roi_size, (0, 255, 0), 1)
+                roi = self.raw_img[c[1]:c[1] + self.img_roi_size[1], c[0]:c[0] + self.img_roi_size[0]]
+                mc = self.get_roi_mc(roi)
+                self.grille_mc[np.unravel_index(i, self.grille_mc.shape)] = mc
+                # cv2.imwrite(roi_path + f'ROI_{i}.png', roi)
+            
+            output_msg = f'Grille Contrast:\n'
+            output_msg += f'Max Value: {self.grille_mc.max()}\n'
+            output_msg += f'Min Value: {self.grille_mc.min()}\n'
+            return output_msg
+        
+
+    def get_roi_mc(self, roi):
+        roi_avg = np.average(roi, 0)    
+        roi_peaks, _ = signal.find_peaks(roi_avg, height=(np.average(roi_avg)))
+        roi_max = np.average(roi_avg[roi_peaks])
+        roi_valleys, _ = signal.find_peaks(roi_max - roi_avg, height=(np.average(roi_avg)))
+        roi_min = np.average(roi_avg[roi_valleys])
+        mc = (roi_max - roi_min) / (roi_max + roi_min)
+        return mc    
+    
+
+
+
+
+if __name__=='__main__':
+    
     def coords_compare(coords_1, coords_2):
         fig, ax = plt.subplots()
         coords_1 = np.atleast_2d(coords_1)
@@ -269,10 +317,11 @@ if __name__=='__main__':
         fig.subplots_adjust(top=0.9)
         plt.show()
         return fig, ax
-    coords_compare(dist_grid_norm.coords, std_grid_norm.coords)
+    
 
-    def plot_coords_mesh(coords_val, grid_dim, chart_res, vmax, vmin, cmap='viridis'):
+    def plot_coords_mesh(title, coords_val, grid_dim, chart_res, vmax, vmin, cmap='viridis'):
         fig, ax = plt.subplots()    
+        ax.set_title(title)
         x = np.linspace(0, chart_res[0], grid_dim[0])
         y = np.linspace(0, chart_res[1], grid_dim[1])
         xx, yy = np.meshgrid(x, y)
@@ -280,3 +329,47 @@ if __name__=='__main__':
         c = ax.pcolormesh(xx, yy, coords_val_mesh, cmap=cmap, vmax=vmax, vmin=vmin)        
         fig.colorbar(c, ax=ax, fraction=0.046, pad=0.04)
         return fig, ax
+
+
+    raw_img = cv2.imread('Grille_4px_vertical_Corrected_2.5mm_20211222-12-01-28.png', cv2.IMREAD_GRAYSCALE)
+    labeled_img = cv2.cvtColor(raw_img, COLOR_GRAY2RGB)
+
+    grille_eval = Grille_Eval()
+    grille_eval.raw_img = raw_img
+    grille_eval.labeled_img = labeled_img
+    grid_dim = np.array([67, 39])
+    fov_anchor = np.array([120, 67])
+    fov_size = np.array([2010, 1170])
+
+    grille_eval.gen_mc_grid(fov_anchor, fov_size, grid_dim)
+    grille_eval.grille_eval()
+
+    fig, ax = plot_coords_mesh('grille contrast', grille_eval.grille_mc, grille_eval.grid_dim, grille_eval.fov_size, 1, 0)
+    plt.show()
+
+    # cv2.imwrite('grille_grid.png', grille_eval.labeled_img)
+
+    # self.raw_img = cv2.imread('Freeform_Image_65x37.png', cv2.IMREAD_GRAYSCALE)
+    
+    # dist_eval = Distortion_Eval()
+    # dist_eval.raw_img = self.raw_img
+    # dist_eval.std_grid_gen((2560, 1440), (65, 37), (0, 0))
+    # dist_eval.img_grid_extract(25, 255, 5)
+    # dist_eval.sort_dist_grid(30, 1.5)
+    # dist_eval.draw_coords_index(0.8)
+    # cv2.imwrite('indexed_img.png', dist_eval.indexed_img)
+
+    # dist_grid_norm = dist_eval.dist_grid.copy()
+    # std_grid_norm = dist_eval.std_grid.copy()
+    # dist_grid_norm.normalize()
+    # std_grid_norm.normalize()
+    # dist_grid_norm.sort(30, 1.5)
+    # dist_grid_norm.center_grid(std_grid_norm)
+
+    # dist_eval, dist_diff = dist_eval.dist_eval()
+    # cv2.imwrite('labeled_img.png', dist_eval.labeled_img)
+    
+
+    
+
+    # coords_compare(dist_grid_norm.coords, std_grid_norm.coords)

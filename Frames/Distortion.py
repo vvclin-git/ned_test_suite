@@ -101,23 +101,18 @@ class Distortion(NetsFrame):
         # Distortion Analysis
         self.dist_analysis_frame = LabelFrame(self.settings, text='Distortion Analysis', padding=(5, 5, 5, 5))
         self.dist_analysis_frame.pack(side='top', expand=True, fill='x', pady=10)
-        
-        self.dist_analysis_btn_frame = Frame(self.dist_analysis_frame)
-        self.dist_analysis_btn_frame.pack(side='top', expand=True, fill='x')
-        self.dist_analyze_btn = Button(self.dist_analysis_btn_frame, text='Evaluate Distortion', command=self.dist_evaluate)
-        self.dist_analyze_btn.pack(side='right', pady=5)
 
         self.mesh_output_frame = Frame(self.dist_analysis_frame)
         self.mesh_output_frame.pack(side='top', expand=True, fill='both')
         
-        self.mesh_output_label = Label(self.mesh_output_frame, text='Mesh Output Path')
+        self.mesh_output_label = Label(self.mesh_output_frame, text='Output Path')
         self.mesh_output_label.pack(side='left', padx=5, pady=5)
         
         self.mesh_output_input = Entry(self.mesh_output_frame, textvariable=self.mesh_output_path)
-        self.mesh_output_input.pack(side='left', expand=True, fill='x', padx=5, pady=5)
+        self.mesh_output_input.pack(side='left', expand=True, fill='x', pady=5)
         
         self.mesh_output_btn = Button(self.mesh_output_frame, text='Browse...', style='Buttons.TButton', command=partial(self.path_browse, path_var=self.mesh_output_path))
-        self.mesh_output_btn.pack(side='left', padx=(5, 0), pady=5)
+        self.mesh_output_btn.pack(side='left', padx=2, pady=5)
         
         self.show_mesh_frame = Frame(self.dist_analysis_frame)
         self.show_mesh_frame.pack(side='top', expand=True, fill='x')        
@@ -126,7 +121,10 @@ class Distortion(NetsFrame):
         self.dist_diff_mesh_rbtn = Radiobutton(self.show_mesh_frame, text='Absolute Mesh', value=2, variable=self.mesh_output_type)
         self.dist_diff_mesh_rbtn.pack(side='left', padx=5)        
         self.dist_mesh_btn = Button(self.show_mesh_frame, text='Show Mesh', command=partial(self.show_dist_mesh, mesh_output_type=self.mesh_output_type))
-        self.dist_mesh_btn.pack(side='right', pady=5)
+        self.dist_mesh_btn.pack(side='right', padx=2, pady=5)
+
+        self.dist_analyze_btn = Button(self.show_mesh_frame, text='Evaluate', command=self.dist_evaluate)
+        self.dist_analyze_btn.pack(side='right', padx=2, pady=5)
 
 
 

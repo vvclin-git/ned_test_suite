@@ -59,7 +59,7 @@ class NetsFrame(Frame):
         self.settings.grid(row=0, column=1, sticky='NEW')
                 
         # Preset Save / Load
-        self.preset_frame = LabelFrame(self.settings, text='Parameter Preset', padding=(5, 5, 0, 5))
+        self.preset_frame = LabelFrame(self.settings, text='Parameter Preset', padding=(5, 5, 5, 5))
         self.preset_frame.pack(expand=True, fill='x', pady=5, side='top')
 
         self.preset_input_frame = Frame(self.preset_frame)
