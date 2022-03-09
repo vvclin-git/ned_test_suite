@@ -38,6 +38,7 @@ class Distortion(NetsFrame):
         self.mesh_output_type = tk.IntVar()
         self.mesh_output_type.set(1)        
         self.raw_img = None
+        self.buttons = []
         
         # preset button event handler config
         self.preset_save_btn.configure(command=self.save_preset)
@@ -79,6 +80,9 @@ class Distortion(NetsFrame):
         
         self.grid_extract_btn = Button(self.grid_extract_btn_frame, text='Extract Grid', style='Buttons.TButton', command=self.extract_grid)
         self.grid_extract_btn.pack(side='right', padx=2, pady=5)
+        
+        self.grid_extract_btn_list = [self.extract_preview_btn, self.grid_extract_btn]
+        self.buttons.append(self.grid_extract_btn_list)
 
         # Grid Sorting Settings
         self.grid_sort_frame = LabelFrame(self.settings, text='Grid Sorting Settings', padding=(5, 5, 5, 5))
@@ -98,6 +102,9 @@ class Distortion(NetsFrame):
         self.grid_sort_btn = Button(self.grid_sort_btn_frame, text='Sort Grid', style='Buttons.TButton', command=self.sort_grid)
         self.grid_sort_btn.pack(side='right', padx=2, pady=5)
         
+        self.grid_sort_btn_list = [self.sort_preview_btn, self.grid_sort_btn]
+        self.buttons.append(self.grid_sort_btn_list)
+        
         # Distortion Analysis
         self.dist_analysis_frame = LabelFrame(self.settings, text='Distortion Analysis', padding=(5, 5, 5, 5))
         self.dist_analysis_frame.pack(side='top', expand=True, fill='x', pady=10)
@@ -108,38 +115,37 @@ class Distortion(NetsFrame):
         self.mesh_output_label = Label(self.mesh_output_frame, text='Output Path')
         self.mesh_output_label.pack(side='left', padx=5, pady=5)
         
-        self.mesh_output_input = Entry(self.mesh_output_frame, textvariable=self.mesh_output_path)
-        self.mesh_output_input.pack(side='left', expand=True, fill='x', pady=5)
+        self.mesh_output_path_input = Entry(self.mesh_output_frame, textvariable=self.mesh_output_path)
+        self.mesh_output_path_input.pack(side='left', expand=True, fill='x', pady=5)
         
-        self.mesh_output_btn = Button(self.mesh_output_frame, text='Browse...', style='Buttons.TButton', command=partial(self.path_browse, path_var=self.mesh_output_path))
-        self.mesh_output_btn.pack(side='left', padx=2, pady=5)
+        self.mesh_output_path_btn = Button(self.mesh_output_frame, text='Browse...', style='Buttons.TButton', command=partial(self.path_browse, path_var=self.mesh_output_path))
+        self.mesh_output_path_btn.pack(side='left', padx=2, pady=5)
         
-        
-
         self.show_mesh_frame = Frame(self.dist_analysis_frame)
         self.show_mesh_frame.pack(side='right', expand=True, fill='x')        
         
         self.mesh_rbtn_frame = Frame(self.dist_analysis_frame)
         self.mesh_rbtn_frame.pack(side='left', expand=True, fill='x') 
         self.mesh_rbtn_frame.columnconfigure(0, weight=1)
-        self.dist_rel_mesh_rbtn = Radiobutton(self.mesh_rbtn_frame, text='Relative Mesh', value=1, variable=self.mesh_output_type)
-        # self.dist_rel_mesh_rbtn.pack(side='top', padx=5)
-        self.dist_rel_mesh_rbtn.grid(row=0, column=0, sticky='W', padx=5)
-        self.dist_diff_mesh_rbtn = Radiobutton(self.mesh_rbtn_frame, text='Absolute Mesh', value=2, variable=self.mesh_output_type)
-        # self.dist_diff_mesh_rbtn.pack(side='top', padx=5)   
-        self.dist_diff_mesh_rbtn.grid(row=1, column=0, sticky='W', padx=5)         
         
+        self.dist_rel_mesh_rbtn = Radiobutton(self.mesh_rbtn_frame, text='Relative Mesh', value=1, variable=self.mesh_output_type)
+        self.dist_rel_mesh_rbtn.grid(row=0, column=0, sticky='W', padx=5)        
+        self.dist_diff_mesh_rbtn = Radiobutton(self.mesh_rbtn_frame, text='Absolute Mesh', value=2, variable=self.mesh_output_type)
+        self.dist_diff_mesh_rbtn.grid(row=1, column=0, sticky='W', padx=5)                 
         
         self.save_mesh_btn = Button(self.show_mesh_frame, text='Save Mesh', command=self.save_mesh)
         self.save_mesh_btn.pack(side='right', padx=2, pady=5)
         
-        self.dist_mesh_btn = Button(self.show_mesh_frame, text='Show Mesh', command=partial(self.show_dist_mesh, mesh_output_type=self.mesh_output_type))
-        self.dist_mesh_btn.pack(side='right', padx=2, pady=5)
+        self.show_mesh_btn = Button(self.show_mesh_frame, text='Show Mesh', command=partial(self.show_dist_mesh, mesh_output_type=self.mesh_output_type))
+        self.show_mesh_btn.pack(side='right', padx=2, pady=5)
 
         self.dist_analyze_btn = Button(self.show_mesh_frame, text='Evaluate', command=self.dist_evaluate)
         self.dist_analyze_btn.pack(side='right', padx=2, pady=5)
-
-
+        
+        self.dist_analysis_btn_list = [self.dist_rel_mesh_rbtn, self.dist_diff_mesh_rbtn, self.save_mesh_btn, self.show_mesh_btn, self.dist_analyze_btn]
+        self.buttons.append(self.dist_analysis_btn_list)
+        
+        self.reset()
 
         
     def load_preset(self):
@@ -194,6 +200,8 @@ class Distortion(NetsFrame):
             self.dist_eval.raw_img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
             self.update_img(Image.fromarray((self.dist_eval.raw_img).astype(np.uint8)))
             self.console(f'Image File: {img_path} Loaded')
+            self.reset()
+            self.enable_btn_group(self.grid_extract_btn_list)
         return
     
     def extract_grid(self):
@@ -202,16 +210,35 @@ class Distortion(NetsFrame):
         self.console(output_msg)
         output_msg = self.dist_eval.img_grid_extract(*grid_extract_paras[3:])
         self.console(output_msg)
+        
+        if self.dist_eval.extracted_pts_count == self.dist_eval.std_grid_pts_count:
+            output_msg = f'Standard Grid Points: {self.dist_eval.std_grid_pts_count}\n'
+            output_msg += f'Extracted Points: {self.dist_eval.extracted_pts_count}\n'
+            self.console(output_msg)
+            self.enable_btn_group(self.grid_sort_btn_list)
+        else:
+            output_msg = f'Standard Grid Points: {self.dist_eval.std_grid_pts_count}\n'
+            output_msg += f'Extracted Points: {self.dist_eval.extracted_pts_count}\n'
+            output_msg += f'Incorrect extracted point count!'
+            self.console(output_msg)
+        
+        
         return
     
     def sort_grid(self):
-        if self.dist_eval.extracted_pts_count == self.dist_eval.std_grid_pts_count:
-            grid_sort_paras = self.grid_sort_settings.output_parsed_vals()
-            self.dist_eval.sort_dist_grid(*grid_sort_paras)
-            self.dist_eval.draw_coords_index(0.8)
-            self.console('Extracted Grid Sorted')
-        else:
-            self.console(f'Incorrect extracted point count (std_grid: {self.dist_eval.std_grid_pts_count}, extracted: {self.dist_eval.extracted_pts_count})')
+        grid_sort_paras = self.grid_sort_settings.output_parsed_vals()
+        self.dist_eval.sort_dist_grid(*grid_sort_paras)
+        self.dist_eval.draw_coords_index(0.8)
+        self.console('Extracted Grid Sorted')
+        self.dist_analyze_btn.config(state='enable')
+        # if self.dist_eval.extracted_pts_count == self.dist_eval.std_grid_pts_count:
+        #     grid_sort_paras = self.grid_sort_settings.output_parsed_vals()
+        #     self.dist_eval.sort_dist_grid(*grid_sort_paras)
+        #     self.dist_eval.draw_coords_index(0.8)
+        #     self.console('Extracted Grid Sorted')
+        #     self.dist_analyze_btn.config(state='enable')
+        # else:
+        #     self.console(f'Incorrect extracted point count (std_grid: {self.dist_eval.std_grid_pts_count}, extracted: {self.dist_eval.extracted_pts_count})')
         return
 
     def preview_grid_on(self):
@@ -240,7 +267,8 @@ class Distortion(NetsFrame):
 
     def dist_evaluate(self):
         output_msg = self.dist_eval.dist_eval()
-        print(output_msg)
+        self.enable_btn_group(self.dist_analysis_btn_list)
+        # print(output_msg)
         self.console(output_msg)
         return
     
@@ -275,4 +303,34 @@ class Distortion(NetsFrame):
         return fig, ax
 
     def save_mesh(self):
+        if self.dist_eval.dist_rel or self.dist_eval.dist_diff is None:
+            output_msg = f'Merit mesh not available!'
+            self.console(output_msg)
+            return
+        timestr = time.strftime("%Y%m%d-%H-%M-%S")
+        rel_filename = f'Relative Distortion Mesh_{timestr}'
+        np.save(self.output_path + rel_filename, self.dist_eval.dist_rel)
+        output_msg = f'Mesh file {rel_filename} saved'
+        self.console(output_msg)
+
+        diff_filename = f'Absolute Distortion Mesh_{timestr}'
+        np.save(self.output_path + diff_filename, self.dist_eval.dist_diff)
+        output_msg = f'Mesh file {diff_filename} saved'
+        self.console(output_msg)
+        
         return
+
+    # def reset(self):
+    #     for btn_group in self.buttons:
+    #         self.disable_btn_group(btn_group)
+    #     return
+
+    # def enable_btn_group(self, btn_group):
+    #     for b in btn_group:
+    #         b.config(state='enable')
+    #     return
+
+    # def disable_btn_group(self, btn_group):
+    #     for b in btn_group:
+    #         b.config(state='disable')
+    #     return

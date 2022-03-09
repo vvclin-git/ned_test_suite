@@ -36,6 +36,7 @@ class Grille(NetsFrame):
         # self.mesh_output_type = tk.IntVar()
         # self.mesh_output_type.set(1)        
         self.raw_img = None
+        self.buttons = []
         
         # preset button event handler config
         self.preset_save_btn.configure(command=self.save_preset)
@@ -70,13 +71,15 @@ class Grille(NetsFrame):
 
         self.grille_grid_btn_frame = Frame(self.grille_grid_frame)
         self.grille_grid_btn_frame.pack(side='top', expand=True, fill='both')
-        # self.extract_preview_btn = Button(self.grille_grid_btn_frame, text='Preview', style='Buttons.TButton', command=None)
-        # self.extract_preview_btn.pack(side='right', padx=2, pady=5)
+        
         self.grille_grid_preview_btn = ToggleBtn(self.grille_grid_btn_frame, 'Preview On', 'Preview Off', self.preview_grid_on, self.preview_grid_off)
         self.grille_grid_preview_btn.pack(side='right', padx=2, pady=5)
         
         self.grille_grid_btn = Button(self.grille_grid_btn_frame, text='Generate Grid', style='Buttons.TButton', command=self.gen_mc_grid)
         self.grille_grid_btn.pack(side='right', padx=2, pady=5)
+        
+        self.grille_grid_btn_list = [self.grille_grid_preview_btn, self.grille_grid_btn]
+        self.buttons.append(self.grille_grid_btn_list)
 
         # Grille Contrast Analysis
         self.grille_analysis_frame = LabelFrame(self.settings, text='Grille Contrast Analysis', padding=(5, 5, 5, 5))
@@ -100,13 +103,16 @@ class Grille(NetsFrame):
         self.save_mesh_btn = Button(self.show_mesh_frame, text='Save Mesh', command=self.save_mesh)
         self.save_mesh_btn.pack(side='right', padx=2, pady=5)
         
-        self.grille_mesh_btn = Button(self.show_mesh_frame, text='Show Mesh', command=self.show_grille_mesh)
-        self.grille_mesh_btn.pack(side='right', padx=2, pady=5)
+        self.show_mesh_btn = Button(self.show_mesh_frame, text='Show Mesh', command=self.show_grille_mesh)
+        self.show_mesh_btn.pack(side='right', padx=2, pady=5)
 
         self.grille_analyze_btn = Button(self.show_mesh_frame, text='Evaluate', command=self.grille_evaluate)
         self.grille_analyze_btn.pack(side='right', padx=2, pady=5)
-    
-
+        
+        self.grille_analysis_btn_list = [self.mesh_output_btn, self.save_mesh_btn, self.show_mesh_btn, self.grille_analyze_btn]
+        self.buttons.append(self.grille_analysis_btn_list)
+        
+        self.reset()
 
     def load_preset(self):
         f = open(self.preset_path.get(), 'r')
@@ -157,6 +163,8 @@ class Grille(NetsFrame):
             self.grille_eval.labeled_img = cv2.imread(img_path, cv2.IMREAD_COLOR)
             self.update_img(Image.fromarray((self.grille_eval.raw_img).astype(np.uint8)))
             self.console(f'Image File: {img_path} Loaded')
+            self.reset()
+            self.enable_btn_group(self.grille_grid_btn_list)
         return
 
     def preview_grid_on(self):
@@ -177,11 +185,13 @@ class Grille(NetsFrame):
         grille_grid_paras = self.grille_grid_settings.output_parsed_vals()
         output_msg = self.grille_eval.gen_mc_grid(*grille_grid_paras)
         self.console(output_msg)
+        self.grille_analyze_btn.config(state='enable')
         return
     
     def grille_evaluate(self):
         output_msg = self.grille_eval.grille_eval()
         self.console(output_msg)
+        self.enable_btn_group(self.grille_analysis_btn_list)
         return
 
     def show_grille_mesh(self):

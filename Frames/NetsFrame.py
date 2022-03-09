@@ -131,6 +131,21 @@ class NetsFrame(Frame):
         self.console(f'Preset File: {preset_path} Saved')
         return
     
+    def reset(self):
+        for btn_group in self.buttons:
+            self.disable_btn_group(btn_group)
+        return
+
+    def enable_btn_group(self, btn_group):
+        for b in btn_group:
+            b.config(state='enable')
+        return
+
+    def disable_btn_group(self, btn_group):
+        for b in btn_group:
+            b.config(state='disable')
+        return
+    
 
 
 if __name__=='__main__':
