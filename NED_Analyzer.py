@@ -300,7 +300,13 @@ class Grille_Eval():
         return mc    
     
 
+class SMTF_Eval():
+    def __init__(self) -> None:
+        pass
 
+class Draper():
+    def __init__(self) -> None:
+        pass
 
 
 if __name__=='__main__':
