@@ -1,4 +1,4 @@
-/__pycache__/
-/Output/**
+__pycache__/
+Output/
 /Frames/__pycache__/
 *.npy
