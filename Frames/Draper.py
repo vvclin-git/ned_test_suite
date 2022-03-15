@@ -54,7 +54,7 @@ class Draper(Frame):
 
         # Eyebox Vol Frame
         eyebox_vol_preview_frame = Frame(eyebox_vol_frame)
-        eyebox_vol_preview_frame.pack(side='left', expand=1, fill='both')
+        eyebox_vol_preview_frame.pack(side='left', expand=1, fill='x')
         eyebox_vol_img = MeshPreviewBox(eyebox_vol_preview_frame, draper_preview_size)
         eyebox_vol_img.pack(side='top')
 

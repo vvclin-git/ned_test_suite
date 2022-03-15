@@ -13,10 +13,16 @@ class MeshPreviewBox(Frame):
     def __init__(self, window, preview_img_size):
         super().__init__(window)
 
+
+        self.preview_img_size = preview_img_size
+        
+        # Image File Loading Widget
+        self.img_load = ImgFileLoad(self, self.load_img)
+        self.img_load.pack(side='top')
+        
+        # Preview Image Widget
         self.canvas_frame = Frame(self)
         self.canvas_frame.pack(side='top')
-        self.preview_img_size = preview_img_size
-        # Preview Image Widget
         img_width = self.preview_img_size[0]
         img_height = self.preview_img_size[1]
         img = np.zeros([img_height, img_width, 3], dtype=np.uint8)
@@ -30,9 +36,7 @@ class MeshPreviewBox(Frame):
         self.canvas = Zoom_Advanced(self.canvas_frame, self.preview_img)
 
 
-        # Image File Loading Widget
-        self.img_load = ImgFileLoad(self, self.load_img)
-        self.img_load.pack(side='top')
+        
 
     def load_img(self):
         

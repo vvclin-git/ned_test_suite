@@ -24,7 +24,7 @@ class ParameterTab(ttk.Frame):
         
         self.tree.tag_bind('value', '<1>', self.val_edit)
         self.tree.tag_bind('list', '<1>', self.list_edit)
-        self.tree.pack(fill='both', expand=True)        
+        self.tree.pack(fill='x', expand=True)        
     
     def val_edit(self, event): # value edit event handler
         if self.tree.identify_region(event.x, event.y) == 'cell':

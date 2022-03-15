@@ -8,7 +8,7 @@ import re
 import time
 import json
 from tkinter.ttk import *
-from ToggleBtn import *
+from Widgets.ToggleBtn import *
 import matplotlib
 from matplotlib import pyplot as plt
 from functools import partial
