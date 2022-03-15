@@ -1,6 +1,6 @@
 import imp
 from Frames.NetsFrame import *
-from ParameterTab import *
+from Widgets.ParameterTab import *
 import os
 from tkinter import filedialog
 from NED_Chart import *

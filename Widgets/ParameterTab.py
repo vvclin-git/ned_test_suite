@@ -14,9 +14,9 @@ class ParameterTab(ttk.Frame):
         self.tree = ttk.Treeview(self, show='headings', columns=("1", "2"))
         self.tree['show'] = 'headings'
 
-        self.tree.column("1", width=230)
+        self.tree.column("1")
         self.tree.heading("1", text="Parameter")
-        self.tree.column("2", width=230)
+        self.tree.column("2")
         self.tree.heading("2", text="Value")
         
         for p in self.parameters:            

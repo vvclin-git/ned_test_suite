@@ -16,7 +16,9 @@ import sys
 # print(os.getcwd())
 # from MeshPreviewBox import MeshPreviewBox
 from Widgets.MeshPreviewBox import MeshPreviewBox
+from Widgets.MeshProcessBox import MeshProcessBox
 from Widgets.MsgBox import MsgBox
+
 
 class Draper(Frame):
     def __init__(self, window, draper_preview_size):
@@ -26,7 +28,7 @@ class Draper(Frame):
 
         # Top Frame
         top_frame = Frame(self)
-        top_frame.pack(side='top', expand=1, fill='both')
+        top_frame.pack(side='top', expand=1, fill='x')
         
         mesh_frame = LabelFrame(top_frame, text='Merit Mesh Process')
         mesh_frame.pack(side='left')
@@ -35,16 +37,20 @@ class Draper(Frame):
         eyebox_vol_frame.pack(side='left')
         # Near Mesh Frame
         near_mesh_frame = Frame(mesh_frame)
-        near_mesh_frame.pack(side='left', expand=1, fill='both')
-        near_mesh_img = MeshPreviewBox(near_mesh_frame, draper_preview_size)
-        near_mesh_img.pack(side='top')
+        near_mesh_frame.pack(side='left', expand=1, fill='x')
+        # near_mesh_img = MeshPreviewBox(near_mesh_frame, draper_preview_size)
+        # near_mesh_img.pack(side='top')
+        near_mesh_process = MeshProcessBox(near_mesh_frame, draper_preview_size)
+        near_mesh_process.pack(side='top')
         
 
         # Far Frame
         far_mesh_frame = Frame(mesh_frame)
-        far_mesh_frame.pack(side='left', expand=1, fill='both')
-        far_mesh_img = MeshPreviewBox(far_mesh_frame, draper_preview_size)
-        far_mesh_img.pack(side='top')
+        far_mesh_frame.pack(side='left', expand=1, fill='x')
+        # far_mesh_img = MeshPreviewBox(far_mesh_frame, draper_preview_size)
+        # far_mesh_img.pack(side='top'
+        far_mesh_process = MeshProcessBox(far_mesh_frame, draper_preview_size)
+        far_mesh_process.pack(side='top')
 
         # Eyebox Vol Frame
         eyebox_vol_preview_frame = Frame(eyebox_vol_frame)
