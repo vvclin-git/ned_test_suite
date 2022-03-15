@@ -22,6 +22,7 @@ class NED_Test_Suite(tk.Tk):
         self.title('NED Test Suite')
         self.geometry('1480x990')
         preview_img_size = (960, 740)
+        draper_preview_size = (480, 360)
         # self.geometry('1680x990')
         # self.resizable(width=False, height=False)
         self.columnconfigure(0, weight=1)

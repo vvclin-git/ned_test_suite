@@ -5,7 +5,8 @@ import cv2
 import numpy as np
 from tkinter.ttk import *
 from PIL import Image, ImageTk
-from ZoomCanvas import *
+from Frames.ZoomCanvas import *
+from Widgets.ImgFileLoad import ImgFileLoad
 import os
 import json
 from tkinter import filedialog
