@@ -13,9 +13,9 @@ class MeshPreviewBox(Frame):
     def __init__(self, window, preview_img_size):
         super().__init__(window)
 
-
+        self.raw_img = None
         self.preview_img_size = preview_img_size
-        
+        self.controller = None
         # Image File Loading Widget
         self.img_load = ImgFileLoad(self, self.load_img)
         self.img_load.pack(side='top')
@@ -34,13 +34,23 @@ class MeshPreviewBox(Frame):
         
         self.preview_img = Image.fromarray(img)        
         self.canvas = Zoom_Advanced(self.canvas_frame, self.preview_img)
+      
 
-
-        
-
-    def load_img(self):
-        
-        self.canvas.update_image(Image.fromarray((self.img_load.image).astype(np.uint8)))
+    def load_img(self):        
+        if self.controller:
+            self.preview_img = Image.fromarray(self.img_load.image)
+            self.raw_img = self.img_load.image
+            self.canvas.update_image(Image.fromarray((self.img_load.image).astype(np.uint8)))
+            msg_output = f'Mesh image loaded from {self.img_load.img_path.get()}\n'
+            msg_output += f'Mesh resolution: {self.raw_img.shape[1]}x{self.raw_img.shape[0]}'
+            self.controller.msg_box.console(msg_output)
+        return
+    
+    def update_img(self, img):
+        self.preview_img = Image.fromarray(img) 
+        self.canvas.update_image(self.preview_img)
+        msg_output = f'Mesh image updaded'
+        self.controller.msg_box.console(msg_output)
         return
     
 

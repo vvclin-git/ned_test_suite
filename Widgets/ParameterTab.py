@@ -1,11 +1,12 @@
 
 import tkinter as tk
-from tkinter import ttk
+from tkinter import Button, ttk
 import re
 
 regex_dim = re.compile(r'\d+x\d+')
 regex_coord = re.compile(r'^\d+,\d+$')
 regex_color = re.compile(r'^\d+,\d+,\d+$')
+regex_float = re.compile(r'^\d+.\d+$')
 
 class ParameterTab(ttk.Frame):
     def __init__(self, parent, parameters):
@@ -102,6 +103,8 @@ class ParameterTab(ttk.Frame):
                     parsed = (int(parsed_str[0]), int(parsed_str[1]))
                 elif p[0] == 'Line Type':
                     parsed = {'filled':cv2.FILLED, 'line_4':cv2.LINE_4, 'line_8':cv2.LINE_8, 'line_AA':cv2.LINE_AA}[p[1]]  
+                elif regex_float.search(p[1]):
+                    parsed = float(p[1])
             parsed_paras.append(parsed)
         return parsed_paras
 
@@ -122,7 +125,17 @@ if __name__ == '__main__':
     parameters = {'Parameter 1': {'value':1, 'type':'value', 'options':None},
                   'Parameter 2': {'value':2, 'type':'value', 'options':None},
                   'Parameter 3': {'value':'a', 'type':'list', 'options':('a', 'b', 'c')},
-                  'Parameter 4': {'value':'e', 'type':'list', 'options':('e', 'f', 'g')}}
+                  'Parameter 4': {'value':'e', 'type':'list', 'options':('e', 'f', 'g')},
+                  'Parameter 5': {'value':0.001, 'type':'value', 'options':None}}
+    
     para_tab = ParameterTab(root, parameters)
     para_tab.pack()
+        
+    def print_parsed_vals():
+        parsed = para_tab.output_parsed_vals()
+        for v in parsed:
+            print(f'Type: {type(v)}, Value: {v}')
+    
+    parse_test_btn = Button(root, text='Print Parsed Values', command=print_parsed_vals)
+    parse_test_btn.pack()
     root.mainloop()

@@ -37,18 +37,13 @@ class Draper(Frame):
         eyebox_vol_frame.pack(side='left')
         # Near Mesh Frame
         near_mesh_frame = Frame(mesh_frame)
-        near_mesh_frame.pack(side='left', expand=1, fill='x')
-        # near_mesh_img = MeshPreviewBox(near_mesh_frame, draper_preview_size)
-        # near_mesh_img.pack(side='top')
+        near_mesh_frame.pack(side='left', expand=1, fill='x')        
         near_mesh_process = MeshProcessBox(near_mesh_frame, draper_preview_size)
-        near_mesh_process.pack(side='top')
-        
+        near_mesh_process.pack(side='top')        
 
         # Far Frame
         far_mesh_frame = Frame(mesh_frame)
-        far_mesh_frame.pack(side='left', expand=1, fill='x')
-        # far_mesh_img = MeshPreviewBox(far_mesh_frame, draper_preview_size)
-        # far_mesh_img.pack(side='top'
+        far_mesh_frame.pack(side='left', expand=1, fill='x')        
         far_mesh_process = MeshProcessBox(far_mesh_frame, draper_preview_size)
         far_mesh_process.pack(side='top')
 
@@ -68,10 +63,21 @@ class Draper(Frame):
         self.msg_box = MsgBox(msg_frame) 
         self.msg_box.pack(side='top', expand=1, fill='both')       
         
-    
+        # self.controller = Controller(near_mesh_process, far_mesh_process, eyebox_vol, self.msg_box)
+        self.controller = Controller(near_mesh_process, far_mesh_process, self.msg_box)
+        near_mesh_process.set_controller(self.controller)
+        far_mesh_process.set_controller(self.controller)
+        # eyebox_vol.set_controller(self.controller)
 
 
-    
+class Controller():
+    def __init__(self, near_mesh_process, far_mesh_process, msg_box):
+        self.near_mesh_process = near_mesh_process
+        self.fat_mesh_process = far_mesh_process
+        # self.eyebox_vol = eyebox_vol
+        self.msg_box = msg_box
+        pass
+
 
 # if __name__=='__main__':
 #     root = tk.Tk()
