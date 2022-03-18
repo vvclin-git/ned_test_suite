@@ -33,8 +33,8 @@ class MeshProcessBox(MeshPreviewBox):
 
         self.process_btn_frame = Frame(self.process_frame)
         self.process_btn_frame.pack(side='top', expand=1, fill='x')
-        self.set_mesh_btn = Button(self.process_btn_frame, text='Set Mesh', command=self.set_mesh)
-        self.set_mesh_btn.pack(side='right')
+        # self.set_mesh_btn = Button(self.process_btn_frame, text='Set Mesh', command=self.set_mesh)
+        # self.set_mesh_btn.pack(side='right')
         self.preview_btn = ToggleBtn(self.process_btn_frame, 'Preview On', 'Preview Off', self.preview_on, self.preview_off)
         self.preview_btn.pack(side='right')
         self.process_btn = Button(self.process_btn_frame, text='Process', command=self.process_mesh)
@@ -47,9 +47,13 @@ class MeshProcessBox(MeshPreviewBox):
         kernel_size, threshold_val, max_threshold_val, epsilon = process_paras        
         
         self.preview_img = cv2.cvtColor(self.raw_img, cv2.COLOR_GRAY2RGB)
+        if self.preview_img.dtype != 'uint8':
+            self.preview_img = self.preview_img.astype('uint8')
         img = cv2.medianBlur(self.raw_img, kernel_size)        
         # thresholding
         _, thresh = cv2.threshold(img, threshold_val, max_threshold_val, cv2.THRESH_BINARY)
+        if thresh.dtype != 'uint8':
+            thresh = thresh.astype('uint8')
         # find border
         contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         peris = [cv2.arcLength(c, True) for c in contours]        

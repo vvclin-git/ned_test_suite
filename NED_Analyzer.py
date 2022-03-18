@@ -2,9 +2,11 @@
 import cv2
 from cv2 import COLOR_GRAY2RGB
 import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 import time
 from scipy import signal
+from mpl_toolkits.mplot3d import Axes3D
 
 
 
@@ -403,7 +405,7 @@ class Draper_Eval():
     def get_aper_roi(self, aper_pts):
         aper_rois = []
         for p in aper_pts:            
-            aper_rois.append(ROI(aper_pts[0:2], (1, 1), self.camera_eff, self.sensor_size, self.pixel_size, 1))
+            aper_rois.append(ROI(p[0:2], (1, 1), self.camera_eff, self.sensor_size, self.pixel_size, 1))
             # cv2.drawMarker(img_output, tuple(p[0:2].astype('int')), markerType=cv2.MARKER_TILTED_CROSS, color=(0, 255, 0), markerSize=20) 
         return aper_rois
 
@@ -501,7 +503,7 @@ class Draper_Eval():
         # np.savetxt('roi_outline_coord.csv', outline_coords_array)
         return aper_pts
     
-    def draw_outline_projection(self, ax, view, outline_1_in, outline_2_in, plane_1_alpha, plane_2_alpha, proj_plane_grid, filename):   
+    def draw_outline_projection(self, ax, view, outline_1_in, outline_2_in, plane_1_alpha, plane_2_alpha, proj_plane_grid):   
 
         outline_temp = np.zeros((len(outline_1_in) + 1, len(outline_1_in[0])))
         outline_temp[0:len(outline_1_in), :] = outline_1_in
@@ -529,10 +531,10 @@ class Draper_Eval():
         ax.plot(outline_1[:, 0], outline_1[:, 2], outline_1[:, 1], 'b--', lw=1)
         ax.plot(outline_2[:, 0], outline_2[:, 2], outline_2[:, 1], 'b--', lw=1)
     
-        plt.savefig(self.output_path + filename, dpi=600)
+        # plt.savefig(self.output_path + filename, dpi=600)
         return
     
-    def draw_eyebox_volume(self, proj_pts, roi_pts, proj_theta_phi, proj_plane_grid, aper_depth_grid, view, alpha, filename):
+    def draw_eyebox_volume(self, proj_pts, roi_pts, proj_theta_phi, proj_plane_grid, aper_depth_grid, view, alpha):
         
         aper_pts_list = []
         for d in aper_depth_grid:
@@ -540,8 +542,8 @@ class Draper_Eval():
         fig = plt.figure()            
         ax = Axes3D(fig)        
         for a in aper_pts_list:
-            self.draw_outline_projection(ax, view, proj_pts, a, alpha[1], alpha[2], proj_plane_grid, filename)
-        self.draw_outline_projection(ax, view, roi_pts, proj_pts, alpha[0], alpha[1], proj_plane_grid, filename)
+            self.draw_outline_projection(ax, view, proj_pts, a, alpha[1], alpha[2], proj_plane_grid)
+        self.draw_outline_projection(ax, view, roi_pts, proj_pts, alpha[0], alpha[1], proj_plane_grid)
         return aper_pts_list, ax, fig
 
 

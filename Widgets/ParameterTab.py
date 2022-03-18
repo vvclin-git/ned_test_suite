@@ -9,7 +9,7 @@ regex_coord = re.compile(r'^\d+,\d+$')
 regex_color = re.compile(r'^\d+,\d+,\d+$')
 regex_float = re.compile(r'^[-]*\d+[.]\d+$')
 regex_list = re.compile(r'(.+?)(?:,|$)')
-regex_int = re.compile(r'^[1-9]\d*$')
+regex_int = re.compile(r'^[-]*[1-9]\d*$')
 
 class ParameterTab(ttk.Frame):
     def __init__(self, parent, parameters):
