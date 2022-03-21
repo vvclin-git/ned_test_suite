@@ -481,10 +481,24 @@ class Draper_Eval():
         ax = Axes3D(fig)        
         for a in aper_pts_list:
             self.draw_outline_projection(ax, view, proj_pts, a, alpha[1], alpha[2], proj_plane_grid)
+        # draw pinhole rays
         # self.draw_outline_projection(ax, view, roi_pts, proj_pts, alpha[0], alpha[1], proj_plane_grid)
         return aper_pts_list, ax, fig
 
-
+    def draw_eyebox_area(self, aper_pts_list, proj_plane_grid, aper_depth_grid):
+        fig, ax = plt.subplots()
+        for i, aper_pts in enumerate(aper_pts_list):
+            ax.plot([*aper_pts[:, 0], aper_pts[0, 0]], [*aper_pts[:, 1], aper_pts[0, 1]], ls='-', marker='o', markersize=2, label=f'Z={[0, *aper_depth_grid][i]} mm')
+        ax.set_xlim(proj_plane_grid.min(), proj_plane_grid.max())
+        ax.set_ylim(proj_plane_grid.min(), proj_plane_grid.max())
+        ax.set_xticks(proj_plane_grid)
+        ax.set_aspect('equal')
+        ax.set_xlabel('X (mm)')
+        ax.set_ylabel('Y (mm)')
+        ax.legend(prop={'size': 6})
+        ax.grid()
+        fig.set_dpi(200)
+        return ax, fig
     
 
 

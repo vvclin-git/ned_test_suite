@@ -58,8 +58,10 @@ class EyeboxVolEval(Frame):
         self.eyebox_view_btn_frame.pack(side='top', expand=1, fill='both')
         self.eyebox_view_export_btn = Button(self.eyebox_view_btn_frame, text='Export')
         self.eyebox_view_export_btn.pack(side='right')
-        self.eyebox_view_btn = Button(self.eyebox_view_btn_frame, text='Show Results', command=self.draw_eyebox_vol)
-        self.eyebox_view_btn.pack(side='right')
+        self.eyebox_vol_view_btn = Button(self.eyebox_view_btn_frame, text='Show Volume', command=self.draw_eyebox_vol)
+        self.eyebox_vol_view_btn.pack(side='right')
+        self.eyebox_area_view_btn = Button(self.eyebox_view_btn_frame, text='Show Area', command=self.draw_eyebox_area)
+        self.eyebox_area_view_btn.pack(side='right')
         
 
     def init_draper(self):
@@ -83,13 +85,25 @@ class EyeboxVolEval(Frame):
         x_min, x_max = x_range * -0.5, x_range * 0.5
         z_min, z_max = z_range * -0.5, z_range * 0.5
         y_min, y_max = 0, y_range
-        aper_pts_list, ax, fig = self.controller.draper_eval.draw_eyebox_volume(self.proj_pts, self.roi_pts, self.proj_theta_phi, self.proj_plane_grid, self.aper_depth_grid, self.view, self.alpha)
+        self.aper_pts_list, ax, fig = self.controller.draper_eval.draw_eyebox_volume(self.proj_pts, self.roi_pts, self.proj_theta_phi, self.proj_plane_grid, self.aper_depth_grid, self.view, self.alpha)
         ax.set_xlim(x_min, x_max)
         ax.set_ylim(y_min, y_max)
         ax.set_zlim(z_min, z_max)
         ax.set_box_aspect((x_range, y_range, z_range))   
+        plt.gcf().canvas.set_window_title('Eyebox Volume')
         fig.show()
         return
+    
+    def draw_eyebox_area(self):
+        if self.aper_pts_list:
+            self.proj_plane_grid, self.view, self.plot_range, self.aper_depth_grid = self.eyebox_view_paras_tab.output_parsed_vals()
+            self.proj_plane_grid = np.linspace(*self.proj_plane_grid)
+            self.aper_depth_grid = np.linspace(*self.aper_depth_grid)
+            ax, fig = self.controller.draper_eval.draw_eyebox_area(self.aper_pts_list, self.proj_plane_grid, self.aper_depth_grid)
+            plt.gcf().canvas.set_window_title('Eyebox Volume')
+            fig.show()
+        return
+
 
 
     def set_controller(self, controller):
