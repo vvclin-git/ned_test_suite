@@ -175,7 +175,7 @@ class ParameterTab(ttk.Frame):
         self.clear()
         self.parameters = selected_parameters
         for p in selected_parameters:
-            print(p)            
+            # print(p)            
             self.tree.insert("", "end", values=(p, selected_parameters[p]['value']), tags=selected_parameters[p]['type'])
         return
     

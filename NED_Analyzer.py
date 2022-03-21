@@ -377,31 +377,7 @@ class Draper_Eval():
                 output[i * 2 + 1, :] = (aper_pts[i, :] + aper_pts[(i + 1) % aper_pts.shape[0], :]) * 0.5
             return self.aper_upscaler(output.astype('int'),upscale_multiplr - 1)
     
-    # def get_aper(self, merit_mesh, min_threshold, max_threshold, peris_factor):
         
-    #     mesh_res = np.array((merit_mesh.shape[1], merit_mesh.shape[0]))
-    #     grid_size = (self.sensor_res / mesh_res).astype('uint')
-    #     mesh_x = np.linspace(grid_size[0] * 0.5, self.sensor_res[0] - grid_size[0] * 0.5, mesh_res[0], dtype='uint', endpoint=True)
-    #     mesh_y = np.linspace(grid_size[1] * 0.5, self.sensor_res[1] - grid_size[1] * 0.5, mesh_res[1], dtype='uint', endpoint=True)
-    #     mesh_xx, mesh_yy = np.meshgrid(mesh_x, mesh_y)
-        
-    #     ret, thresh = cv2.threshold(merit_mesh, min_threshold, max_threshold, cv2.THRESH_BINARY)
-    #     thresh = cv2.convertScaleAbs(thresh)
-    #     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    #     peris = [cv2.arcLength(c, True) for c in contours]
-    #     approx_contours = [cv2.approxPolyDP(contours[i], peris_factor * peris[i], True) for i in range(len(contours))]
-    #     approx_contours.sort(key=lambda c: cv2.contourArea(c), reverse=True)
-    #     aper_pts_mm = np.zeros_like(np.squeeze(approx_contours[0])).astype('uint')
-    #     aper_pts_mm[:, 0:2] = np.squeeze(approx_contours[0])
-    #     aper_pts = np.zeros_like(aper_pts_mm)
-    #     aper_pts[:, :] = np.vstack((mesh_xx[aper_pts_mm[:, 1], aper_pts_mm[:, 0]], mesh_yy[aper_pts_mm[:, 1], aper_pts_mm[:, 0]])).transpose()
-
-    #     aper_rois = []
-    #     for p in aper_pts:            
-    #         aper_rois.append(ROI(p[0:2], (1, 1), self.camera_eff, self.sensor_size, self.pixel_size, 1))
-    #         # cv2.drawMarker(img_output, tuple(p[0:2].astype('int')), markerType=cv2.MARKER_TILTED_CROSS, color=(0, 255, 0), markerSize=20) 
-    #     return aper_rois
-    
     def get_aper_roi(self, aper_pts):
         aper_rois = []
         for p in aper_pts:            
@@ -409,19 +385,7 @@ class Draper_Eval():
             # cv2.drawMarker(img_output, tuple(p[0:2].astype('int')), markerType=cv2.MARKER_TILTED_CROSS, color=(0, 255, 0), markerSize=20) 
         return aper_rois
 
-    # def init_pupil_image(self, merit_mesh, min_threshold, max_threshold, peris_factor):
-        
-    #     aper_rois = self.get_aper(merit_mesh, min_threshold, max_threshold, peris_factor)       
-               
-    #     self.alpha_phi_array = np.zeros((len(aper_rois), 2))
-    #     for i, r in enumerate(aper_rois):
-    #         self.alpha_phi_array[i, 0] = r.phi
-    #         self.alpha_phi_array[i, 1] = r.alpha
-    #     ind = self.alpha_phi_array[:, 0].argsort()
-    #     self.alpha_phi_array = self.alpha_phi_array[ind]
-    #     return
-
-
+    
     def init_pupil_image(self, aper_pts):
         
         aper_rois = self.get_aper_roi(aper_pts)
@@ -461,32 +425,6 @@ class Draper_Eval():
         return proj_pts, roi_pts, proj_theta_phi
 
 
-    # def get_eyebox_aperture_pupil(self, camera_distance, merit_mesh, min_threshold, max_threshold, peris_factor):
-        
-    #     aper_rois = self.get_aper(merit_mesh, min_threshold, max_threshold, peris_factor)              
-        
-    #     roi_pts = np.zeros(((len(aper_rois), 3)))
-    #     for i, r in enumerate(aper_rois):
-    #         roi_pts[i, 0:2] = r.roi_coord_real
-    #     roi_pts[:, 2] = camera_distance
-    #     # project outline ROI location onto pupil plane
-    #     camera_point = np.array([0, 0, camera_distance])
-    #     pupil_plane_normal = np.array([0, 0, 1])
-    #     pupil_plane_point = np.array([0, 0, 0])
-    #     proj_pts = np.zeros((len(aper_rois), 3))
-    #     ray_pts = np.zeros((len(aper_rois), 3))
-    #     proj_theta_phi = np.zeros((len(aper_rois), 2))
-    #     for i, r in enumerate(aper_rois):
-    #         ray_point = np.array([*r.roi_coord_real, self.camera_eff + camera_distance])
-    #         ray_pts[i, :] = ray_point
-    #         ray_direction = (camera_point - ray_point) / np.linalg.norm((camera_point - ray_point))
-    #         proj_pts[i, :] = self.LinePlaneCollision(pupil_plane_normal, pupil_plane_point, ray_direction, ray_point, epsilon=1e-6)           
-    #         proj_theta_phi[i, 0] = self.get_proj_pt_phi(proj_pts[i, 0:2])        
-    #     # assign alpha value usign phi of outline ROIs to projected points on pupil plane
-        
-    #     proj_theta_phi[:, 1] = np.interp(proj_theta_phi[:, 0], self.alpha_phi_array[:, 0], self.alpha_phi_array[:, 1])
-                
-    #     return proj_pts, roi_pts, proj_theta_phi
     
     def get_eyebox_aperture(self, proj_pts, proj_theta_phi, aperture_depth):               
         
@@ -543,52 +481,11 @@ class Draper_Eval():
         ax = Axes3D(fig)        
         for a in aper_pts_list:
             self.draw_outline_projection(ax, view, proj_pts, a, alpha[1], alpha[2], proj_plane_grid)
-        self.draw_outline_projection(ax, view, roi_pts, proj_pts, alpha[0], alpha[1], proj_plane_grid)
+        # self.draw_outline_projection(ax, view, roi_pts, proj_pts, alpha[0], alpha[1], proj_plane_grid)
         return aper_pts_list, ax, fig
 
 
-    # def draw_outline_projection(self, ax, view, outline_1_in, outline_2_in, plane_1_alpha, plane_2_alpha, proj_plane_grid, filename):   
-
-    #     outline_temp = np.zeros((len(outline_1_in) + 1, len(outline_1_in[0])))
-    #     outline_temp[0:len(outline_1_in), :] = outline_1_in
-    #     outline_temp[-1, :] = outline_1_in[0, :]
-    #     outline_1 = outline_temp
-    #     outline_temp = np.zeros((len(outline_2_in) + 1, len(outline_2_in[0])))
-    #     outline_temp[0:len(outline_2_in), :] = outline_2_in
-    #     outline_temp[-1, :] = outline_2_in[0, :]
-    #     outline_2 = outline_temp
-
-    #     ax.view_init(view[0], view[1])
-    #     proj_plane_size = proj_plane_grid.max() - proj_plane_grid.min()
-    #     proj_distance = abs(outline_2[0][2] - outline_1[0][2])    
-    #     ax.set_box_aspect((proj_plane_size, proj_distance, proj_plane_size))    
-        
-    #     xx, yy = np.meshgrid(proj_plane_grid, proj_plane_grid)
-    #     zz_1 = np.ones_like(xx) * outline_1[0][2]
-    #     zz_2 = np.ones_like(xx) * outline_2[0][2]   
-        
-    #     ax.plot_surface(xx, zz_1, yy, alpha=plane_1_alpha)    
-    #     ax.plot_surface(xx, zz_2, yy, alpha=plane_2_alpha)   
-        
-    #     for i, p in enumerate(outline_1):        
-    #         ax.plot([p[0], outline_2[i, 0]], [p[2], outline_2[i, 2]], [p[1], outline_2[i, 1]], 'r-', lw=0.2)
-    #     ax.plot(outline_1[:, 0], outline_1[:, 2], outline_1[:, 1], 'b--', lw=1)
-    #     ax.plot(outline_2[:, 0], outline_2[:, 2], outline_2[:, 1], 'b--', lw=1)
     
-    #     plt.savefig(self.output_path + filename, dpi=600)
-    #     return
-    
-    # def draw_eyebox_volume(self, proj_pts, roi_pts, proj_theta_phi, proj_plane_grid, aper_depth_grid, view, alpha, filename):
-        
-    #     aper_pts_list = []
-    #     for d in aper_depth_grid:
-    #         aper_pts_list.append(self.get_eyebox_aperture(proj_pts, proj_theta_phi, d))        
-    #     fig = plt.figure()            
-    #     ax = Axes3D(fig)        
-    #     for a in aper_pts_list:
-    #         self.draw_outline_projection(ax, view, proj_pts, a, alpha[1], alpha[2], proj_plane_grid, filename)
-    #     self.draw_outline_projection(ax, view, roi_pts, proj_pts, alpha[0], alpha[1], proj_plane_grid, filename)
-    #     return aper_pts_list, ax, fig
 
 
 

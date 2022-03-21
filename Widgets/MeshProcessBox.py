@@ -8,11 +8,11 @@ from tkinter.ttk import *
 from Widgets.ParameterTab import ParameterTab
 from Widgets.ToggleBtn import ToggleBtn
 
-parameters = {'Blur Kernel Size': {'value':1, 'type':'value', 'options':None},
-              'Threshold Value': {'value':50, 'type':'value', 'options':None},
-              'Max Threshold Value': {'value':100, 'type':'value', 'options':None},
-              'Contour Approx Epsilon': {'value':0.1, 'type':'value', 'options':None},
-              }
+# parameters = {'Blur Kernel Size': {'value':1, 'type':'value', 'options':None},
+#               'Threshold Value': {'value':50, 'type':'value', 'options':None},
+#               'Max Threshold Value': {'value':100, 'type':'value', 'options':None},
+#               'Contour Approx Epsilon': {'value':0.1, 'type':'value', 'options':None},
+#               }
 
 class MeshProcessBox(MeshPreviewBox):
     def __init__(self, window, preview_img_size):
@@ -23,12 +23,13 @@ class MeshProcessBox(MeshPreviewBox):
         self.border_coords = None
         self.preview_img = None
         self.preview = False
+        self.parameters = {}
         
         # Widgets        
         self.process_frame = Frame(self)
         self.process_frame.pack(side='top')
-        self.process_paras_tab = ParameterTab(self.process_frame, parameters)
-        self.process_paras_tab.tree.configure(height=len(parameters))
+        self.process_paras_tab = ParameterTab(self.process_frame, self.parameters)
+        # self.process_paras_tab.tree.configure(height=len(parameters))
         self.process_paras_tab.pack(side='top')
 
         self.process_btn_frame = Frame(self.process_frame)

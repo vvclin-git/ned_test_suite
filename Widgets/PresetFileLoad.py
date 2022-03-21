@@ -3,7 +3,7 @@ import numpy as np
 from tkinter.ttk import *
 import tkinter as tk
 from PIL import Image, ImageTk
-
+from tkinter import messagebox
 import os
 import json
 from tkinter import filedialog
@@ -14,7 +14,8 @@ class PresetFileLoad(Frame):
         
         self.controller = None
         self.preset_path = tk.StringVar()
-        self.preset = None        
+        self.presets = {}
+        self.linked_tabs = {}        
         
         self.preset_frame = LabelFrame(self, text='Parameter Preset', padding=(5, 5, 5, 5))
         self.preset_frame.pack(expand=True, fill='x', pady=5, side='top')
@@ -36,25 +37,34 @@ class PresetFileLoad(Frame):
         self.preset_browse_btn = Button(self.preset_btn_frame, text='Browse...', style='Buttons.TButton', command=self.browse_preset)
         self.preset_browse_btn.pack(side='right', padx=2, pady=5)
     
-    def load_preset(self, load_func):
+    def load_preset(self):
         f = open(self.preset_path.get(), 'r')
         self.presets = json.load(f)
         f.close()
-        self.console(f'Preset File: {self.preset_path.get()} Loaded')
-        load_func()
+        if self.controller:
+            self.console(f'Preset File: {self.preset_path.get()} Loaded')
+        for k in self.presets:
+            self.linked_tabs[k].parameter_chg(self.presets[k])
+            self.linked_tabs[k].fit_height()
         return
     
     def save_preset(self):
         preset_path = self.preset_path.get()
         if os.path.isfile(preset_path):
-            chk_overwrite = tk.messagebox.askquestion(title='Confirm Overwrite', message='File already exists, overwrite?')
+            chk_overwrite = messagebox.askquestion(title='Confirm Overwrite', message='File already exists, overwrite?')
             if not chk_overwrite:
                 return                
         f = open(preset_path, 'w')
+        
+        for k in self.linked_tabs:
+            for p in self.linked_tabs[k].output_values():
+                self.presets[k][p[0]]['value'] = p[1]        
+        
         save_preset = self.presets
         json.dump(save_preset, f)
         f.close()
-        self.console(f'Preset File: {preset_path} Saved')
+        if self.controller:
+            self.controller.msg_box.console(f'Preset File: {preset_path} Saved')
         return
 
     def browse_preset(self):
@@ -65,4 +75,37 @@ class PresetFileLoad(Frame):
         if len(temp_path) > 0:            
             self.preset_path.set(temp_path)
         return
+    
+    def init_linked_tabs(self, linked_tabs):
+        self.linked_tabs = linked_tabs
+        for k in self.linked_tabs:
+            self.presets[k] = linked_tabs[k].parameters
+    
+    def set_controller(self, controller):
+        self.controller = controller
        
+
+
+if __name__=='__main__':
+    from ParameterTab import ParameterTab
+    para_1 = {'Parameter 1': {'value':1, 'type':'value', 'options':None},
+              'Parameter 2': {'value':2, 'type':'value', 'options':None},
+              'Parameter 3': {'value':'c', 'type':'list', 'options':('a', 'b', 'c')}
+              }
+
+    para_2 = {'Parameter 4': {'value':4, 'type':'value', 'options':None},
+              'Parameter 5': {'value':5, 'type':'value', 'options':None},
+              'Parameter 6': {'value':'f', 'type':'list', 'options':('d', 'e', 'f')}
+             }
+    presets = {'para_1':para_1, 'para_2':para_2}
+        
+    root = tk.Tk()
+    paratab_1 = ParameterTab(root, presets['para_1'])
+    paratab_1.pack(side='top')
+    paratab_2 = ParameterTab(root, presets['para_2'])
+    paratab_2.pack(side='top')
+    load_preset = PresetFileLoad(root)
+    load_preset.pack(side='top')
+    linked_tabs = {'para_1':paratab_1, 'para_2':paratab_2}
+    load_preset.init_linked_tabs(linked_tabs)
+    root.mainloop()
