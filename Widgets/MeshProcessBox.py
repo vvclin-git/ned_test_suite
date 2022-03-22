@@ -26,20 +26,20 @@ class MeshProcessBox(MeshPreviewBox):
         self.parameters = {}
         
         # Widgets        
-        self.process_frame = Frame(self)
-        self.process_frame.pack(side='top')
-        self.process_paras_tab = ParameterTab(self.process_frame, self.parameters)
+        # self.process_frame = Frame(self)
+        # self.process_frame.pack(side='top', expand=1, fill='x')
+        self.process_paras_tab = ParameterTab(self, self.parameters)
         # self.process_paras_tab.tree.configure(height=len(parameters))
-        self.process_paras_tab.pack(side='top')
+        self.process_paras_tab.pack(side='top', expand=1, fill='x')
 
-        self.process_btn_frame = Frame(self.process_frame)
-        self.process_btn_frame.pack(side='top', expand=1, fill='x')
+        # self.process_btn_frame = Frame(self)
+        # self.process_btn_frame.pack(side='top', expand=1, fill='x')
         # self.set_mesh_btn = Button(self.process_btn_frame, text='Set Mesh', command=self.set_mesh)
         # self.set_mesh_btn.pack(side='right')
-        self.preview_btn = ToggleBtn(self.process_btn_frame, 'Preview On', 'Preview Off', self.preview_on, self.preview_off)
-        self.preview_btn.pack(side='right')
-        self.process_btn = Button(self.process_btn_frame, text='Process', command=self.process_mesh)
-        self.process_btn.pack(side='right')
+        self.preview_btn = ToggleBtn(self, 'Preview On', 'Preview Off', self.preview_on, self.preview_off)
+        self.preview_btn.pack(side='right', padx=(2, 0))
+        self.process_btn = Button(self, text='Process', command=self.process_mesh)
+        self.process_btn.pack(side='right', padx=2)
         
 
     def process_mesh(self):

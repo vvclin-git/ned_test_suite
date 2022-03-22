@@ -22,7 +22,7 @@ class MeshPreviewBox(Frame):
         
         # Preview Image Widget
         self.canvas_frame = Frame(self)
-        self.canvas_frame.pack(side='top')
+        self.canvas_frame.pack(side='top', expand=1, fill='x')
         img_width = self.preview_img_size[0]
         img_height = self.preview_img_size[1]
         img = np.zeros([img_height, img_width, 3], dtype=np.uint8)

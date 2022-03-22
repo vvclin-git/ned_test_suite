@@ -17,8 +17,8 @@ class PresetFileLoad(Frame):
         self.presets = {}
         self.linked_tabs = {}        
         
-        self.preset_frame = LabelFrame(self, text='Parameter Preset', padding=(5, 5, 5, 5))
-        self.preset_frame.pack(expand=True, fill='x', pady=5, side='top')
+        self.preset_frame = LabelFrame(self, text='Parameter Preset')
+        self.preset_frame.pack(expand=True, fill='x', side='top')
 
         self.preset_input_frame = Frame(self.preset_frame)
         self.preset_input_frame.pack(side='top', expand=True, fill='both')

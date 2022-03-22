@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter.constants import CENTER
 from tkinter.ttk import *
 from Frames import TestCharts, Distortion, Lum, SMTF, Grille
+from Frames.Draper import *
 from windows import set_dpi_awareness
 from tkinter import filedialog
 import time
@@ -22,7 +23,7 @@ class NED_Test_Suite(tk.Tk):
         self.title('NED Test Suite')
         self.geometry('1480x990')
         preview_img_size = (960, 740)
-        draper_preview_size = (480, 360)
+        draper_preview_size = (800, 600)
         # self.geometry('1680x990')
         # self.resizable(width=False, height=False)
         self.columnconfigure(0, weight=1)
@@ -32,6 +33,11 @@ class NED_Test_Suite(tk.Tk):
         # Styling
         style = Style()
         style.theme_use('clam')
+        style.configure('Red.TFrame', background='red')
+        style.configure('Green.TFrame', background='green')
+        style.configure('Blue.TFrame', background='blue')
+        
+        
         style.configure('Output.TFrame', background='red')
         style.configure('Settings.TFrame', background='green')
         style.configure('Buttons.TFrame', background='blue')                        
@@ -45,7 +51,7 @@ class NED_Test_Suite(tk.Tk):
         style.configure('TestLabel2.TLabel', background='green')
         style.configure('TestLabel3.TLabel', background='blue')
         
-        container = Frame(self)
+        container = Frame(self)        
         container.grid(row=0, column=0, sticky='NSEW')
         container.columnconfigure(0, weight=1)
         container.rowconfigure(0, weight=1)
@@ -54,11 +60,11 @@ class NED_Test_Suite(tk.Tk):
         tab_test_charts = TestCharts(tab_control, preview_img_size)
         tab_distortion = Distortion(tab_control, preview_img_size)
         tab_grille = Grille(tab_control, preview_img_size)
-        tab_lum = Lum(tab_control)
+        tab_draper = Draper(tab_control, draper_preview_size)
         tab_control.add(tab_test_charts, text='Test Charts', )
         tab_control.add(tab_distortion, text='Distortion Analysis')
         tab_control.add(tab_grille, text='Grille Contrast Analysis')
-        tab_control.add(tab_lum, text='Luminance Analysis')
+        tab_control.add(tab_draper, text='Draper Eyebox Evaluation')
         tab_control.pack(expand=1, fill='both')
 
 

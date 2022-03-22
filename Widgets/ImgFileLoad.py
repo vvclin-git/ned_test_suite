@@ -16,8 +16,8 @@ class ImgFileLoad(Frame):
         self.img_path = tk.StringVar()
         
 
-        self.img_load_frame = LabelFrame(window, text='Image Loading', padding=(5, 5, 5, 5))
-        self.img_load_frame.pack(expand=True, fill='x', pady=10, side='top')
+        self.img_load_frame = LabelFrame(window, text='Image Loading')
+        self.img_load_frame.pack(expand=True, fill='x', side='top')
         
         self.img_load_input_frame = Frame(self.img_load_frame)
         self.img_load_input_frame.pack(side='top', expand=True, fill='both')

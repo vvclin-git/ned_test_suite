@@ -15,7 +15,7 @@ class PathBrowse(Frame):
         
         self.output_path = tk.StringVar()
         self.output_path_frame = LabelFrame(self, text='Path Browse')
-        self.output_path_frame.pack(side='top', expand=True, fill='both')
+        self.output_path_frame.pack(side='top', expand=True, fill='x')
         
         self.output_path_label = Label(self.output_path_frame, text='Output Path')
         self.output_path_label.pack(side='left', padx=5, pady=5)
@@ -32,7 +32,7 @@ class PathBrowse(Frame):
         temp_path = filedialog.askdirectory(parent=self, initialdir=cur_path, title='Please select a directory')
         # if len(temp_path) > 0:
         #     print ("You chose: %s" % tempdir)
-        self.output_path.set(temp_path)
+        self.output_path.set(temp_path + '/')
         return
 
 if __name__=='__main__':
