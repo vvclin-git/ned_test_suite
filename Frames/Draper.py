@@ -29,7 +29,7 @@ class Draper(Frame):
         
         # Top Frame
         top_frame = Frame(self, style='Green.TFrame')
-        top_frame.pack(side='top', expand=1, fill='x')
+        top_frame.pack(side='top', expand=0, fill='x')
         
         mesh_frame = LabelFrame(top_frame, text='Merit Mesh Process')
         mesh_frame.pack(side='left', expand=1, fill='both', padx=5, pady=5)
