@@ -6,6 +6,8 @@ import random
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
+from matplotlib import container
+from scipy.fftpack import shift
 
 class AutoScrollbar(ttk.Scrollbar):
     ''' A scrollbar that hides itself if it's not needed.
@@ -57,7 +59,8 @@ class Zoom_Advanced(ttk.Frame):
         self.imscale = 1.0  # scale for the canvaas image
         self.delta = 1.3  # zoom magnitude
         # Put image into container rectangle and use it to set proper coordinates to the image
-        self.container = self.canvas.create_rectangle(0, 0, self.width, self.height, width=0)
+        self.container = self.canvas.create_rectangle(0, 0, self.width, self.height, width=0, tags='container')
+        self.imageid = None
         # Plot some optional random rectangles for the test purposes
         # minsize, maxsize, number = 5, 20, 10
         # for n in range(number):
@@ -108,7 +111,9 @@ class Zoom_Advanced(ttk.Frame):
             self.imscale *= self.delta
             scale        *= self.delta
         self.canvas.scale('all', x, y, scale, scale)  # rescale all canvas objects
+        # print(x, y, scale)
         self.show_image()
+
 
     def show_image(self, event=None):
         ''' Show image on the Canvas '''
@@ -137,10 +142,45 @@ class Zoom_Advanced(ttk.Frame):
             y = min(int(y2 / self.imscale), self.height)  # ...and sometimes not            
             image = self.image.crop((int(x1 / self.imscale), int(y1 / self.imscale), x, y))
             imagetk = ImageTk.PhotoImage(image.resize((int(x2 - x1), int(y2 - y1))))
-            imageid = self.canvas.create_image(max(bbox2[0], bbox1[0]), max(bbox2[1], bbox1[1]),
-                                               anchor='nw', image=imagetk)
-            self.canvas.lower(imageid)  # set image into background
+            if self.imageid == None:
+                self.imageid = self.canvas.create_image(max(bbox2[0], bbox1[0]), max(bbox2[1], bbox1[1]),
+                                               anchor='nw', image=imagetk, tags='view_img')
+            else:
+                self.canvas.delete('view_img')
+                self.imageid = self.canvas.create_image(max(bbox2[0], bbox1[0]), max(bbox2[1], bbox1[1]),
+                                               anchor='nw', image=imagetk, tags='view_img')
+                # self.canvas.itemconfigure(self.imageid, image=imagetk)
+                # bbox_img = self.canvas.bbox(self.imageid)
+                # shift_x = max(bbox2[0], bbox1[0]) - bbox_img[0]
+                # shift_y = max(bbox2[1], bbox1[1]) - bbox_img[1]
+                # self.canvas.move(self.imageid, shift_x, shift_y)
+            self.canvas.lower(self.imageid)  # set image into background
             self.canvas.imagetk = imagetk  # keep an extra reference to prevent garbage-collection
+        # print(len(self.canvas.find_withtag('view_img')), len(self.canvas.find_all()))
+        # print(f'container dim: {self.get_contianer_dim()}, container center: {self.get_container_center()}, imscale: {self.imscale}')
+        print(self.canvas.xview(), self.canvas.yview())
+        
+
+    def scale_to_canvas(self):
+        
+        canvas_width = self.canvas.winfo_width()
+        canvas_height = self.canvas.winfo_height()
+        container_width, container_height = self.get_contianer_dim()
+        scale = canvas_width / container_width
+        if container_height * scale > canvas_height:
+            scale = canvas_height / container_height
+        # self.canvas.xview_moveto(0.5)
+        # self.canvas.yview_moveto(0.5)
+        x, y = int(container_width * 0.5), int(container_height * 0.5)
+        print(x, y, container_width, container_height)
+        self.canvas.scale('all', x, y, scale, scale)
+        self.imscale = scale  
+        self.canvas.xview_moveto(0.0)
+        # self.canvas.yview_moveto(0.5)
+        
+        self.show_image()
+
+        return    
 
     def update_image(self, img):
         # self.canvas.itemconfig(self.imageid, image=img)
@@ -149,13 +189,39 @@ class Zoom_Advanced(ttk.Frame):
         self.width, self.height = self.image.size
         self.container = self.canvas.create_rectangle(0, 0, self.width, self.height, width=0)
         self.show_image()
+    
+    def get_contianer_dim(self):
+        bbox1 = self.canvas.bbox(self.container)
+        bbox1 = (bbox1[0] + 1, bbox1[1] + 1, bbox1[2] - 1, bbox1[3] - 1)
+        container_width = bbox1[2] - bbox1[0]
+        container_height = bbox1[3] - bbox1[1]
+        return container_width, container_height
+
+    def get_container_center(self):
+        bbox1 = self.canvas.bbox(self.container)
+        bbox1 = (bbox1[0] + 1, bbox1[1] + 1, bbox1[2] - 1, bbox1[3] - 1)
+        container_width, container_height = self.get_contianer_dim()
+        container_x, container_y = int(bbox1[0] + container_width * 0.5), int(bbox1[1] + container_height * 0.5)
+        return container_x, container_y
+
+    
+    
+
+       
+        
 
 if __name__ == '__main__':
 
-    img = Image.open('.\Temp\img_large.png')  # place path to your image here
+    img = Image.open('.\\Temp\\test_img.png')  # place path to your image here
     root = tk.Tk()
-    
-    app = Zoom_Advanced(root, img)
+    canvas_frame = tk.Frame(root)    
+    canvas_frame.pack(side='top')
+    app = Zoom_Advanced(canvas_frame, img)
+    print(app.canvas.winfo_height(), app.canvas.winfo_width())
+    app.canvas.configure(width=640, height=480)
+    app.show_image()
+    test_btn = tk.Button(root, text='test', command=app.scale_to_canvas)
+    test_btn.pack(side='top')
     root.mainloop()
 
 
