@@ -2,6 +2,7 @@
 import tkinter as tk
 from tkinter import Button, ttk
 import re
+import cv2
 
 regex_dim = re.compile(r'^\d+x\d+$')
 regex_dim_float = re.compile(r'^\d+.\d+x\d+.\d+$')

@@ -23,7 +23,7 @@ class MeshPreviewBox(Frame):
         
         # Preview Image Widget
         self.canvas_frame = Frame(self)
-        self.canvas_frame.pack(side='top', expand=1, fill='x')
+        self.canvas_frame.pack(side='top', expand=1, fill='both')
         img_width = self.preview_img_size[0]
         img_height = self.preview_img_size[1]
         img = np.zeros([img_height, img_width, 3], dtype=np.uint8)
@@ -55,6 +55,9 @@ class MeshPreviewBox(Frame):
         msg_output = f'Mesh image updaded'
         self.controller.msg_box.console(msg_output)
         return
+    
+    def set_controller(self, controller):
+        self.controller = controller
     
 
 
