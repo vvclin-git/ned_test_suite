@@ -32,17 +32,17 @@ class Zoom_Advanced(ttk.Frame):
         ttk.Frame.__init__(self, master=mainframe)
         # self.master.title('Zoom with mouse wheel')
         # Vertical and horizontal scrollbars for canvas
-        vbar = AutoScrollbar(self.master, orient='vertical')
-        hbar = AutoScrollbar(self.master, orient='horizontal')
-        vbar.grid(row=0, column=1, sticky='ns')
-        hbar.grid(row=1, column=0, sticky='we')
+        self.vbar = AutoScrollbar(self.master, orient='vertical')
+        self.hbar = AutoScrollbar(self.master, orient='horizontal')
+        self.vbar.grid(row=0, column=1, sticky='ns')
+        self.hbar.grid(row=1, column=0, sticky='we')
         # Create canvas and put image on it
         self.canvas = tk.Canvas(self.master, highlightthickness=0,
-                                xscrollcommand=hbar.set, yscrollcommand=vbar.set)
+                                xscrollcommand=self.hbar.set, yscrollcommand=self.vbar.set)
         self.canvas.grid(row=0, column=0, sticky='nswe')
         self.canvas.update()  # wait till canvas is created
-        vbar.configure(command=self.scroll_y)  # bind scrollbars to the canvas
-        hbar.configure(command=self.scroll_x)
+        self.vbar.configure(command=self.scroll_y)  # bind scrollbars to the canvas
+        self.hbar.configure(command=self.scroll_x)
         # Make the canvas expandable
         self.master.rowconfigure(0, weight=1)
         self.master.columnconfigure(0, weight=1)
@@ -85,10 +85,13 @@ class Zoom_Advanced(ttk.Frame):
     def move_from(self, event):
         ''' Remember previous coordinates for scrolling with the mouse '''
         self.canvas.scan_mark(event.x, event.y)
+        # canvas_x, canvas_y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
+        # print(f'move starting from {event.x}, {event.y}, {canvas_x}, {canvas_y}')
 
     def move_to(self, event):
         ''' Drag (move) canvas to the new position '''
         self.canvas.scan_dragto(event.x, event.y, gain=1)
+        # print(f'move finished at {event.x}, {event.y}')
         self.show_image()  # redraw the image
 
     def wheel(self, event):
@@ -148,38 +151,38 @@ class Zoom_Advanced(ttk.Frame):
             else:
                 self.canvas.delete('view_img')
                 self.imageid = self.canvas.create_image(max(bbox2[0], bbox1[0]), max(bbox2[1], bbox1[1]),
-                                               anchor='nw', image=imagetk, tags='view_img')
-                # self.canvas.itemconfigure(self.imageid, image=imagetk)
-                # bbox_img = self.canvas.bbox(self.imageid)
-                # shift_x = max(bbox2[0], bbox1[0]) - bbox_img[0]
-                # shift_y = max(bbox2[1], bbox1[1]) - bbox_img[1]
-                # self.canvas.move(self.imageid, shift_x, shift_y)
+                                               anchor='nw', image=imagetk, tags='view_img')               
             self.canvas.lower(self.imageid)  # set image into background
             self.canvas.imagetk = imagetk  # keep an extra reference to prevent garbage-collection
         # print(len(self.canvas.find_withtag('view_img')), len(self.canvas.find_all()))
-        # print(f'container dim: {self.get_contianer_dim()}, container center: {self.get_container_center()}, imscale: {self.imscale}')
-        print(self.canvas.xview(), self.canvas.yview())
+        # print(f'container dim: {self.get_contianer_dim()}, container center: {self.get_container_center()}, imscale: {self.imscale} view: {self.canvas.xview()}, {self.canvas.yview()}')
+        # print(f'horizontal scroll location: {self.hbar.get()}, vertical scroll location: {self.vbar.get()}')
         
+    def center_view(self):        
+        # print(f'horizontal scroll location: {self.hbar.get()}, vertical scroll location: {self.vbar.get()}')
+        hbar_loc = self.hbar.get()
+        vbar_loc = self.vbar.get()
+        hbar_len = hbar_loc[1] - hbar_loc[0]
+        vbar_len = vbar_loc[1] - vbar_loc[0]
+        self.canvas.xview_moveto((1-hbar_len) * 0.5)
+        self.canvas.yview_moveto((1-vbar_len) * 0.5)
+        self.show_image()
+        pass
 
     def scale_to_canvas(self):
-        
+        self.center_view()        
         canvas_width = self.canvas.winfo_width()
         canvas_height = self.canvas.winfo_height()
         container_width, container_height = self.get_contianer_dim()
         scale = canvas_width / container_width
         if container_height * scale > canvas_height:
             scale = canvas_height / container_height
-        # self.canvas.xview_moveto(0.5)
-        # self.canvas.yview_moveto(0.5)
-        x, y = int(container_width * 0.5), int(container_height * 0.5)
-        print(x, y, container_width, container_height)
-        self.canvas.scale('all', x, y, scale, scale)
-        self.imscale = scale  
-        self.canvas.xview_moveto(0.0)
-        # self.canvas.yview_moveto(0.5)
         
-        self.show_image()
-
+        x, y = int(container_width * 0.5), int(container_height * 0.5)
+                
+        self.imscale = scale  
+        self.canvas.scale('all', x, y, scale, scale)      
+        self.show_image()  
         return    
 
     def update_image(self, img):
@@ -187,8 +190,11 @@ class Zoom_Advanced(ttk.Frame):
         # self.canvas.imagetk = img
         self.image = img
         self.width, self.height = self.image.size
-        self.container = self.canvas.create_rectangle(0, 0, self.width, self.height, width=0)
+        self.container = self.canvas.create_rectangle(0, 0, self.width, self.height, width=0, tags='container')
         self.show_image()
+        self.update()
+        self.scale_to_canvas()
+        # print(f'after loading horizontal scroll location: {self.hbar.get()}, vertical scroll location: {self.vbar.get()}')
     
     def get_contianer_dim(self):
         bbox1 = self.canvas.bbox(self.container)
@@ -222,6 +228,8 @@ if __name__ == '__main__':
     app.show_image()
     test_btn = tk.Button(root, text='test', command=app.scale_to_canvas)
     test_btn.pack(side='top')
+    test_btn_2 = tk.Button(root, text='test_2', command=app.center_view)
+    test_btn_2.pack(side='top')
     root.mainloop()
 
 

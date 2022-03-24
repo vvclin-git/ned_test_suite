@@ -13,6 +13,8 @@ root = tk.Tk()
 preview_img_size = (480, 320)
 
 
-draper = Draper(root, preview_img_size)
-draper.pack()
+# draper = Draper(root, preview_img_size)
+# draper.pack()
+mp = MeshPreviewBox(root, preview_img_size)
+mp.pack()
 root.mainloop()

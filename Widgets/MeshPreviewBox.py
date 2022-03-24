@@ -3,9 +3,10 @@ import cv2
 import numpy as np
 from tkinter.ttk import *
 from PIL import Image, ImageTk
+import sys
 from Widgets.ZoomCanvas import *
 from Widgets.ImgFileLoad import ImgFileLoad
-import os
+
 import json
 from tkinter import filedialog
 
@@ -41,6 +42,8 @@ class MeshPreviewBox(Frame):
             self.preview_img = Image.fromarray(self.img_load.image)
             self.raw_img = self.img_load.image
             self.canvas.update_image(Image.fromarray((self.img_load.image).astype(np.uint8)))
+            # self.canvas.update()
+            # self.canvas.scale_to_canvas()
             msg_output = f'Mesh image loaded from {self.img_load.img_path.get()}\n'
             msg_output += f'Mesh resolution: {self.raw_img.shape[1]}x{self.raw_img.shape[0]}'
             self.controller.msg_box.console(msg_output)
@@ -56,6 +59,8 @@ class MeshPreviewBox(Frame):
 
 
 if __name__=='__main__':
+    
+    
     root = tk.Tk()
     preview_img_size = (960, 720)
     mp_box = MeshPreviewBox(root, preview_img_size)
