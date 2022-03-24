@@ -38,10 +38,12 @@ class Draper(Frame):
         
         # Pupil Mesh Frame              
         self.pupil_mesh_process = MeshProcessBox(mesh_frame, draper_preview_size)
+        self.pupil_mesh_process.img_load.img_load_frame.configure(text='Pupil Mesh')
         self.pupil_mesh_process.pack(side='left', expand=1, fill='both', ipady=10, padx=5, pady=5)        
 
         # Far Frame        
         self.far_mesh_process = MeshProcessBox(mesh_frame, draper_preview_size)
+        self.far_mesh_process.img_load.img_load_frame.configure(text='Far Mesh')
         self.far_mesh_process.pack(side='left', expand=1, fill='both', ipady=10, padx=5, pady=5)        
         
         # Settings Frame
