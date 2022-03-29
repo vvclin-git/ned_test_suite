@@ -12,7 +12,9 @@ from Widgets.MsgBox import *
 parameters = {             
             "Edge Angle": {"value": 5, "type": "value", "options": None}, 
             "Pattern Size": {"value": 80, "type": "value", "options": None},            
-            "Line Type": {"value": "line_8", "type": "list", "options": ["line_8", "line_4", "line_AA", "filled"]},
+            "Line Type": {"value": "cv2.LINE_8", "type": "list", "options": ['cv2.LINE_4', 'cv2.LINE_8', 'cv2.LINE_AA']},
+            "Extract Method": {"value": 'cv2.TM_CCOEFF_NORMED', "type": "list", "options": ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
+            'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']},
             "Threshold": {"value": 0.95, "type": "value", "options": None},
             "IoU Threshold": {"value": 0.01, "type": "value", "options": None}
             } 
@@ -43,14 +45,13 @@ class SE_MTF_Test(MeshPreviewBox):
         return chart_im
 
     def get_se_patterns(self):
-        edge_angle, pattern_size, line_type, threshold, iou_thresh = self.paras_tab.output_parsed_vals()
+        edge_angle, pattern_size, line_type, method, threshold, iou_thresh = self.paras_tab.output_parsed_vals()
+        # method = eval('cv2.TM_CCOEFF_NORMED')
         se_pattern_im = self.draw_se_MTF_pattern(edge_angle, pattern_size, line_type)
         self.labeled_img = self.raw_img.copy()
-        stat = cv2.imwrite('se_pattern.png', se_pattern_im)
-        se_pattern = cv2.imread('se_pattern.png')
-        print(stat)
-        res_se_pattern = cv2.matchTemplate(self.labeled_img, se_pattern, cv2.TM_CCOEFF_NORMED)
-        
+        stat = cv2.imwrite('.\\temp\\se_pattern.png', se_pattern_im)
+        se_pattern = cv2.imread('.\\temp\\se_pattern.png')        
+        res_se_pattern = cv2.matchTemplate(self.labeled_img, se_pattern, method)       
         
         loc = np.where(res_se_pattern >= threshold)
         loc_value = res_se_pattern[res_se_pattern >= threshold]
@@ -58,25 +59,18 @@ class SE_MTF_Test(MeshPreviewBox):
         res_box_list[:, 0] = loc[1]
         res_box_list[:, 1] = loc[0]
         res_box_list[:, 2] = loc_value
-        
+        self.res_box_num = len(res_box_list[:, 2])
         self.pick_list = []
         self.nms(res_box_list, iou_thresh, np.array((pattern_size, pattern_size)))
-        # self.pick_list.append(res_box_list[0])
-        # self.pick_list.append(res_box_list[10])
-        # self.pick_list.append(res_box_list[15])
+        
+        self.controller.msg_box.console('')
         for pt in self.pick_list:
             cv2.rectangle(self.labeled_img, (int(pt[0]), int(pt[1])), (int(pt[0]) + pattern_size, int(pt[1]) + pattern_size), (0,255,255), 1)
-             
-
-        # i = 0
-        # for pt in zip(*loc[::-1]):
-        #     cv2.rectangle(self.labeled_img, pt, (pt[0]+pattern_size, pt[1]+pattern_size), (0,255,255), 1)
-
-        #     i += 1
+        
         cv2.imwrite('labeled.png', self.labeled_img)
        
-        self.update_img(self.labeled_img)
-        # self.controller.msg_box.console(f'{len(loc[0])} SE MTF patterns founded')
+        self.update_img(self.labeled_img)        
+        
         self.controller.msg_box.console(f'{len(self.pick_list)} SE MTF patterns founded')
 
 
@@ -85,10 +79,7 @@ class SE_MTF_Test(MeshPreviewBox):
         if res_box_list.size == 0:
             return 
         else:
-            if len(self.pick_list) > 142:
-                print('')
-                pass
-            
+                     
             res_box_list = res_box_list[np.argsort(res_box_list[:, 2])[::-1]]
             box1 = res_box_list[0, 0:3]
             self.pick_list.append(box1)
@@ -97,7 +88,10 @@ class SE_MTF_Test(MeshPreviewBox):
                 if iou > iou_thresh:
                     box2[2] = 0
             box1[2] = 0
-            print(len(self.pick_list), res_box_list[:, 0].size)
+            progress = 1 - (res_box_list[:, 0].size / self.res_box_num)
+            msg_output = f'{len(self.pick_list)} pattern extracted, progress: {progress: 3.2%}'            
+            self.controller.msg_box.console_update(msg_output)
+            
             return self.nms(res_box_list[res_box_list[:, 2] > 0], iou_thresh, pattern_size)
 
     def iou_calc(self, box1, box2, shape):

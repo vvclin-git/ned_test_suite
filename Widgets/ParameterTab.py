@@ -11,6 +11,7 @@ regex_color = re.compile(r'^\d+,\d+,\d+$')
 regex_float = re.compile(r'^[-]*\d+[.]\d+$')
 regex_list = re.compile(r'(.+?)(?:,|$)')
 regex_int = re.compile(r'^[-]*[1-9]\d*$')
+regex_cv = re.compile(r'^cv2?[.]')
 
 class ParameterTab(ttk.Frame):
     def __init__(self, parent, parameters):
@@ -108,8 +109,10 @@ class ParameterTab(ttk.Frame):
                     elif regex_coord.search(p[1]):
                         parsed_str = p[1].split(',')
                         parsed = (int(parsed_str[0]), int(parsed_str[1]))
-                    elif p[0] == 'Line Type':
-                        parsed = {'filled':cv2.FILLED, 'line_4':cv2.LINE_4, 'line_8':cv2.LINE_8, 'line_AA':cv2.LINE_AA}[p[1]] 
+                    # elif p[0] == 'Line Type':
+                    #     parsed = {'filled':cv2.FILLED, 'line_4':cv2.LINE_4, 'line_8':cv2.LINE_8, 'line_AA':cv2.LINE_AA}[p[1]] 
+                    elif regex_cv.search(p[1]):
+                        parsed = eval(p[1])
                     elif regex_dim_float.search(p[1]):
                         parsed = (float(p[1].split('x')[0]), float(p[1].split('x')[1]))
                     elif regex_float.search(p[1]):
@@ -143,30 +146,7 @@ class ParameterTab(ttk.Frame):
             output.append(parsed)
         return output
 
-    # def output_parsed_vals(self):
-    #     output_vals = self.output_values()
-    #     parsed_paras = []
-    #     for p in output_vals:
-    #         parsed = p[1]
-    #         if type(p[1]) == str: 
-    #             if regex_color.search(p[1]):                    
-    #                 parsed_str = p[1].split(',')
-    #                 parsed = (int(parsed_str[0]), int(parsed_str[1]), int(parsed_str[2]))
-    #             elif regex_dim.search(p[1]):
-    #                 parsed_str = p[1].split('x')
-    #                 parsed = (int(p[1].split('x')[0]), int(p[1].split('x')[1]))               
-    #             elif regex_coord.search(p[1]):
-    #                 parsed_str = p[1].split(',')
-    #                 parsed = (int(parsed_str[0]), int(parsed_str[1]))
-    #             elif p[0] == 'Line Type':
-    #                 parsed = {'filled':cv2.FILLED, 'line_4':cv2.LINE_4, 'line_8':cv2.LINE_8, 'line_AA':cv2.LINE_AA}[p[1]]  
-    #             elif regex_float.search(p[1]):
-    #                 parsed = float(p[1])
-    #             elif regex_dim_float.search(p[1]):
-    #                 parsed = (float(p[1].split('x')[0]), float(p[1].split('x')[1]))
-            
-    #         parsed_paras.append(parsed)
-    #     return parsed_paras
+    
 
     def clear(self):
         self.tree.delete(*self.tree.get_children())
@@ -189,7 +169,7 @@ if __name__ == '__main__':
     root = tk.Tk()
     parameters = {'Parameter 1': {'value':1, 'type':'value', 'options':None},
                   'Parameter 2': {'value':2, 'type':'value', 'options':None},
-                  'Parameter 3': {'value':'a', 'type':'list', 'options':('a', 'b', 'c')},
+                  'Parameter 3': {'value':'cv2.FILLED', 'type':'list', 'options':('cv2.FILLED', 'cv2.LINE_4', 'cv2.LINE_8', 'cv2.LINE_AA')},
                   'Parameter 4': {'value':'e', 'type':'list', 'options':('e', 'f', 'g')},
                   'Parameter 5': {'value':0.001, 'type':'value', 'options':None}}
     

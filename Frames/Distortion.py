@@ -15,7 +15,7 @@ from functools import partial
 # from NED_Chart import *
 
 OUTPUT_PATH = f'{os.getcwd()}\\Output'
-PRESET_PATH = f'{os.getcwd()}\\dist_default.json'
+PRESET_PATH = f'{os.getcwd()}\\Presets\\dist_default.json'
 MESH_OUTPUT_PATH = f'{os.getcwd()}\\Output'
 
 class Distortion(NetsFrame):

@@ -21,6 +21,7 @@ class MsgBox(Frame):
         self.msg_output.config(state='normal')
         if cr:
             self.msg_output.insert('end', msg + '\n')
+            self.msg_output.see('end')
         else:
             self.msg_output.insert('end', msg)
         self.msg_output.config(state='disabled')
@@ -30,6 +31,13 @@ class MsgBox(Frame):
         self.msg_output.config(state='normal')
         self.msg_output.delete('1.0', 'end')
         self.msg_output.config(state='disabled')
+
+    def console_update(self, msg):
+        self.msg_output.config(state='normal')
+        self.msg_output.delete("end-1c linestart", 'end-1c lineend')
+        self.msg_output.insert("end-1c linestart", msg)
+        self.msg_output.config(state='disabled')
+        self.msg_output.update()
 
 if __name__=='__main__':
     root = tk.Tk()
@@ -44,10 +52,19 @@ if __name__=='__main__':
     def clr_test():
         msg_box.console_clr()
 
+    counter = 0
+    def upd_test():
+        global counter 
+        counter += 1
+        msg_box.console_update(f'{counter}')
+
     test_btn = Button(root, text='test', command=test)
     test_btn.pack()
 
     clr_btn = Button(root, text='clear', command=clr_test)
     clr_btn.pack()
+
+    upd_btn = Button(root, text='update', command=upd_test)
+    upd_btn.pack()
 
     root.mainloop()

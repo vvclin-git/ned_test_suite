@@ -14,7 +14,7 @@ from matplotlib import pyplot as plt
 from functools import partial
 
 OUTPUT_PATH = f'{os.getcwd()}\\Output'
-PRESET_PATH = f'{os.getcwd()}\\grille_default.json'
+PRESET_PATH = f'{os.getcwd()}\\Presets\\grille_default.json'
 MESH_OUTPUT_PATH = f'{os.getcwd()}\\Output'
 
 class Grille(NetsFrame):

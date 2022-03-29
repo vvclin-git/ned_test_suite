@@ -17,7 +17,7 @@ CHART_FN_DICT = {'Reticle': gen_reticle,
                     'Slanted Edge MTF': gen_se_MTF}
 
 OUTPUT_PATH = f'{os.getcwd()}\\Output'
-PRESET_PATH = f'{os.getcwd()}\\default.json'
+PRESET_PATH = f'{os.getcwd()}\\Presets\\chart_default.json'
 
 regex_coord = re.compile(r'\d+x\d+')
 regex_color = re.compile(r'\d+,\d+,\d+')
@@ -25,7 +25,7 @@ regex_color = re.compile(r'\d+,\d+,\d+')
 class TestCharts(NetsFrame):
     def __init__(self, window, preview_img_size):
         super().__init__(window, preview_img_size)
-        f = open('default.json', 'r')
+        f = open(PRESET_PATH, 'r')
         self.presets = json.load(f)
         f.close()
         
@@ -177,8 +177,8 @@ class TestCharts(NetsFrame):
                     parsed_str = p[1].split('x')
                     parsed = (int(p[1].split('x')[0]), int(p[1].split('x')[1]))               
                 elif p[0] == 'Line Type':
-                    parsed = {'filled':cv2.FILLED, 'line_4':cv2.LINE_4, 'line_8':cv2.LINE_8, 'line_AA':cv2.LINE_AA}[p[1]]                 
-            
+                    # parsed = {'filled':cv2.FILLED, 'line_4':cv2.LINE_4, 'line_8':cv2.LINE_8, 'line_AA':cv2.LINE_AA}[p[1]]                 
+                    parsed = eval(p[1])
             parsed_paras.append(parsed)
         # print(parsed_paras)
         # chart_im, _ = CHART_FN_DICT[self.chart_type.get()](*parsed_paras)
