@@ -8,16 +8,21 @@ from PIL import Image
 from Widgets.ParameterTab import *
 from Widgets.MeshPreviewBox import *
 from Widgets.MsgBox import *
+import json
 
-parameters = {             
-            "Edge Angle": {"value": 5, "type": "value", "options": None}, 
-            "Pattern Size": {"value": 80, "type": "value", "options": None},            
-            "Line Type": {"value": "cv2.LINE_8", "type": "list", "options": ['cv2.LINE_4', 'cv2.LINE_8', 'cv2.LINE_AA']},
-            "Extract Method": {"value": 'cv2.TM_CCOEFF_NORMED', "type": "list", "options": ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
-            'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']},
-            "Threshold": {"value": 0.95, "type": "value", "options": None},
-            "IoU Threshold": {"value": 0.01, "type": "value", "options": None}
-            } 
+PRESET_PATH = '.\\Presets\\smtf_default.json'
+preset_file = open(PRESET_PATH, 'r')
+parameters = json.load(preset_file)["se_paras"]
+
+# parameters = {             
+#             "Edge Angle": {"value": 5, "type": "value", "options": None}, 
+#             "Pattern Size": {"value": 80, "type": "value", "options": None},            
+#             "Line Type": {"value": "cv2.LINE_8", "type": "list", "options": ['cv2.LINE_4', 'cv2.LINE_8', 'cv2.LINE_AA']},
+#             "Extract Method": {"value": 'cv2.TM_CCOEFF_NORMED', "type": "list", "options": ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
+#             'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']},
+#             "Threshold": {"value": 0.95, "type": "value", "options": None},
+#             "IoU Threshold": {"value": 0.01, "type": "value", "options": None}
+#             } 
 
 class SE_MTF_Test(MeshPreviewBox):
     def __init__(self, window, preview_img_size):
@@ -32,7 +37,7 @@ class SE_MTF_Test(MeshPreviewBox):
         self.controller = Controller(self.paras_tab, self.msg_box)
         self.set_controller(self.controller)
 
-    def draw_se_MTF_pattern(self, edge_angle, pattern_size, line_type):    
+    def draw_se_pattern(self, edge_angle, pattern_size, line_type):    
         chart_im = np.zeros((pattern_size, pattern_size, 3))
         center = (np.array(chart_im.shape[0:2]) * 0.5).astype('uint')
         anchor = center - 0.5 * pattern_size
@@ -47,7 +52,7 @@ class SE_MTF_Test(MeshPreviewBox):
     def get_se_patterns(self):
         edge_angle, pattern_size, line_type, method, threshold, iou_thresh = self.paras_tab.output_parsed_vals()
         # method = eval('cv2.TM_CCOEFF_NORMED')
-        se_pattern_im = self.draw_se_MTF_pattern(edge_angle, pattern_size, line_type)
+        se_pattern_im = self.draw_se_pattern(edge_angle, pattern_size, line_type)
         self.labeled_img = self.raw_img.copy()
         stat = cv2.imwrite('.\\temp\\se_pattern.png', se_pattern_im)
         se_pattern = cv2.imread('.\\temp\\se_pattern.png')        

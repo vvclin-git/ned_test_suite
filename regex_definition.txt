@@ -1,0 +1,14 @@
+Dimension r'^\d+x\d+$'
+Dimension (Float) r'^\d+.\d+x\d+.\d+$'
+Coordinate r'^\d+,\d+$'
+
+Float r'^[-]*\d+[.]\d+$'
+List r'(.+?)(?:,|$)'
+Integer r'^[-]*[1-9]\d*$'
+Unsigned Integer r'^[1-9]\d*$'
+
+Float r'^[-]*\d+[.]\d+$'
+Unsigned Float r'^\d+[.]\d+$'
+
+Open CV Constants r'^cv2?[.]'
+

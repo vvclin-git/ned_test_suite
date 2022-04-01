@@ -1,0 +1,9 @@
+{
+"dim": "(int(val.split('x')[0]), int(val.split('x')[1]))",
+"dim_float": "(float(val.split('x')[0]), float(val.split('x')[1]))",
+"float": "float(val)",
+"ufloat": "float(val)",
+"int": "int(val)",
+"uint": "int(val)",
+"opencv_const": "eval(val)"
+}

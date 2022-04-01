@@ -2,7 +2,9 @@
 import tkinter as tk
 from tkinter import Button, ttk
 import re
+
 import cv2
+from tkinter import messagebox
 
 regex_dim = re.compile(r'^\d+x\d+$')
 regex_dim_float = re.compile(r'^\d+.\d+x\d+.\d+$')
@@ -41,10 +43,18 @@ class ParameterTab(ttk.Frame):
             if column == '#2': # only value column is allowed for editing
                 x, y, width, height = self.tree.bbox(item, column) 
                 value = self.tree.set(item, column)
+                
                 def ok(event):
                     """Change item value."""
-                    self.tree.set(item, column, entry.get())
-                    entry.destroy()
+                    para_name = self.tree.set(item, '#1')
+                    regex = re.compile(eval(self.parameters[para_name]['regex']))
+                    if regex.search(entry.get()):
+                        self.tree.set(item, column, entry.get())
+                        entry.destroy()
+                    else:
+                        messagebox.showinfo('Input Validation', 'Wrong input format!')
+                        return
+
             else:
                 return
         else:
@@ -94,59 +104,31 @@ class ParameterTab(ttk.Frame):
     def output_parsed_vals(self):
         output_vals = self.output_values()
         parsed_paras = []
-        for p in output_vals:
-            parsed = p[1]
-            if type(p[1]) == str:
-                if len(p[1].split(',')) > 1:
-                    parsed = self.list_parser(p[1])
-                else: 
-                    if regex_color.search(p[1]):                    
-                        parsed_str = p[1].split(',')
-                        parsed = (int(parsed_str[0]), int(parsed_str[1]), int(parsed_str[2]))
-                    elif regex_dim.search(p[1]):
-                        parsed_str = p[1].split('x')
-                        parsed = (int(p[1].split('x')[0]), int(p[1].split('x')[1]))               
-                    elif regex_coord.search(p[1]):
-                        parsed_str = p[1].split(',')
-                        parsed = (int(parsed_str[0]), int(parsed_str[1]))
-                    # elif p[0] == 'Line Type':
-                    #     parsed = {'filled':cv2.FILLED, 'line_4':cv2.LINE_4, 'line_8':cv2.LINE_8, 'line_AA':cv2.LINE_AA}[p[1]] 
-                    elif regex_cv.search(p[1]):
-                        parsed = eval(p[1])
-                    elif regex_dim_float.search(p[1]):
-                        parsed = (float(p[1].split('x')[0]), float(p[1].split('x')[1]))
-                    elif regex_float.search(p[1]):
-                        parsed = float(p[1])
-            
+        for r in output_vals:
+            para_name = r[0]
+            val = str(r[1])
+            parser = self.parameters[para_name]['parser']            
+            if len(val.split(',')) > 1:
+                parsed = self.list_parser(val, parser)
+            else:
+                if parser:
+                    parsed = eval(parser)
+                else:
+                    parsed = val
             parsed_paras.append(parsed)
         return parsed_paras
 
-    
-    def list_parser(self, in_str):        
+
+    def list_parser(self, in_str, parser):
         output = []
         in_str_list = in_str.split(',')
-        for s in in_str_list:
-            if regex_color.search(s):                    
-                parsed_str = s.split(',')
-                parsed = (int(parsed_str[0]), int(parsed_str[1]), int(parsed_str[2]))
-            elif regex_dim.search(s):
-                parsed_str = s.split('x')
-                parsed = (int(s.split('x')[0]), int(s.split('x')[1]))               
-            elif regex_coord.search(s):
-                parsed_str = s.split(',')
-                parsed = (int(parsed_str[0]), int(parsed_str[1]))              
-            elif regex_float.search(s):
-                parsed = float(s)
-            elif regex_dim_float.search(s):
-                parsed = (float(s.split('x')[0]), float(s.split('x')[1]))            
-            elif regex_int.search(s):
-                parsed = int(s)
+        for val in in_str_list:
+            if parser:
+                parsed = eval(parser)
             else:
-                parsed = s
+                parsed = val
             output.append(parsed)
         return output
-
-    
 
     def clear(self):
         self.tree.delete(*self.tree.get_children())
@@ -167,12 +149,20 @@ class ParameterTab(ttk.Frame):
 
 if __name__ == '__main__':
     root = tk.Tk()
-    parameters = {'Parameter 1': {'value':1, 'type':'value', 'options':None},
-                  'Parameter 2': {'value':2, 'type':'value', 'options':None},
-                  'Parameter 3': {'value':'cv2.FILLED', 'type':'list', 'options':('cv2.FILLED', 'cv2.LINE_4', 'cv2.LINE_8', 'cv2.LINE_AA')},
-                  'Parameter 4': {'value':'e', 'type':'list', 'options':('e', 'f', 'g')},
-                  'Parameter 5': {'value':0.001, 'type':'value', 'options':None}}
+    # parameters = {'Parameter 1': {'value':1, 'type':'value', 'options':None},
+    #               'Parameter 2': {'value':2, 'type':'value', 'options':None},
+    #               'Parameter 3': {'value':'cv2.FILLED', 'type':'list', 'options':('cv2.FILLED', 'cv2.LINE_4', 'cv2.LINE_8', 'cv2.LINE_AA')},
+    #               'Parameter 4': {'value':'e', 'type':'list', 'options':('e', 'f', 'g')},
+    #               'Parameter 5': {'value':0.001, 'type':'value', 'options':None}}
     
+    parameters = {'Parameter 1': {'value':'10x10', 'type':'value', 'regex':"r'^\\d+x\\d+$'", 'parser':"(int(val.split('x')[0]), int(val.split('x')[1]))", 'options':None},
+                  'Parameter 2': {'value':'5.5x5.5', 'type':'value', 'regex':"r'^\\d+.\\d+x\\d+.\\d+$'", 'parser':"(float(val.split('x')[0]), float(val.split('x')[1]))", 'options':None},
+                  'Parameter 3': {'value':'cv2.FILLED', 'type':'list', 'regex':"r'^cv2?[.]'", 'parser':'eval(val)', 'options':('cv2.FILLED', 'cv2.LINE_4', 'cv2.LINE_8', 'cv2.LINE_AA')},
+                  'Parameter 4': {'value':'e', 'type':'list', 'regex':None, 'parser':None, 'options':('e', 'f', 'g')},
+                  'Parameter 5': {'value':0.001, 'type':'value','regex':"r'^[-]*\d+[.]\d+$'", 'parser':'float(val)', 'options':None},
+                  'Parameter 6': {'value':1, 'type':'value','regex':"r'^[1-9]\d*$'", 'parser':'int(val)', 'options':None},
+                  'Parameter 7': {'value':-1, 'type':'value','regex':"r'^[-]*[1-9]\d*$'", 'parser':'int(val)', 'options':None}}
+
     para_tab = ParameterTab(root, parameters)
     para_tab.pack()
         

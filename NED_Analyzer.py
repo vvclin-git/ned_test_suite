@@ -7,6 +7,7 @@ import numpy as np
 import time
 from scipy import signal
 from mpl_toolkits.mplot3d import Axes3D
+import subprocess
 
 
 
@@ -330,8 +331,133 @@ class Grille_Eval():
     
 
 class SMTF_Eval():
-    def __init__(self) -> None:
+    def __init__(self, roi_path, se_pattern_path):
+        
+        self.pixel_size = None
+        self.threshold = None
+        self.mtf_contrast = None
+        self.mtf_analysis_options = None
+        self.roi_path = roi_path        
+        self.se_pattern_path = se_pattern_path
+        self.raw_im = None
+        self.controller = None
+        self.pattern_size = None
         pass
+    
+    def draw_se_pattern(self, edge_angle, pattern_size, line_type):    
+        chart_im = np.zeros((pattern_size, pattern_size, 3))
+        center = (np.array(chart_im.shape[0:2]) * 0.5).astype('uint')
+        anchor = center - 0.5 * pattern_size
+        pt1 = anchor + np.array([0, pattern_size])
+        pt2 = pt1 + np.array([0.5 * pattern_size * (1 - np.tan(np.radians(edge_angle))), 0])
+        pt3 = pt2 + np.array([0.5 * pattern_size * (np.tan(np.radians(edge_angle))), -pattern_size])    
+        pts = np.array([anchor, pt1, pt2, pt3, anchor]).astype('int32')
+        pts = np.expand_dims(pts, axis=1)  
+        cv2.fillPoly(chart_im, [pts], color=(255, 255, 255), lineType=line_type)
+        return chart_im
+
+    def get_se_patterns(self, edge_angle, pattern_size, line_type, method, threshold, iou_thresh):
+        
+        # method = eval('cv2.TM_CCOEFF_NORMED')
+        se_pattern_im = self.draw_se_pattern(edge_angle, pattern_size, line_type)
+        self.extracted_im = self.raw_im.copy()
+        stat = cv2.imwrite(self.se_pattern_path + 'se_pattern.png', se_pattern_im)
+        se_pattern = cv2.imread(self.se_pattern_path + 'se_pattern.png')        
+        res_se_pattern = cv2.matchTemplate(self.extracted_im, se_pattern, method)       
+        
+        loc = np.where(res_se_pattern >= threshold)
+        loc_value = res_se_pattern[res_se_pattern >= threshold]
+        res_box_list = np.zeros((len(loc[0]), 3))
+        res_box_list[:, 0] = loc[1]
+        res_box_list[:, 1] = loc[0]
+        res_box_list[:, 2] = loc_value
+        self.res_box_num = len(res_box_list[:, 2])
+        self.pick_list = []
+        self.nms(res_box_list, iou_thresh, np.array((pattern_size, pattern_size)))
+        
+        self.controller.msg_box.console('')
+        for pt in self.pick_list:
+            cv2.rectangle(self.extracted_im, (int(pt[0]), int(pt[1])), (int(pt[0]) + pattern_size, int(pt[1]) + pattern_size), (0,255,255), 1)
+        
+        # cv2.imwrite('labeled.png', self.labeled_img)      
+                     
+        self.controller.msg_box.console(f'{len(self.pick_list)} SE MTF patterns founded')
+
+    def nms(self, res_box_list, iou_thresh, pattern_size):
+        
+        if res_box_list.size == 0:
+            return 
+        else:
+                     
+            res_box_list = res_box_list[np.argsort(res_box_list[:, 2])[::-1]]
+            box1 = res_box_list[0, 0:3]
+            self.pick_list.append(box1.astype('uint'))
+            for box2 in res_box_list[1:, 0:3]:
+                iou, _, _ = self.iou_calc(box1[0:2], box2[0:2], pattern_size)
+                if iou > iou_thresh:
+                    box2[2] = 0
+            box1[2] = 0
+            progress = 1 - (res_box_list[:, 0].size / self.res_box_num)
+            msg_output = f'{len(self.pick_list)} pattern extracted, progress: {progress: 3.2%}'            
+            self.controller.msg_box.console_update(msg_output)
+            
+            return self.nms(res_box_list[res_box_list[:, 2] > 0], iou_thresh, pattern_size)
+
+    def iou_calc(self, box1, box2, shape):
+        x1, y1 = box1[0], box1[1]
+        x2, y2 = box2[0], box2[1]
+        if abs(x1-x2) >= shape[0] or abs(y1-y2) >= shape[1]:
+            return -1, None, None
+        x_inter, y_inter = max(x1, x2), max(y1, y2)    
+        coord_inter = np.array((x_inter, y_inter))
+        shape_inter = np.array((shape[0] - abs(x1-x2), shape[1] - abs(y1-y2)))
+        area_inter = shape_inter[0] * shape_inter[1]
+        area_union = (shape[0] * shape[1]) * 2 - area_inter
+        iou = area_inter / area_union
+        return iou, coord_inter, shape_inter
+    
+    def get_mtf_mesh(self):
+        mesh_size = len(self.pick_list)
+        self.mtf_value_list = []
+        self.evaluated_im = self.raw_im.copy()
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        for i, pt in enumerate(self.pick_list):
+            h, w = self.pattern_size, self.pattern_size
+            roi_im = self.raw_im[int(pt[1]):pt[1] + w, pt[0]:pt[0] + h]            
+            roi_im = cv2.cvtColor(roi_im, cv2.COLOR_RGB2GRAY)
+            stat = cv2.imwrite(self.roi_path + f'roi_{i}.png', roi_im)
+            mtf_value = self.mtf_analyzer(f'roi_{i}.png')            
+            self.controller.msg_box.console(f'MTF value of ROI {i} at {pt[0]}, {pt[1]}: {mtf_value}')
+            self.controller.msg_box.update()           
+            self.mtf_value_list.append(mtf_value)
+            cv2.putText(self.evaluated_im, str(mtf_value), (pt[0], pt[1]), fontScale=1, thickness=1, fontFace=font, color=(0, 255, 255), lineType=cv2.LINE_AA)
+        
+    def set_mtf_analysis_paras(self, pixel_size, threshold, mtf_contrast):
+        self.mtf_analysis_paras = ['--single-roi', f'--threshold {threshold}', f'--pixelsize {pixel_size}', f'--mtf {mtf_contrast}', '--esf-sampler line', '-l', '-a']
+
+    def mtf_analyzer(self, roi_filename):
+        # print(f'Processing file {roi_filename}...', end='')
+        # mtf_analyze = subprocess.run(['mtf_mapper', '--single-roi', '--pixelsize 5', '--mtf 20', '-l', '-a', self.roi_img_path + roi_filename, '.\\'], stdout=subprocess.PIPE)
+        mtf_analyze = subprocess.run(['mtf_mapper', *self.mtf_analysis_paras, self.roi_path + roi_filename, '.\\'], stdout=subprocess.PIPE)
+        mtf_value = 0
+        print(mtf_analyze.stdout.decode('UTF-8').splitlines())
+        if len(mtf_analyze.stdout.decode('UTF-8').splitlines()) == 8:
+            mtf_report = mtf_analyze.stdout.decode('UTF-8').splitlines()[7]
+            try:
+                mtf_value = float(mtf_report.split(' ')[14])
+                print(f'MTF evaluation completed, value:{mtf_value}...', end='')                
+                # store the annotated picture
+                output_filename = roi_filename.replace('.png', '_annotated.png')
+                subprocess.run(['copy', '.\\annotated.png', self.roi_path + 'annotated\\' + output_filename], shell=True)
+                print('Annotated image dumped')                
+            except:            
+                print(f'MTF evaluation failed!')
+                
+        return mtf_value 
+    
+    def set_controller(self, controller):        
+        self.controller = controller
+
 
 class Draper_Eval():
     def __init__(self, camera_eff, sensor_res, sensor_size, output_path):        
@@ -469,7 +595,7 @@ class Draper_Eval():
         ax.plot(outline_1[:, 0], outline_1[:, 2], outline_1[:, 1], 'b--', lw=1)
         ax.plot(outline_2[:, 0], outline_2[:, 2], outline_2[:, 1], 'b--', lw=1)
     
-        # plt.savefig(self.output_path + filename, dpi=600)
+        # plt.savefig(self.output_path + roi_filename, dpi=600)
         return
     
     def draw_eyebox_volume(self, proj_pts, roi_pts, proj_theta_phi, proj_plane_grid, aper_depth_grid, view, alpha):
