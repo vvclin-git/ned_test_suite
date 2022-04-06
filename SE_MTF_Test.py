@@ -1,5 +1,6 @@
 
 import cv2
+from cv2 import CV_8UC3
 import numpy as np
 from tkinter.ttk import *
 import tkinter as tk
@@ -37,7 +38,7 @@ class SE_MTF_Test(MeshPreviewBox):
         self.controller = Controller(self.paras_tab, self.msg_box)
         self.set_controller(self.controller)
 
-    def draw_se_pattern(self, edge_angle, pattern_size, line_type):    
+    def draw_se_pattern(self, edge_angle, pattern_size, line_type, reverse):    
         chart_im = np.zeros((pattern_size, pattern_size, 3))
         center = (np.array(chart_im.shape[0:2]) * 0.5).astype('uint')
         anchor = center - 0.5 * pattern_size
@@ -47,13 +48,19 @@ class SE_MTF_Test(MeshPreviewBox):
         pts = np.array([anchor, pt1, pt2, pt3, anchor]).astype('int32')
         pts = np.expand_dims(pts, axis=1)  
         cv2.fillPoly(chart_im, [pts], color=(255, 255, 255), lineType=line_type)
+        if reverse:
+            chart_rev_im = np.zeros_like(chart_im)
+            chart_rev_im[np.where(chart_im == 0)] = 255
+            return chart_rev_im
         return chart_im
 
     def get_se_patterns(self):
-        edge_angle, pattern_size, line_type, method, threshold, iou_thresh = self.paras_tab.output_parsed_vals()
+        edge_angle, pattern_size, line_type, reverse, method, threshold, iou_thresh = self.paras_tab.output_parsed_vals()
         # method = eval('cv2.TM_CCOEFF_NORMED')
-        se_pattern_im = self.draw_se_pattern(edge_angle, pattern_size, line_type)
+        se_pattern_im = self.draw_se_pattern(edge_angle, pattern_size, line_type, reverse)
         self.labeled_img = self.raw_img.copy()
+        self.labeled_img = (self.labeled_img // (self.labeled_img.max() / 256 + 1)).astype('uint8')
+        self.labeled_img = cv2.cvtColor(self.labeled_img, cv2.COLOR_GRAY2RGB)
         stat = cv2.imwrite('.\\temp\\se_pattern.png', se_pattern_im)
         se_pattern = cv2.imread('.\\temp\\se_pattern.png')        
         res_se_pattern = cv2.matchTemplate(self.labeled_img, se_pattern, method)       

@@ -10,6 +10,8 @@ from functools import partial
 from PIL import Image
 from NED_Analyzer import SMTF_Eval
 import numpy as np
+from scipy.interpolate import griddata
+import matplotlib.pyplot as plt
 
 PRESET_PATH = '.\\Presets\\smtf_default.json'
 OUTPUT_PATH = '.\\Output\\'
@@ -57,8 +59,14 @@ class SMTF(NetsFrame2):
         self.mtf_eval_preview_btn.config(state='disable')
 
         # output
-        self.output_path = PathBrowse(self.settings)
+        output_frame = LabelFrame(self.settings, text='Evaluation Result Output')
+        output_frame.pack(side='top', fill='x', pady=5)
+        self.output_path = PathBrowse(output_frame)
         self.output_path.pack(side='top', expand=1, fill='x')
+        self.get_interp_mesh_btn = Button(output_frame, text='Get MTF Mesh', command=self.get_interp_mesh)
+        self.get_interp_mesh_btn.pack(side='right', padx=2, pady=5)
+        self.show_interp_mesh_btn = Button(output_frame, text='Show MTF Mesh')
+        self.show_interp_mesh_btn.pack(side='right', padx=2, pady=5)
         
         # widget interlink & initialization
         self.controller = Controller(self.msg_box, self.img_file_load, self.preset_file_load, self.output_path, self.preview_canvas)
@@ -73,13 +81,30 @@ class SMTF(NetsFrame2):
         self.se_pattern_paras_tab.fit_height()
         self.mtf_paras_tab.fit_height()
 
+    def get_interp_mesh(self):
+        mesh_dim = np.array((32, 18))
+        fov_dim = np.array((2000, 1166))
+        fov_anchor = np.array((124, 66))
+        grid_x = np.linspace(fov_anchor[0], (fov_dim - fov_anchor)[0], mesh_dim[0])
+        grid_y = np.linspace(fov_anchor[1], (fov_dim - fov_anchor)[1], mesh_dim[1])
+        grid_xx, grid_yy = np.meshgrid(grid_x, grid_y)
+        points = np.zeros((len(self.smtf_eval.pick_list), 2))
+        values = np.zeros((len(self.smtf_eval.pick_list), 1))
+        for i, p in enumerate(self.smtf_eval.pick_list):
+            points[i, :] = (p[0:2] + self.smtf_eval.pattern_size * 0.5).astype('uint')
+            values[i] = self.smtf_eval.mtf_value_list[i]
+        self.mtf_mesh = griddata(points, values, (grid_xx, grid_yy), method='nearest', fill_value=0)
+        plt.imshow(self.mtf_mesh, extent=(fov_anchor[0], fov_anchor[0]+fov_dim[0], fov_anchor[1]+fov_dim[1], fov_anchor[1]), origin='upper')
+        
+
+
     def mtf_extract(self):
-        edge_angle, self.pattern_size, line_type, method, threshold, iou_thresh = self.se_pattern_paras_tab.output_parsed_vals()
+        edge_angle, self.pattern_size, line_type, reverse, method, threshold, iou_thresh = self.se_pattern_paras_tab.output_parsed_vals()
         self.smtf_eval.pattern_size = self.pattern_size
-        self.smtf_eval.get_se_patterns(edge_angle, self.pattern_size, line_type, method, threshold, iou_thresh)
-        self.extracted_img = Image.fromarray((self.smtf_eval.extracted_im).astype(np.uint8))
+        self.smtf_eval.get_se_patterns(edge_angle, self.pattern_size, line_type, reverse, method, threshold, iou_thresh)
+        self.extracted_label_img = Image.fromarray((self.smtf_eval.extracted_label_im).astype(np.uint8))
         if self.mtf_extract_preview_btn.toggle_stat:
-            self.preview_canvas.update_image(self.extracted_img)
+            self.preview_canvas.update_image(self.extracted_label_img)
         self.mtf_extract_preview_btn.config(state='active')
         self.mtf_eval_btn.config(state='active')
         pass
@@ -88,28 +113,35 @@ class SMTF(NetsFrame2):
         pixel_size, threshold, mtf_contrast = self.mtf_paras_tab.output_parsed_vals()
         self.smtf_eval.set_mtf_analysis_paras(pixel_size, threshold, mtf_contrast)
         self.smtf_eval.get_mtf_mesh()
-        self.mtf_eval_preview_btn.config(state='active')
-        self.evaluated_img = Image.fromarray((self.smtf_eval.evaluated_im).astype(np.uint8))
-
+        self.mtf_eval_preview_btn.config(state='active')        
+        self.extracted_label_img = Image.fromarray((self.smtf_eval.extracted_label_im).astype(np.uint8))
+        coords = np.array(self.smtf_eval.pick_list)
+        mtf_vals = np.array(self.smtf_eval.mtf_value_list)
+        np.save('coords.npy', coords)        
+        np.save('mtf_vals.npy', mtf_vals)        
+        
         pass
 
     def mtf_extract_preview(self, preview):
         if preview:
-            self.preview_canvas.update_image(self.extracted_img)
+            self.preview_canvas.update_image(self.extracted_label_img)
         else:
             self.preview_canvas.update_image(self.preview_img)
         return
 
     def mtf_eval_preview(self, preview):
         if preview:
-            self.preview_canvas.update_image(self.evaluated_img)
+            self.preview_canvas.update_image(self.extracted_label_img)
         else:
             self.preview_canvas.update_image(self.preview_img)
         return
     
-    def load_img(self):
-        self.preview_img = Image.fromarray((self.img_file_load.image).astype(np.uint8))
-        self.raw_im = self.img_file_load.image
+    def load_img(self):       
+        self.raw_im = self.img_file_load.image 
+        self.preview_im = self.raw_im.copy()       
+        self.preview_im = (self.preview_im // (self.preview_im.max() / 256 + 1)).astype('uint8')
+        self.preview_im = cv2.cvtColor(self.preview_im, cv2.COLOR_GRAY2RGB)
+        self.preview_img = Image.fromarray((self.preview_im).astype(np.uint8))
         self.preview_canvas.update_image(self.preview_img)        
         msg_output = f'Image loaded from {self.img_file_load.img_path.get()}\n'
         msg_output += f'Image Resolution: {self.raw_im.shape[1]}x{self.raw_im.shape[0]}'
