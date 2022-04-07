@@ -52,6 +52,8 @@ mtf_paras = {
 
 
 output_paras = {
+                'FoV Anchor': {'value':'124,66', 'type':'value', 'regex':int_reg, 'parser':int_par,  'options':None},
+                'FoV Dimension': {'value':'1950x1116', 'type':'value', 'regex':dim_reg, 'parser':dim_par,  'options':None},
                 'Grid Dimension': {'value':'32x18', 'type':'value', 'regex':dim_reg, 'parser':dim_par,  'options':None},
                 'Mesh Resolution': {'value':'64x36', 'type':'value', 'regex':dim_reg, 'parser':dim_par,  'options':None},
                 'Interpolation': {'value':'linear', 'type':'list', 'regex':str_reg, 'parser':str_par, 'options':['linear', 'nearest', 'cubic']}                

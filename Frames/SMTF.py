@@ -97,14 +97,14 @@ class SMTF(NetsFrame2):
         mtf_grid_xx, mtf_grid_yy = np.meshgrid(mtf_grid_x, mtf_grid_y)
         mtf_grid_coords = np.vstack((mtf_grid_xx.flatten(), mtf_grid_yy.flatten())).T
         
-        mtf_coords = self.smtf_eval.pick_list[:, 0:2] + self.smtf_eval.pattern_size * 0.5
+        mtf_coords = np.array(self.smtf_eval.pick_list)[:, 0:2] + self.smtf_eval.pattern_size * 0.5
         mtf_vals = np.array(self.smtf_eval.mtf_value_list)
         mtf_coords_kdtree = KDTree(mtf_coords)
         fig, axes = plt.subplots(1, 2)
         ax = axes[1]
         
         
-        for i in range(mesh_dim.cumprod()[1]):
+        for i in range(mesh_dim[0] * mesh_dim[1]):
             dist, _= mtf_coords_kdtree.query((mtf_grid_coords[i, 0], mtf_grid_coords[i, 1]))
             if dist > self.smtf_eval.pattern_size * 0.5:
                 # ax.scatter(x=(mtf_grid_coords[i, 0]), y=(mtf_grid_coords[i, 1]), c='red')
