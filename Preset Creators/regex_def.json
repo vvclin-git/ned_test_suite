@@ -5,5 +5,7 @@
 "ufloat": "r'^\\d+[.]\\d+$'",
 "int": "r'^[-]*[1-9]\\d*$'",
 "uint": "r'^[1-9]\\d*$'",
-"opencv_const": "r'^cv2?[.]'"
+"opencv_const": "r'^cv2?[.]'",
+"str": "r'.+'",
+"bool": "r'^True$|^False$'"
 }

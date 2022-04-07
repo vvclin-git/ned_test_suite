@@ -34,9 +34,10 @@ for k in parser.keys():
     exec(par + f"=parser['{k}']")    
 
 se_paras =  {             
-            "Edge Angle": {"value": 5, "type": "value", 'regex':uint_reg, 'parser':uint_par, "options": None}, 
+            "Edge Angle": {"value": 5, "type": "value", 'regex':int_reg, 'parser':int_par, "options": None}, 
             "Pattern Size": {"value": 80, "type": "value", 'regex':uint_reg, 'parser':uint_par,"options": None},            
             "Line Type": {"value": "cv2.LINE_8", "type": "list", 'regex':opencv_const_reg, 'parser':opencv_const_par, "options": ['cv2.LINE_4', 'cv2.LINE_8', 'cv2.LINE_AA']},
+            "Reverse": {"value": "True", "type": "list", "regex": bool_reg, "parser": bool_par, "options": ["True", "False"]},
             "Extract Method": {"value": 'cv2.TM_CCOEFF_NORMED', "type": "list", 'regex':opencv_const_reg, 'parser':opencv_const_par, "options": ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
             'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']},
             "Threshold": {"value": 0.95, "type": "value", 'regex':ufloat_reg, 'parser':ufloat_par, "options": None},
@@ -44,13 +45,19 @@ se_paras =  {
             }
 
 mtf_paras = {
-            'Sensor Pixel Size (µm)': {'value':'1.85', 'regex':ufloat_reg, 'parser':ufloat_par, 'type':'value', 'options':None},
+            'Sensor Pixel Size (µm)': {'value':'1.85', 'type':'value', 'regex':ufloat_reg, 'parser':ufloat_par,  'options':None},
             'Threshold': {'value':'0.55', 'type':'value', 'regex':ufloat_reg, 'parser':ufloat_par, 'options':None},
             'MTF Contrast (10-90)': {'value':'30', 'type':'value', 'regex':uint_reg, 'parser':uint_par, 'options':None},
             }
 
 
-preset = {'se_paras':se_paras, 'mtf_paras':mtf_paras}
+output_paras = {
+                'Grid Dimension': {'value':'32x18', 'type':'value', 'regex':dim_reg, 'parser':dim_par,  'options':None},
+                'Mesh Resolution': {'value':'64x36', 'type':'value', 'regex':dim_reg, 'parser':dim_par,  'options':None},
+                'Interpolation': {'value':'linear', 'type':'list', 'regex':str_reg, 'parser':str_par, 'options':['linear', 'nearest', 'cubic']}                
+                }
+
+preset = {'se_paras':se_paras, 'mtf_paras':mtf_paras, 'output_paras': output_paras}
 
 f = open('.\\Presets\\smtf_default.json', 'w')
 json.dump(preset, f)

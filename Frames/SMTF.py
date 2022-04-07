@@ -12,6 +12,7 @@ from NED_Analyzer import SMTF_Eval
 import numpy as np
 from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
+from scipy.spatial import KDTree
 
 PRESET_PATH = '.\\Presets\\smtf_default.json'
 OUTPUT_PATH = '.\\Output\\'
@@ -24,6 +25,7 @@ class SMTF(NetsFrame2):
 
         self.se_paras = {}
         self.mtf_paras = {}
+        self.output_paras = {}
         self.smtf_eval = None
         self.mtf_roi_coord = None
         self.pattern_size = None
@@ -59,11 +61,15 @@ class SMTF(NetsFrame2):
         self.mtf_eval_preview_btn.config(state='disable')
 
         # output
+        
+        self.output_path = PathBrowse(self.settings)
+        self.output_path.pack(side='top', expand=1, fill='x')
+        
         output_frame = LabelFrame(self.settings, text='Evaluation Result Output')
         output_frame.pack(side='top', fill='x', pady=5)
-        self.output_path = PathBrowse(output_frame)
-        self.output_path.pack(side='top', expand=1, fill='x')
-        self.get_interp_mesh_btn = Button(output_frame, text='Get MTF Mesh', command=self.get_interp_mesh)
+        self.output_paras_tab = ParameterTab(output_frame, self.output_paras)
+        self.output_paras_tab.pack(side='top', expand=1, fill='x')
+        self.get_interp_mesh_btn = Button(output_frame, text='Get MTF Mesh', command=self.get_mtf_mesh)
         self.get_interp_mesh_btn.pack(side='right', padx=2, pady=5)
         self.show_interp_mesh_btn = Button(output_frame, text='Show MTF Mesh')
         self.show_interp_mesh_btn.pack(side='right', padx=2, pady=5)
@@ -72,7 +78,8 @@ class SMTF(NetsFrame2):
         self.controller = Controller(self.msg_box, self.img_file_load, self.preset_file_load, self.output_path, self.preview_canvas)
 
         linked_tabs = {'se_paras':self.se_pattern_paras_tab,
-                       'mtf_paras':self.mtf_paras_tab,                       
+                       'mtf_paras':self.mtf_paras_tab,
+                       'output_paras':self.output_paras_tab,                       
                       }
 
         self.preset_file_load.init_linked_tabs(linked_tabs)
@@ -80,21 +87,42 @@ class SMTF(NetsFrame2):
         self.preset_file_load.load_preset()   
         self.se_pattern_paras_tab.fit_height()
         self.mtf_paras_tab.fit_height()
+    
 
-    def get_interp_mesh(self):
-        mesh_dim = np.array((32, 18))
-        fov_dim = np.array((2000, 1166))
-        fov_anchor = np.array((124, 66))
-        grid_x = np.linspace(fov_anchor[0], (fov_dim - fov_anchor)[0], mesh_dim[0])
-        grid_y = np.linspace(fov_anchor[1], (fov_dim - fov_anchor)[1], mesh_dim[1])
-        grid_xx, grid_yy = np.meshgrid(grid_x, grid_y)
+    def get_mtf_mesh(self):
+        fov_anchor, fov_dim, grid_dim, mesh_dim, interpolation = self.output_paras_tab.output_parsed_vals()
+        
+        mtf_grid_x = np.linspace(fov_anchor[0] + 25, fov_dim[0] + fov_anchor[0] + 25, mesh_dim[0])
+        mtf_grid_y = np.linspace(fov_anchor[1] + 25, fov_dim[1] + fov_anchor[1] + 25, mesh_dim[1])
+        mtf_grid_xx, mtf_grid_yy = np.meshgrid(mtf_grid_x, mtf_grid_y)
+        mtf_grid_coords = np.vstack((mtf_grid_xx.flatten(), mtf_grid_yy.flatten())).T
+        
+        mtf_coords = self.smtf_eval.pick_list[:, 0:2] + self.smtf_eval.pattern_size * 0.5
+        mtf_vals = np.array(self.smtf_eval.mtf_value_list)
+        mtf_coords_kdtree = KDTree(mtf_coords)
+        fig, axes = plt.subplots(1, 2)
+        ax = axes[1]
+        
+        
+        for i in range(mesh_dim.cumprod()[1]):
+            dist, _= mtf_coords_kdtree.query((mtf_grid_coords[i, 0], mtf_grid_coords[i, 1]))
+            if dist > self.smtf_eval.pattern_size * 0.5:
+                # ax.scatter(x=(mtf_grid_coords[i, 0]), y=(mtf_grid_coords[i, 1]), c='red')
+                mtf_coords = np.append(mtf_coords, np.atleast_2d(mtf_grid_coords[i, :]), axis=0)
+                mtf_vals = np.append(mtf_vals, np.atleast_1d(0), axis=0) 
+        mtf_plot = ax.scatter(x=mtf_coords[:, 0], y=mtf_coords[:, 1], c=mtf_vals[:])
+        plt.colorbar(mtf_plot, ax)
+
+        mesh_x = np.linspace(0, self.raw_im.shape[0], mesh_dim[0])
+        mesh_y = np.linspace(0, self.raw_im.shape[1], mesh_dim[1])
+        mesh_xx, mesh_yy = np.meshgrid(mesh_x, mesh_y)
         points = np.zeros((len(self.smtf_eval.pick_list), 2))
         values = np.zeros((len(self.smtf_eval.pick_list), 1))
         for i, p in enumerate(self.smtf_eval.pick_list):
-            points[i, :] = (p[0:2] + self.smtf_eval.pattern_size * 0.5).astype('uint')
+            points[i, :] = (np.array(p[0:2]) + self.smtf_eval.pattern_size * 0.5).astype('uint')
             values[i] = self.smtf_eval.mtf_value_list[i]
-        self.mtf_mesh = griddata(points, values, (grid_xx, grid_yy), method='nearest', fill_value=0)
-        plt.imshow(self.mtf_mesh, extent=(fov_anchor[0], fov_anchor[0]+fov_dim[0], fov_anchor[1]+fov_dim[1], fov_anchor[1]), origin='upper')
+        self.mtf_mesh = griddata(points, values, (mesh_xx, mesh_yy), method=interpolation, fill_value=0)
+        # plt.imshow(self.mtf_mesh, extent=(0, self.raw_im.shape[1], self.raw_im.shape[0], 0), origin='upper')
         
 
 
@@ -144,7 +172,7 @@ class SMTF(NetsFrame2):
         self.preview_img = Image.fromarray((self.preview_im).astype(np.uint8))
         self.preview_canvas.update_image(self.preview_img)        
         msg_output = f'Image loaded from {self.img_file_load.img_path.get()}\n'
-        msg_output += f'Image Resolution: {self.raw_im.shape[1]}x{self.raw_im.shape[0]}'
+        msg_output += f'Image Resolution: {self.raw_im.shape[1]}x{self.raw_im.shape[0]}'        
         self.controller.msg_box.console(msg_output)
         self.smtf_eval = SMTF_Eval(MTF_TEMP_PATH, MTF_PATTERN_TEMP_PATH)
         self.smtf_eval.raw_im = self.raw_im
@@ -153,6 +181,10 @@ class SMTF(NetsFrame2):
         self.mtf_extract_preview_btn.config(state='disabled')
         self.mtf_eval_btn.config(state='disabled')
         self.mtf_eval_preview_btn.config(state='disabled') 
+        
+        self.smtf_eval.pick_list = np.load('coords.npy').tolist()
+        self.smtf_eval.mtf_value_list = np.load('mtf_vals.npy').tolist()
+        self.smtf_eval.pattern_size = 50
         return
 
 class Controller():

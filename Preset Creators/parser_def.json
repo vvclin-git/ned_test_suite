@@ -5,5 +5,7 @@
 "ufloat": "float(val)",
 "int": "int(val)",
 "uint": "int(val)",
-"opencv_const": "eval(val)"
+"opencv_const": "eval(val)",
+"str": "str(val)",
+"bool": "eval(val)"
 }
