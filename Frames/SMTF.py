@@ -59,7 +59,7 @@ class SMTF(NetsFrame2):
         self.mtf_eval_preview_btn = ToggleBtn(mtf_eval_frame, on_txt='Preview On', off_txt='Preview off', on_cmd=partial(self.mtf_eval_preview, True), off_cmd=partial(self.mtf_eval_preview, False))
         self.mtf_eval_preview_btn.pack(side='right', padx=2, pady=5)
         self.mtf_eval_preview_btn.config(state='disable')
-
+       
         # output
         
         self.output_path = PathBrowse(self.settings)
@@ -69,10 +69,15 @@ class SMTF(NetsFrame2):
         output_frame.pack(side='top', fill='x', pady=5)
         self.output_paras_tab = ParameterTab(output_frame, self.output_paras)
         self.output_paras_tab.pack(side='top', expand=1, fill='x')
-        self.get_interp_mesh_btn = Button(output_frame, text='Show MTF Mesh', command=self.get_mtf_mesh)
+        self.export_btn = Button(output_frame, text='Export Results', command=self.export)
+        self.export_btn.pack(side='right', padx=2, pady=5)
+        self.get_interp_mesh_btn = Button(output_frame, text='Get MTF Mesh', command=self.get_mtf_mesh)
         self.get_interp_mesh_btn.pack(side='right', padx=2, pady=5)
         self.show_interp_mesh_btn = Button(output_frame, text='Get MTF Grid', command=self.get_mtf_grid)
         self.show_interp_mesh_btn.pack(side='right', padx=2, pady=5)
+        self.show_fov_btn = ToggleBtn(output_frame, on_txt='FoV on', off_txt='FoV off', on_cmd=partial(self.show_fov, True), off_cmd=partial(self.show_fov, False))
+        self.show_fov_btn.pack(side='right', padx=2, pady=5)
+        
         
         # widget interlink & initialization
         self.controller = Controller(self.msg_box, self.img_file_load, self.preset_file_load, self.output_path, self.preview_canvas)
@@ -176,6 +181,33 @@ class SMTF(NetsFrame2):
             self.preview_canvas.update_image(self.preview_img)
         return
     
+    def show_fov(self, preview):
+        if preview:
+            fov_anchor, fov_dim, _, _ = self.output_paras_tab.output_parsed_vals()
+            fov_anchor = np.array(fov_anchor)
+            fov_dim = np.array(fov_dim)
+            fov_pt1 = fov_anchor
+            fov_pt2 = fov_anchor + fov_dim        
+            if self.smtf_eval.extracted_label_im:
+                fov_preview_im = self.smtf_eval.extracted_label_im
+            else:
+                fov_preview_im = self.preview_im
+            cv2.rectangle(fov_preview_im, fov_pt1, fov_pt2, color=(0, 255, 0), line=2)
+            fov_preview_img = Image.fromarray((self.smtf_eval.extracted_label_im).astype(np.uint8))
+            self.preview_canvas.update_image(fov_preview_img)
+        else:
+            if self.smtf_eval.extracted_label_im:
+                self.preview_canvas.update_image(self.extracted_label_img)
+            else:
+                self.preview_canvas.update_image(self.preview_img)
+        return
+    
+    def export(self):
+        output_path = self.output_path
+        if len(output_path) > 0:
+            if self.smtf_eval.extracted_im:
+                cv2.imwrite()
+
     def load_img(self):       
         self.raw_im = self.img_file_load.image 
         self.preview_im = self.raw_im.copy()       
