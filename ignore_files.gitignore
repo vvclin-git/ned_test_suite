@@ -2,4 +2,4 @@ __pycache__/
 Output/
 Frames/__pycache__/
 *.npy
-Temp/
+Temp/*.png
