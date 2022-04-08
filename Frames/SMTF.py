@@ -69,9 +69,9 @@ class SMTF(NetsFrame2):
         output_frame.pack(side='top', fill='x', pady=5)
         self.output_paras_tab = ParameterTab(output_frame, self.output_paras)
         self.output_paras_tab.pack(side='top', expand=1, fill='x')
-        self.get_interp_mesh_btn = Button(output_frame, text='Get MTF Mesh', command=self.get_mtf_mesh)
+        self.get_interp_mesh_btn = Button(output_frame, text='Show MTF Mesh', command=self.get_mtf_mesh)
         self.get_interp_mesh_btn.pack(side='right', padx=2, pady=5)
-        self.show_interp_mesh_btn = Button(output_frame, text='Show MTF Mesh')
+        self.show_interp_mesh_btn = Button(output_frame, text='Get MTF Grid', command=self.get_mtf_grid)
         self.show_interp_mesh_btn.pack(side='right', padx=2, pady=5)
         
         # widget interlink & initialization
@@ -88,42 +88,54 @@ class SMTF(NetsFrame2):
         self.se_pattern_paras_tab.fit_height()
         self.mtf_paras_tab.fit_height()
     
-
-    def get_mtf_mesh(self):
-        fov_anchor, fov_dim, grid_dim, mesh_dim, interpolation = self.output_paras_tab.output_parsed_vals()
-        
-        mtf_grid_x = np.linspace(fov_anchor[0] + 25, fov_dim[0] + fov_anchor[0] + 25, mesh_dim[0])
-        mtf_grid_y = np.linspace(fov_anchor[1] + 25, fov_dim[1] + fov_anchor[1] + 25, mesh_dim[1])
+    
+    def get_mtf_grid(self):
+        fov_anchor, fov_dim, grid_dim, mesh_dim, interpolation = self.output_paras_tab.output_parsed_vals()       
+        fov_anchor = np.array(fov_anchor) + self.smtf_eval.pattern_size * 0.5
+        mtf_grid_x = np.linspace(fov_anchor[0], fov_dim[0] + fov_anchor[0], grid_dim[0])
+        mtf_grid_y = np.linspace(fov_anchor[1], fov_dim[1] + fov_anchor[1], grid_dim[1])
         mtf_grid_xx, mtf_grid_yy = np.meshgrid(mtf_grid_x, mtf_grid_y)
         mtf_grid_coords = np.vstack((mtf_grid_xx.flatten(), mtf_grid_yy.flatten())).T
         
-        mtf_coords = np.array(self.smtf_eval.pick_list)[:, 0:2] + self.smtf_eval.pattern_size * 0.5
-        mtf_vals = np.array(self.smtf_eval.mtf_value_list)
-        mtf_coords_kdtree = KDTree(mtf_coords)
-        fig, axes = plt.subplots(1, 2)
-        ax = axes[1]
+        self.mtf_coords = np.array(self.smtf_eval.pick_list)[:, 0:2] + self.smtf_eval.pattern_size * 0.5
+        self.mtf_vals = np.array(self.smtf_eval.mtf_value_list)        
+        mtf_coords_kdtree = KDTree(self.mtf_coords)               
         
-        
-        for i in range(mesh_dim[0] * mesh_dim[1]):
+        for i in range(grid_dim[0] * grid_dim[1]):
             dist, _= mtf_coords_kdtree.query((mtf_grid_coords[i, 0], mtf_grid_coords[i, 1]))
             if dist > self.smtf_eval.pattern_size * 0.5:
                 # ax.scatter(x=(mtf_grid_coords[i, 0]), y=(mtf_grid_coords[i, 1]), c='red')
-                mtf_coords = np.append(mtf_coords, np.atleast_2d(mtf_grid_coords[i, :]), axis=0)
-                mtf_vals = np.append(mtf_vals, np.atleast_1d(0), axis=0) 
-        mtf_plot = ax.scatter(x=mtf_coords[:, 0], y=mtf_coords[:, 1], c=mtf_vals[:])
-        plt.colorbar(mtf_plot, ax)
-
-        mesh_x = np.linspace(0, self.raw_im.shape[0], mesh_dim[0])
-        mesh_y = np.linspace(0, self.raw_im.shape[1], mesh_dim[1])
-        mesh_xx, mesh_yy = np.meshgrid(mesh_x, mesh_y)
-        points = np.zeros((len(self.smtf_eval.pick_list), 2))
-        values = np.zeros((len(self.smtf_eval.pick_list), 1))
-        for i, p in enumerate(self.smtf_eval.pick_list):
-            points[i, :] = (np.array(p[0:2]) + self.smtf_eval.pattern_size * 0.5).astype('uint')
-            values[i] = self.smtf_eval.mtf_value_list[i]
-        self.mtf_mesh = griddata(points, values, (mesh_xx, mesh_yy), method=interpolation, fill_value=0)
-        # plt.imshow(self.mtf_mesh, extent=(0, self.raw_im.shape[1], self.raw_im.shape[0], 0), origin='upper')
+                self.mtf_coords = np.append(self.mtf_coords, np.atleast_2d(mtf_grid_coords[i, :]), axis=0)
+                self.mtf_vals = np.append(self.mtf_vals, np.atleast_1d(0), axis=0) 
+        px = 1/plt.rcParams['figure.dpi']
+        fig, ax = plt.subplots(figsize=(grid_dim[0] * 25 * px, grid_dim[1] * 25 * px))
         
+        mtf_plot = ax.scatter(x=self.mtf_coords[:, 0], y=self.mtf_coords[:, 1], c=self.mtf_vals[:])
+        # asp = abs(np.diff(ax.get_ylim())[0] / np.diff(ax.get_xlim())[0])
+        # asp = abs(grid_dim[1] / grid_dim[0])
+        # ax.set_aspect(asp)
+        ax.set_ylim(ax.get_ylim()[::-1])
+        ax_colorbar = fig.add_axes()
+        plt.colorbar(mtf_plot, ax_colorbar)
+        plt.show()
+
+
+    def get_mtf_mesh(self):
+        fov_anchor, fov_dim, grid_dim, mesh_dim, interpolation = self.output_paras_tab.output_parsed_vals()       
+        fov_anchor = np.array(fov_anchor) + self.smtf_eval.pattern_size * 0.5
+        
+        mesh_x = np.linspace(fov_anchor[0], fov_dim[0] + fov_anchor[0], mesh_dim[0])
+        mesh_y = np.linspace(fov_anchor[1], fov_dim[1] + fov_anchor[1], mesh_dim[1])
+        mesh_xx, mesh_yy = np.meshgrid(mesh_x, mesh_y)
+        
+        self.mtf_mesh = griddata(self.mtf_coords, self.mtf_vals, (mesh_xx, mesh_yy), method=interpolation)
+        
+        px = 1/plt.rcParams['figure.dpi']
+        fig, ax = plt.subplots(figsize=(grid_dim[0] * 25 * px, grid_dim[1] * 25 * px))
+        mtf_mesh_plot = ax.imshow(self.mtf_mesh, aspect='auto', interpolation='nearest', extent=(fov_anchor[0], fov_dim[0] + fov_anchor[0], fov_dim[1] + fov_anchor[1], fov_anchor[1]), origin='upper')
+        ax_colorbar = fig.add_axes()
+        plt.colorbar(mtf_mesh_plot, ax_colorbar)
+        plt.show()
 
 
     def mtf_extract(self):
