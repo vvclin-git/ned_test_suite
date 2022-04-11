@@ -183,7 +183,7 @@ class SMTF(NetsFrame2):
     
     def show_fov(self, preview):
         if preview:
-            fov_anchor, fov_dim, _, _ = self.output_paras_tab.output_parsed_vals()
+            fov_anchor, fov_dim, _, _, _ = self.output_paras_tab.output_parsed_vals()
             fov_anchor = np.array(fov_anchor)
             fov_dim = np.array(fov_dim)
             fov_pt1 = fov_anchor
