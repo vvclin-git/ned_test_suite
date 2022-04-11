@@ -1,5 +1,5 @@
 __pycache__/
 Output/
-Frames/__pycache__/
+*.pyc
 *.npy
 Temp/*.png
