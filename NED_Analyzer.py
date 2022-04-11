@@ -340,6 +340,8 @@ class SMTF_Eval():
         self.roi_path = roi_path        
         self.se_pattern_path = se_pattern_path
         self.raw_im = None
+        self.extracted_im = None
+        self.extracted_label_im = None
         self.controller = None
         self.pattern_size = None
         pass

@@ -61,10 +61,13 @@ class NED_Test_Suite(tk.Tk):
         tab_distortion = Distortion(tab_control, preview_img_size)
         tab_grille = Grille(tab_control, preview_img_size)
         tab_draper = Draper(tab_control, draper_preview_size)
+        tab_smtf = SMTF(tab_control, preview_img_size)
+        
         tab_control.add(tab_test_charts, text='Test Charts', )
         tab_control.add(tab_distortion, text='Distortion Analysis')
         tab_control.add(tab_grille, text='Grille Contrast Analysis')
         tab_control.add(tab_draper, text='Draper Eyebox Evaluation')
+        tab_control.add(tab_smtf, text='Slanted Edge MTF Analysis')
         tab_control.pack(expand=1, fill='both')
 
 
