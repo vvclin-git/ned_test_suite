@@ -33,6 +33,7 @@ class NED_Test_Suite(tk.Tk):
         # Styling
         style = Style()
         style.theme_use('clam')
+        
         style.configure('Red.TFrame', background='red')
         style.configure('Green.TFrame', background='green')
         style.configure('Blue.TFrame', background='blue')
