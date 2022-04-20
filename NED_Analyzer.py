@@ -192,7 +192,9 @@ class Distortion_Eval():
         self.std_grid_pts_count = None    
         self.dist_rel = None
         self.dist_diff = None
-    
+        self.std_grid_im = None
+        self.chart_res = None
+
     def std_grid_gen(self, chart_res, grid_dim, padding):    
         chart_res = np.array(chart_res).astype('uint')
         grid_dim = np.array(grid_dim).astype('uint')
@@ -205,10 +207,10 @@ class Distortion_Eval():
         output_msg += f'{grid_dim[0] * grid_dim[1]} points\n'
         output_msg += f'Grid Pitch: {grid_pitch[0]} x {grid_pitch[1]}'
         # print(f'Grid Pitch: {grid_pitch[0]} x {grid_pitch[1]}')
-        # chart_im = np.zeros((chart_res[1], chart_res[0], 3))
+        self.std_grid_im = np.zeros((chart_res[1], chart_res[0], 3))
         grid_coords = np.vstack((grid_xx.flatten(), grid_yy.flatten())).transpose().astype('int')        
         # for i in range(len(grid_coords)):
-        #     cv2.circle(chart_im, (grid_coords[i, 0], grid_coords[i, 1]), marker_size, (255, 255, 255), -1)
+        #     cv2.circle(self.labeled_img, (grid_coords[i, 0], grid_coords[i, 1]), 10, (0, 255, 0), -1)
         self.std_grid = Grid(grid_coords, grid_dim)
         self.std_grid.sorted = True
         self.grid_dim = grid_dim
@@ -234,6 +236,26 @@ class Distortion_Eval():
         self.dist_grid = Grid(self.dist_coords[1:, :], self.grid_dim)
         self.dist_grid.sort(dist_angle, max_ratio)
         self.dist_coords = self.dist_grid.coords
+        center_pt = self.dist_grid.coords[self.dist_grid.center_ind].squeeze()
+        if center_pt.shape[0] > 1:
+            center_pt = np.average(center_pt, axis=0)
+        dist_center_dist = self.dist_grid.get_pt_dist(center_pt)
+        center_pts = self.dist_grid.coords[np.argsort(dist_center_dist)].squeeze()[0:3]
+        center_pts = center_pts[np.argsort(center_pts, axis=0)[:, 0], :]
+        grid_pitch = np.array([abs(center_pts[1, 0] - center_pts[2, 0]), abs(center_pts[0, 1] - center_pts[1, 1])])
+        grid_size = (grid_pitch * (self.grid_dim - 1)).astype('uint')
+        grid_anchor = ((self.chart_res - grid_size) * 0.5).astype('uint')
+        grid_x = np.linspace(grid_anchor[0], grid_anchor[0] + grid_size[0], self.grid_dim[0]) 
+        grid_y = np.linspace(grid_anchor[1], grid_anchor[1] + grid_size[1], self.grid_dim[1])
+        grid_xx, grid_yy = np.meshgrid(grid_x, grid_y)
+        grid_coords = np.vstack((grid_xx.flatten(), grid_yy.flatten())).transpose().astype('int')        
+        self.std_grid = Grid(grid_coords, self.grid_dim)
+        self.std_grid.sort(0, 1.5)
+        # self.std_grid.center_grid(self.dist_grid)
+        for i in range(len(grid_coords)):
+            cv2.circle(self.labeled_img, (grid_coords[i, 0], grid_coords[i, 1]), 10, (0, 255, 0), -1)
+        for i in range(len(self.dist_grid.coords)):
+            cv2.circle(self.labeled_img, (self.dist_grid.coords[i, 0].astype('uint'), self.dist_grid.coords[i, 1].astype('uint')), 5, (255, 0, 0), -1)
         return
 
     def dist_eval(self):                
@@ -242,8 +264,12 @@ class Distortion_Eval():
             return output_msg
         self.dist_grid.normalize()
         self.std_grid.normalize()
-        std_center_dist = self.std_grid.get_pt_dist(self.std_grid.coords[self.dist_grid.center_ind].squeeze())
-        dist_center_dist = self.dist_grid.get_pt_dist(self.dist_grid.coords[self.dist_grid.center_ind].squeeze())
+        center_pt = self.std_grid.coords[self.dist_grid.center_ind].squeeze()
+        if center_pt.shape[0] > 1:
+            center_pt = np.average(center_pt, axis=0)
+        
+        std_center_dist = self.std_grid.get_pt_dist(center_pt)
+        dist_center_dist = self.dist_grid.get_pt_dist(center_pt)
         dist_diff = dist_center_dist - std_center_dist
         out = np.zeros_like(std_center_dist)
         np.divide(dist_diff, std_center_dist, out=out, where=std_center_dist!=0)
@@ -263,7 +289,7 @@ class Distortion_Eval():
         coords_scaled_center = np.array([(np.average(coords_scaled[:, 0]), np.average(coords_scaled[:, 1]))])    
         coords_shift = np.array([chart_res]) / 2 - coords_scaled_center    
         coords_output = (coords_scaled + np.tile(coords_shift, (len(coords_scaled), 1))).astype('uint')
-        self.indexed_img = np.zeros((chart_res[1], chart_res[0], 3))    
+        self.indexed_img = np.zeros((chart_res[1], chart_res[0], 3), dtype='uint8')    
         for i, p in enumerate(coords_output):        
             cv2.putText(self.indexed_img, str(i), (p[0], p[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 255, 255), 1, cv2.LINE_AA)
         

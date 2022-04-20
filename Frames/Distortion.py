@@ -75,6 +75,7 @@ class Distortion(NetsFrame):
         self.grid_extract_btn_frame.pack(side='top', expand=True, fill='both')
         # self.extract_preview_btn = Button(self.grid_extract_btn_frame, text='Preview', style='Buttons.TButton', command=None)
         # self.extract_preview_btn.pack(side='right', padx=2, pady=5)
+        
         self.extract_preview_btn = ToggleBtn(self.grid_extract_btn_frame, 'Preview On', 'Preview Off', self.preview_grid_on, self.preview_grid_off)
         self.extract_preview_btn.pack(side='right', padx=2, pady=5)
         
@@ -206,18 +207,21 @@ class Distortion(NetsFrame):
     
     def extract_grid(self):
         grid_extract_paras = self.grid_extract_settings.output_parsed_vals()                
-        output_msg = self.dist_eval.std_grid_gen(*grid_extract_paras[0:3])
-        self.console(output_msg)
+        
         output_msg = self.dist_eval.img_grid_extract(*grid_extract_paras[3:])
         self.console(output_msg)
-        
-        if self.dist_eval.extracted_pts_count == self.dist_eval.std_grid_pts_count:
-            output_msg = f'Standard Grid Points: {self.dist_eval.std_grid_pts_count}\n'
+        self.dist_eval.chart_res = np.array(grid_extract_paras[0])
+        self.dist_eval.grid_dim = np.array(grid_extract_paras[1])
+        # output_msg = self.dist_eval.std_grid_gen(*grid_extract_paras[0:3])
+        # self.console(output_msg)
+        std_grid_pts_count = self.dist_eval.grid_dim[0] * self.dist_eval.grid_dim[1]
+        if self.dist_eval.extracted_pts_count == std_grid_pts_count:
+            output_msg = f'Standard Grid Points: {std_grid_pts_count}\n'
             output_msg += f'Extracted Points: {self.dist_eval.extracted_pts_count}\n'
             self.console(output_msg)
             self.enable_btn_group(self.grid_sort_btn_list)
         else:
-            output_msg = f'Standard Grid Points: {self.dist_eval.std_grid_pts_count}\n'
+            output_msg = f'Standard Grid Points: {std_grid_pts_count}\n'
             output_msg += f'Extracted Points: {self.dist_eval.extracted_pts_count}\n'
             output_msg += f'Incorrect extracted point count!'
             self.console(output_msg)
