@@ -1,4 +1,6 @@
 import imp
+
+from numpy import pad
 from Frames.NetsFrame import *
 from Widgets.ParameterTab import *
 import os
@@ -97,13 +99,16 @@ class Distortion(NetsFrame):
         # self.sort_preview_btn = Button(self.grid_sort_btn_frame, text='Preview', style='Buttons.TButton', command=None)
         # self.sort_preview_btn.pack(side='right', padx=2, pady=5)
         
-        self.sort_preview_btn = ToggleBtn(self.grid_sort_btn_frame, 'Preview On', 'Preview Off', self.preview_sort_on, self.preview_sort_off)
+        self.export_grids_btn = Button(self.grid_sort_btn_frame, text='Export Grids', command=self.export_grids)
+        self.export_grids_btn.pack(side='right', padx=2, pady=5)
+        
+        self.sort_preview_btn = ToggleBtn(self.grid_sort_btn_frame, 'Show Index On', 'Show Index Off', self.preview_sort_on, self.preview_sort_off)
         self.sort_preview_btn.pack(side='right', padx=2, pady=5)
         
         self.grid_sort_btn = Button(self.grid_sort_btn_frame, text='Sort Grid', style='Buttons.TButton', command=self.sort_grid)
         self.grid_sort_btn.pack(side='right', padx=2, pady=5)
         
-        self.grid_sort_btn_list = [self.sort_preview_btn, self.grid_sort_btn]
+        self.grid_sort_btn_list = [self.sort_preview_btn, self.grid_sort_btn, self.export_grids_btn]
         self.buttons.append(self.grid_sort_btn_list)
         
         # Distortion Analysis
@@ -298,28 +303,48 @@ class Distortion(NetsFrame):
     def plot_coords_mesh(self, title, coords_val, grid_dim, chart_res, vmax, vmin, cmap='viridis'):        
         fig, ax = plt.subplots()            
         ax.set_title(title)
-        x = np.linspace(0, chart_res[0], grid_dim[0])
-        y = np.linspace(0, chart_res[1], grid_dim[1])
+        # x = np.linspace(0, chart_res[0], grid_dim[0])
+        # y = np.linspace(0, chart_res[1], grid_dim[1])
+        x = np.linspace(1, grid_dim[0], grid_dim[0])
+        y = np.linspace(1, grid_dim[1], grid_dim[1])
         xx, yy = np.meshgrid(x, y)
         coords_val_mesh = coords_val.reshape((grid_dim[1], grid_dim[0]))    
-        c = ax.pcolormesh(xx, yy, coords_val_mesh, cmap=cmap, vmax=vmax, vmin=vmin)        
+        # c = ax.pcolormesh(xx, yy, coords_val_mesh, cmap=cmap, vmax=vmax, vmin=vmin, shading='auto')
+        c = ax.imshow(coords_val_mesh)        
         fig.colorbar(c, ax=ax, fraction=0.046, pad=0.04)
         return fig, ax
 
     def save_mesh(self):
-        if self.dist_eval.dist_rel or self.dist_eval.dist_diff is None:
+        if (self.dist_eval.dist_rel is None) or (self.dist_eval.dist_diff is None):
             output_msg = f'Merit mesh not available!'
             self.console(output_msg)
             return
         timestr = time.strftime("%Y%m%d-%H-%M-%S")
-        rel_filename = f'Relative Distortion Mesh_{timestr}'
-        np.save(self.output_path + rel_filename, self.dist_eval.dist_rel)
+        output_path = self.output_path.get() + '\\'
+        rel_filename = f'Relative Distortion Mesh_{timestr}.npy'
+        np.save(output_path + rel_filename, self.dist_eval.dist_rel)
         output_msg = f'Mesh file {rel_filename} saved'
         self.console(output_msg)
 
-        diff_filename = f'Absolute Distortion Mesh_{timestr}'
-        np.save(self.output_path + diff_filename, self.dist_eval.dist_diff)
+        diff_filename = f'Absolute Distortion Mesh_{timestr}.npy'
+        np.save(output_path + diff_filename, self.dist_eval.dist_diff)
         output_msg = f'Mesh file {diff_filename} saved'
         self.console(output_msg)
         
         return
+
+    def export_grids(self):
+        if (self.dist_eval.std_grid is None) or (self.dist_eval.dist_grid is None):
+            output_msg = f'Grids not available!'
+            self.console(output_msg)
+            return
+        timestr = time.strftime("%Y%m%d-%H-%M-%S")
+        output_path = self.output_path.get() + '\\'
+        dist_grid_filename = f'Distorted_Grid_{timestr}.npy'
+        np.save(output_path + dist_grid_filename, self.dist_eval.dist_grid.coords)
+        output_msg = f'Grid file {dist_grid_filename} saved'
+        self.console(output_msg)
+        std_grid_filename = f'Standard_Grid_{timestr}.npy'
+        np.save(output_path + std_grid_filename, self.dist_eval.std_grid.coords)
+        output_msg = f'Grid file {std_grid_filename} saved'
+        self.console(output_msg)

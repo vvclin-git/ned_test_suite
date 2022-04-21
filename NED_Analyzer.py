@@ -248,10 +248,11 @@ class Distortion_Eval():
         grid_x = np.linspace(grid_anchor[0], grid_anchor[0] + grid_size[0], self.grid_dim[0]) 
         grid_y = np.linspace(grid_anchor[1], grid_anchor[1] + grid_size[1], self.grid_dim[1])
         grid_xx, grid_yy = np.meshgrid(grid_x, grid_y)
-        grid_coords = np.vstack((grid_xx.flatten(), grid_yy.flatten())).transpose().astype('int')        
+        grid_coords = np.vstack((grid_xx.flatten(), grid_yy.flatten())).transpose().astype('int') 
         self.std_grid = Grid(grid_coords, self.grid_dim)
         self.std_grid.sort(0, 1.5)
-        # self.std_grid.center_grid(self.dist_grid)
+        self.std_grid.center_grid(self.dist_grid)
+        grid_coords = self.std_grid.coords.astype('uint')        
         for i in range(len(grid_coords)):
             cv2.circle(self.labeled_img, (grid_coords[i, 0], grid_coords[i, 1]), 10, (0, 255, 0), -1)
         for i in range(len(self.dist_grid.coords)):
@@ -275,10 +276,12 @@ class Distortion_Eval():
         np.divide(dist_diff, std_center_dist, out=out, where=std_center_dist!=0)
         # dist_rel = dist_diff / std_center_dist
         dist_rel = out
+        dist_rel[self.dist_grid.center_ind] = 0
         self.dist_rel = dist_rel
         self.dist_diff = dist_diff
+        
         output_msg = f'Max relative distortion: {(np.nanmax(abs(dist_rel)) * 100)} %\n'
-        output_msg += f'Max absolute distortion: {np.max(abs(dist_diff))} %'
+        output_msg += f'Max absolute distortion: {np.max(abs(dist_diff))}'
         return output_msg
 
     def draw_coords_index(self, pad_ratio):
