@@ -241,8 +241,9 @@ class Distortion_Eval():
             center_pt = np.average(center_pt, axis=0)
         dist_center_dist = self.dist_grid.get_pt_dist(center_pt)
         center_pts = self.dist_grid.coords[np.argsort(dist_center_dist)].squeeze()[0:3]
-        center_pts = center_pts[np.argsort(center_pts, axis=0)[:, 0], :]
-        grid_pitch = np.array([abs(center_pts[1, 0] - center_pts[2, 0]), abs(center_pts[0, 1] - center_pts[1, 1])])
+        # center_pts = center_pts[np.argsort(center_pts, axis=0)[:, 0], :]
+        # grid_pitch = np.array([abs(center_pts[1, 0] - center_pts[2, 0]), abs(center_pts[0, 1] - center_pts[1, 1])])
+        grid_pitch = np.array([abs(center_pts[:, 0].max() - center_pts[:, 0].min()), abs(center_pts[:, 1].max() - center_pts[:, 1].min())])
         grid_size = (grid_pitch * (self.grid_dim - 1)).astype('uint')
         grid_anchor = ((self.chart_res - grid_size) * 0.5).astype('uint')
         grid_x = np.linspace(grid_anchor[0], grid_anchor[0] + grid_size[0], self.grid_dim[0]) 
