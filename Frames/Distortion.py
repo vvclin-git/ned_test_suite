@@ -334,10 +334,10 @@ class Distortion(NetsFrame):
         return
 
     def export_grids(self):
-        if (self.dist_eval.std_grid is None) or (self.dist_eval.dist_grid is None):
-            output_msg = f'Grids not available!'
-            self.console(output_msg)
-            return
+        # if (self.dist_eval.std_grid is None) or (self.dist_eval.dist_grid is None):
+        #     output_msg = f'Grids not available!'
+        #     self.console(output_msg)
+        #     return
         timestr = time.strftime("%Y%m%d-%H-%M-%S")
         output_path = self.output_path.get() + '\\'
         dist_grid_filename = f'Distorted_Grid_{timestr}.npy'

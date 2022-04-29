@@ -236,26 +236,26 @@ class Distortion_Eval():
         self.dist_grid = Grid(self.dist_coords[1:, :], self.grid_dim)
         self.dist_grid.sort(dist_angle, max_ratio)
         self.dist_coords = self.dist_grid.coords
-        center_pt = self.dist_grid.coords[self.dist_grid.center_ind].squeeze()
+        center_pt = np.atleast_2d(self.dist_grid.coords[self.dist_grid.center_ind].squeeze())
         if center_pt.shape[0] > 1:
             center_pt = np.average(center_pt, axis=0)
         dist_center_dist = self.dist_grid.get_pt_dist(center_pt)
         center_pts = self.dist_grid.coords[np.argsort(dist_center_dist)].squeeze()[0:3]
         # center_pts = center_pts[np.argsort(center_pts, axis=0)[:, 0], :]
         # grid_pitch = np.array([abs(center_pts[1, 0] - center_pts[2, 0]), abs(center_pts[0, 1] - center_pts[1, 1])])
-        grid_pitch = np.array([abs(center_pts[:, 0].max() - center_pts[:, 0].min()), abs(center_pts[:, 1].max() - center_pts[:, 1].min())])
-        grid_size = (grid_pitch * (self.grid_dim - 1)).astype('uint')
-        grid_anchor = ((self.chart_res - grid_size) * 0.5).astype('uint')
-        grid_x = np.linspace(grid_anchor[0], grid_anchor[0] + grid_size[0], self.grid_dim[0]) 
-        grid_y = np.linspace(grid_anchor[1], grid_anchor[1] + grid_size[1], self.grid_dim[1])
-        grid_xx, grid_yy = np.meshgrid(grid_x, grid_y)
-        grid_coords = np.vstack((grid_xx.flatten(), grid_yy.flatten())).transpose().astype('int') 
-        self.std_grid = Grid(grid_coords, self.grid_dim)
-        self.std_grid.sort(0, 1.5)
-        self.std_grid.center_grid(self.dist_grid)
-        grid_coords = self.std_grid.coords.astype('uint')        
-        for i in range(len(grid_coords)):
-            cv2.circle(self.labeled_img, (grid_coords[i, 0], grid_coords[i, 1]), 10, (0, 255, 0), -1)
+        # grid_pitch = np.array([abs(center_pts[:, 0].max() - center_pts[:, 0].min()), abs(center_pts[:, 1].max() - center_pts[:, 1].min())])
+        # grid_size = (grid_pitch * (self.grid_dim - 1)).astype('uint')
+        # grid_anchor = ((self.chart_res - grid_size) * 0.5).astype('uint')
+        # grid_x = np.linspace(grid_anchor[0], grid_anchor[0] + grid_size[0], self.grid_dim[0]) 
+        # grid_y = np.linspace(grid_anchor[1], grid_anchor[1] + grid_size[1], self.grid_dim[1])
+        # grid_xx, grid_yy = np.meshgrid(grid_x, grid_y)
+        # grid_coords = np.vstack((grid_xx.flatten(), grid_yy.flatten())).transpose().astype('int') 
+        # self.std_grid = Grid(grid_coords, self.grid_dim)
+        # self.std_grid.sort(0, 1.5)
+        # self.std_grid.center_grid(self.dist_grid)
+        # grid_coords = self.std_grid.coords.astype('uint')        
+        # for i in range(len(grid_coords)):
+        #     cv2.circle(self.labeled_img, (grid_coords[i, 0], grid_coords[i, 1]), 10, (0, 255, 0), -1)
         for i in range(len(self.dist_grid.coords)):
             cv2.circle(self.labeled_img, (self.dist_grid.coords[i, 0].astype('uint'), self.dist_grid.coords[i, 1].astype('uint')), 5, (255, 0, 0), -1)
         return
