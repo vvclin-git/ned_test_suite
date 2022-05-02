@@ -25,6 +25,6 @@ from tkinter.ttk import *
 root = tk.Tk()
 root.geometry('1480x990')
 preview_img_size = (960, 740)
-nets_frame = SMTF(root, preview_img_size)
+nets_frame = NetsFrame2(root, preview_img_size)
 nets_frame.pack(expand=1, fill='both')
 root.mainloop()
