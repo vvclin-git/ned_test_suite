@@ -90,7 +90,7 @@ class TestCharts(Frame):
         self.chart_para_tree.set_tree_height(20)
         self.chart_para_tree.pack(side='top', expand=1, fill='x', pady=5, padx=2)
                 
-        self.output_chart_btn = Button(self.chart_para_frame, text='Output Charts')
+        self.output_chart_btn = Button(self.chart_para_frame, text='Output Charts', command=self.output_charts)
         self.output_chart_btn.pack(side='right', padx=2, pady=5)        
         
         self.preview_chart_btn = Button(self.chart_para_frame, text='Preview Chart', command=self.preview_chart)
@@ -248,70 +248,78 @@ class TestCharts(Frame):
 
     def preview_chart(self):        
         chart_type = self.chart_para_tree.selected_chart
-        chart_paras = self.chart_para_tree.output_parsed_vals()
-        chart_im, output_msg = self.gen_chart(chart_type, chart_paras[chart_type])
-        # np.save('chart_im', chart_im)
-        # cv2.imwrite('chart_im_cv.png', chart_im)         
-        if len(chart_im[0][0]) == 3:
-            chart_im_preview = Image.fromarray((chart_im).astype(np.uint8))
-        else:
-            chart_im_preview = Image.fromarray((chart_im[:, :, 0]).astype(np.uint8))
-        # chart_im_preview.save('chart_im.png')
-        self.preview_canvas.update_image(chart_im_preview)
-        self.controller.msg_box.console(output_msg)
+        if len(chart_type) > 0:
+            chart_paras = self.chart_para_tree.output_parsed_vals()
+            chart_im, output_msg = self.gen_chart(chart_type, chart_paras[chart_type])
+            # np.save('chart_im', chart_im)
+            # cv2.imwrite('chart_im_cv.png', chart_im)         
+            if len(chart_im[0][0]) == 3:
+                chart_im_preview = Image.fromarray((chart_im).astype(np.uint8))
+            else:
+                chart_im_preview = Image.fromarray((chart_im[:, :, 0]).astype(np.uint8))
+            # chart_im_preview.save('chart_im.png')
+            self.preview_canvas.update_image(chart_im_preview)
+            self.controller.msg_box.console(output_msg)
         return
 
-    def gen_chart(self, chart_type, para_list):        
-        # parsed_paras = []        
-        # for p in para_list:
-        #     # print(f'{p[0]}, {type(p[1])}')
-        #     parsed = p[1]
-        #     if type(p[1]) == str: 
-        #         if regex_color.search(p[1]):                    
-        #             parsed_str = p[1].split(',')
-        #             parsed = (int(parsed_str[0]), int(parsed_str[1]), int(parsed_str[2]))
-        #         elif regex_coord.search(p[1]):
-        #             parsed_str = p[1].split('x')
-        #             parsed = (int(p[1].split('x')[0]), int(p[1].split('x')[1]))               
-        #         elif p[0] == 'Line Type':
-        #             # parsed = {'filled':cv2.FILLED, 'line_4':cv2.LINE_4, 'line_8':cv2.LINE_8, 'line_AA':cv2.LINE_AA}[p[1]]                 
-        #             parsed = eval(p[1])
-        #     parsed_paras.append(parsed)
-        # print(parsed_paras)
-        # chart_im, _ = CHART_FN_DICT[self.chart_type.get()](*parsed_paras)
-        chart_im, output_msg, _ = CHART_FN_DICT[chart_type](*para_list)
-        # print(type(chart_im))
+    def gen_chart(self, chart_type, para_list):                
+        chart_im, output_msg, _ = CHART_FN_DICT[chart_type](*para_list)        
         return chart_im, output_msg
 
-
-
-    def output_charts(self):
-        para_list = []
-        output_path = self.output_path.get()
+    def output_charts(self):        
+        output_path = self.output_path.get_path()
+        if len(output_path) == 0:
+            self.controller.msg_box.console('No file output, output path not specified')
+            return
         output_name = ''
         timestr = time.strftime("%Y%m%d-%H-%M-%S")
         
-        
-        
-        for c in self.chart_output_chk.output_values():
-            if c[1] == 'Yes':
-                output_name = c[0].replace(' ', '_')
-                # print(c[0], self.saved_chart_paras[c[0]])
-                for k in self.saved_chart_paras[c[0]].keys():
-                    # print([k, self.saved_chart_paras[c[0]][k]['value']])
-                    value = self.saved_chart_paras[c[0]][k]['value']
-                    if k == 'Resolution' or k == 'Grid Dimension':
-                        output_name += f'_{value}'
-                    para_list.append([k, value])
-                # print(para_list)
-                self.console(f'Generating {c[0]}...', cr=False)
-                chart_im, output_msg = self.gen_chart(c[0], para_list)
-                self.console(f'Exporting...', cr=False)
-                cv2.imwrite(f'{output_path}\\{output_name}_{timestr}.png', chart_im)
-                self.console(f'Done', cr=True)
-
-            para_list = []
+        chart_paras = self.chart_para_tree.output_parsed_vals()
+        self.controller.msg_box.console(f'Output Path: {output_path}')
+        for t in chart_paras:
+            self.controller.msg_box.console(f'Generating {t}...', cr=False)
+            chart_im, output_msg = self.gen_chart(t, chart_paras[t])
+            output_name = self.gen_output_name(output_msg)
+            self.controller.msg_box.console(f'Exporting...', cr=False)
+            stat = cv2.imwrite(f'{output_path}\\{output_name}{timestr}.png', chart_im)
+            if stat:
+                self.controller.msg_box.console(f'Done', cr=True)        
+            else:
+                self.controller.msg_box.console(f'Failed', cr=True)
         return
+
+    def gen_output_name(self, chart_output_msg):
+        out_paras = chart_output_msg.replace('\n', ',').split(',')        
+        out_paras_dict = {}
+        for i in range(len(out_paras) - 1):
+            p = out_paras[i]
+            para = p.split(':')
+            out_paras_dict[para[0]] = para[1].lstrip()        
+        output_name = ''
+        for p in out_paras_dict:
+            if p in {'Chart Type', 'Resolution', 'Grid Dimension', 'Grille Size', 'Padding'}:
+                output_name += f'{out_paras_dict[p]}_'        
+        return output_name
+
+        # for c in self.chart_output_chk.output_values():
+        #     if c[1] == 'Yes':
+        #         output_name = c[0].replace(' ', '_')
+        #         # print(c[0], self.saved_chart_paras[c[0]])
+        #         for k in self.saved_chart_paras[c[0]].keys():
+        #             # print([k, self.saved_chart_paras[c[0]][k]['value']])
+        #             value = self.saved_chart_paras[c[0]][k]['value']
+        #             if k == 'Resolution' or k == 'Grid Dimension':
+        #                 output_name += f'_{value}'
+        #             para_list.append([k, value])
+        #         # print(para_list)
+        #         self.console(f'Generating {c[0]}...', cr=False)
+        #         chart_im, output_msg = self.gen_chart(c[0], para_list)
+        #         self.console(f'Exporting...', cr=False)
+        #         cv2.imwrite(f'{output_path}\\{output_name}_{timestr}.png', chart_im)
+        #         self.console(f'Done', cr=True)
+
+        #     para_list = []
+        # return
 
     def load_preset(self):
         f = open(self.preset_path.get(), 'r')

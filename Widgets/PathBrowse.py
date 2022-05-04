@@ -32,8 +32,12 @@ class PathBrowse(Frame):
         temp_path = filedialog.askdirectory(parent=self, initialdir=cur_path, title='Please select a directory')
         # if len(temp_path) > 0:
         #     print ("You chose: %s" % tempdir)
-        self.output_path.set(temp_path + '/')
+        if len(temp_path) > 0:
+            self.output_path.set(temp_path + '/')
         return
+    
+    def get_path(self):
+        return self.output_path.get()
 
 if __name__=='__main__':
     root = tk.Tk()
