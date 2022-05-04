@@ -1,5 +1,5 @@
 import imp
-from Frames.NetsFrame import *
+from Frames.NetsFrame2 import *
 from Widgets.ParameterTab import *
 import os
 from tkinter import filedialog
@@ -9,6 +9,9 @@ import time
 import json
 from tkinter.ttk import *
 from Widgets.ToggleBtn import *
+from Widgets.ImgFileLoad import *
+from Widgets.PresetFileLoad import *
+from Widgets.PathBrowse import *
 import matplotlib
 from matplotlib import pyplot as plt
 from functools import partial
@@ -18,7 +21,7 @@ OUTPUT_PATH = f'{os.getcwd()}\\Output'
 PRESET_PATH = f'{os.getcwd()}\\Presets\\dist_default.json'
 MESH_OUTPUT_PATH = f'{os.getcwd()}\\Output'
 
-class Distortion(NetsFrame):
+class Distortion(NetsFrame2):
     def __init__(self, window, preview_img_size):
         super().__init__(window, preview_img_size)
         f = open(PRESET_PATH, 'r')
@@ -29,43 +32,48 @@ class Distortion(NetsFrame):
         self.grid_extract_paras = self.presets['grid_extract_paras']
         self.grid_sort_paras = self.presets['grid_sort_paras']
         
-        self.output_path = tk.StringVar()        
-        self.output_path.set(OUTPUT_PATH)        
-        self.preset_path.set(PRESET_PATH)
-        self.mesh_output_path = tk.StringVar()
-        self.mesh_output_path.set(MESH_OUTPUT_PATH)
-        self.img_path = tk.StringVar()
+        # self.output_path = tk.StringVar()        
+        # self.output_path.set(OUTPUT_PATH)        
+        # self.preset_path.set(PRESET_PATH)
+        # self.mesh_output_path = tk.StringVar()
+        # self.mesh_output_path.set(MESH_OUTPUT_PATH)
+        # self.img_path = tk.StringVar()
         self.mesh_output_type = tk.IntVar()
         self.mesh_output_type.set(1)        
-        self.raw_img = None
+        # self.raw_img = None
         self.buttons = []
         
-        # preset button event handler config
-        self.preset_save_btn.configure(command=self.save_preset)
-        self.preset_load_btn.configure(command=self.load_preset)
+        # # preset button event handler config
+        # self.preset_save_btn.configure(command=self.save_preset)
+        # self.preset_load_btn.configure(command=self.load_preset)
 
-        # Image Loading 
-        self.img_load_frame = LabelFrame(self.settings, text='Image Loading', padding=(5, 5, 5, 5))
-        self.img_load_frame.pack(expand=True, fill='x', pady=10, side='top')
+        # # Image Loading 
+        # self.img_load_frame = LabelFrame(self.settings, text='Image Loading', padding=(5, 5, 5, 5))
+        # self.img_load_frame.pack(expand=True, fill='x', pady=10, side='top')
         
-        self.img_load_input_frame = Frame(self.img_load_frame)
-        self.img_load_input_frame.pack(side='top', expand=True, fill='both')
-        self.img_load_btn_frame = Frame(self.img_load_frame)
-        self.img_load_btn_frame.pack(side='top', expand=True, fill='both')
         
-        self.img_path_label = Label(self.img_load_input_frame, text='Image Path')
-        self.img_path_label.pack(side='left', padx=5, pady=5)
-        self.img_path_input = Entry(self.img_load_input_frame, textvariable=self.img_path)        
-        self.img_path_input.pack(side='left', expand=True, fill='x', padx=5, pady=5)
+        # self.img_load_input_frame = Frame(self.img_load_frame)
+        # self.img_load_input_frame.pack(side='top', expand=True, fill='both')
+        # self.img_load_btn_frame = Frame(self.img_load_frame)
+        # self.img_load_btn_frame.pack(side='top', expand=True, fill='both')
+        
+        # self.img_path_label = Label(self.img_load_input_frame, text='Image Path')
+        # self.img_path_label.pack(side='left', padx=5, pady=5)
+        # self.img_path_input = Entry(self.img_load_input_frame, textvariable=self.img_path)        
+        # self.img_path_input.pack(side='left', expand=True, fill='x', padx=5, pady=5)
 
-        img_load_btn = Button(self.img_load_btn_frame, text='Load', style='Buttons.TButton', command=self.img_load)
-        img_load_btn.pack(side='right', padx=2, pady=5)
-        img_browse_btn = Button(self.img_load_btn_frame, text='Browse...', style='Buttons.TButton', command=self.img_browse)        
-        img_browse_btn.pack(side='right', padx=2, pady=5)
+        # img_load_btn = Button(self.img_load_btn_frame, text='Load', style='Buttons.TButton', command=self.img_load)
+        # img_load_btn.pack(side='right', padx=2, pady=5)
+        # img_browse_btn = Button(self.img_load_btn_frame, text='Browse...', style='Buttons.TButton', command=self.img_browse)        
+        # img_browse_btn.pack(side='right', padx=2, pady=5)
         
+        # Output Path
+        self.output_path = PathBrowse(self.settings)
+        self.output_path.pack(expand=1, fill='x', pady=5)
+
         # Grid Extraction Settings
         self.grid_extract_frame = LabelFrame(self.settings, text='Grid Extraction Settings', padding=(5, 5, 5, 5))
-        self.grid_extract_frame.pack(expand=True, fill='x', pady=10, side='top')
+        self.grid_extract_frame.pack(expand=True, fill='x', pady=5, side='top')
         
         self.grid_extract_settings = ParameterTab(self.grid_extract_frame, self.grid_extract_paras)
         self.grid_extract_settings.tree.configure(height=6)
@@ -86,7 +94,7 @@ class Distortion(NetsFrame):
 
         # Grid Sorting Settings
         self.grid_sort_frame = LabelFrame(self.settings, text='Grid Sorting Settings', padding=(5, 5, 5, 5))
-        self.grid_sort_frame.pack(expand=True, fill='x', pady=10, side='top')
+        self.grid_sort_frame.pack(expand=True, fill='x', pady=5, side='top')
         self.grid_sort_settings = ParameterTab(self.grid_sort_frame, self.grid_sort_paras)
         self.grid_sort_settings.tree.configure(height=3)
         self.grid_sort_settings.pack(expand=True, fill='x', pady=5, side='top')
@@ -104,22 +112,23 @@ class Distortion(NetsFrame):
         
         self.grid_sort_btn_list = [self.sort_preview_btn, self.grid_sort_btn]
         self.buttons.append(self.grid_sort_btn_list)
-        
+               
+
         # Distortion Analysis
         self.dist_analysis_frame = LabelFrame(self.settings, text='Distortion Analysis', padding=(5, 5, 5, 5))
-        self.dist_analysis_frame.pack(side='top', expand=True, fill='x', pady=10)
+        self.dist_analysis_frame.pack(side='top', expand=True, fill='x', pady=5)
 
-        self.mesh_output_frame = Frame(self.dist_analysis_frame)
-        self.mesh_output_frame.pack(side='top', expand=True, fill='both')
+        # self.mesh_output_frame = Frame(self.dist_analysis_frame)
+        # self.mesh_output_frame.pack(side='top', expand=True, fill='both')
         
-        self.mesh_output_label = Label(self.mesh_output_frame, text='Output Path')
-        self.mesh_output_label.pack(side='left', padx=5, pady=5)
+        # self.mesh_output_label = Label(self.mesh_output_frame, text='Output Path')
+        # self.mesh_output_label.pack(side='left', padx=5, pady=5)
         
-        self.mesh_output_path_input = Entry(self.mesh_output_frame, textvariable=self.mesh_output_path)
-        self.mesh_output_path_input.pack(side='left', expand=True, fill='x', pady=5)
+        # self.mesh_output_path_input = Entry(self.mesh_output_frame, textvariable=self.mesh_output_path)
+        # self.mesh_output_path_input.pack(side='left', expand=True, fill='x', pady=5)
         
-        self.mesh_output_path_btn = Button(self.mesh_output_frame, text='Browse...', style='Buttons.TButton', command=partial(self.path_browse, path_var=self.mesh_output_path))
-        self.mesh_output_path_btn.pack(side='left', padx=2, pady=5)
+        # self.mesh_output_path_btn = Button(self.mesh_output_frame, text='Browse...', style='Buttons.TButton', command=partial(self.path_browse, path_var=self.mesh_output_path))
+        # self.mesh_output_path_btn.pack(side='left', padx=2, pady=5)
         
         self.show_mesh_frame = Frame(self.dist_analysis_frame)
         self.show_mesh_frame.pack(side='right', expand=True, fill='x')        
@@ -145,82 +154,95 @@ class Distortion(NetsFrame):
         self.dist_analysis_btn_list = [self.dist_rel_mesh_rbtn, self.dist_diff_mesh_rbtn, self.save_mesh_btn, self.show_mesh_btn, self.dist_analyze_btn]
         self.buttons.append(self.dist_analysis_btn_list)
         
-        self.reset()
+        # self.reset()
+
+        # Widget Initialization
+        self.controller = Controller(self.msg_box, self.preset_file_load, self.img_file_load, self.output_path, self.preview_canvas)
+
+        linked_tabs = {'grid_extract_paras':self.grid_extract_settings, 'grid_sort_paras':self.grid_sort_settings}
+
+        self.preset_file_load.init_linked_tabs(linked_tabs)
+        self.preset_file_load.preset_path.set(PRESET_PATH)
+        self.preset_file_load.load_preset()
+        self.preset_file_load.set_controller(self.controller)
 
         
-    def load_preset(self):
-        f = open(self.preset_path.get(), 'r')
-        self.presets = json.load(f)
-        f.close()
-        self.grid_extract_paras = self.presets['grid_extract_paras']
-        self.grid_sort_paras = self.presets['grid_sort_paras']
-        self.grid_extract_settings.parameter_chg(self.grid_extract_paras)
-        self.grid_sort_settings.parameter_chg(self.grid_sort_paras)
+    # def load_preset(self):
+    #     f = open(self.preset_path.get(), 'r')
+    #     self.presets = json.load(f)
+    #     f.close()
+    #     self.grid_extract_paras = self.presets['grid_extract_paras']
+    #     self.grid_sort_paras = self.presets['grid_sort_paras']
+    #     self.grid_extract_settings.parameter_chg(self.grid_extract_paras)
+    #     self.grid_sort_settings.parameter_chg(self.grid_sort_paras)
         
-        self.console(f'Preset File: {self.preset_path.get()} Loaded')
-        return 
+    #     self.controller.msg_box.console(f'Preset File: {self.preset_path.get()} Loaded')
+    #     return 
 
-    def save_preset(self):
-        if os.path.isfile(self.preset_path.get()):
-            chk_overwrite = tk.messagebox.askquestion(title='Confirm Overwrite', message='File already exists, overwrite?')
-            if not chk_overwrite:
-                return                
-        f = open(self.preset_path.get(), 'w')
-        for p in self.grid_extract_settings.output_values():
-            self.grid_extract_paras[p[0]]['value'] = p[1]
-        for p in self.grid_sort_settings.output_values():
-            self.grid_sort_paras[p[0]]['value'] = p[1]
+    # def save_preset(self):
+    #     if os.path.isfile(self.preset_path.get()):
+    #         chk_overwrite = tk.messagebox.askquestion(title='Confirm Overwrite', message='File already exists, overwrite?')
+    #         if not chk_overwrite:
+    #             return                
+    #     f = open(self.preset_path.get(), 'w')
+    #     for p in self.grid_extract_settings.output_values():
+    #         self.grid_extract_paras[p[0]]['value'] = p[1]
+    #     for p in self.grid_sort_settings.output_values():
+    #         self.grid_sort_paras[p[0]]['value'] = p[1]
         
-        save_preset = {'grid_extract_paras':self.grid_extract_paras, 'grid_sort_paras':self.grid_sort_paras}
-        json.dump(save_preset, f)
-        f.close()
-        self.console(f'Preset File: {self.preset_path.get()} Saved')
-        return
+    #     save_preset = {'grid_extract_paras':self.grid_extract_paras, 'grid_sort_paras':self.grid_sort_paras}
+    #     json.dump(save_preset, f)
+    #     f.close()
+    #     self.controller.msg_box.console(f'Preset File: {self.preset_path.get()} Saved')
+    #     return
 
-    def path_browse(self, path_var):
-        cur_path = os.getcwd()
-        temp_path = filedialog.askdirectory(parent=self, initialdir=cur_path, title='Please select a directory')
-        # if len(temp_path) > 0:
-        #     print ("You chose: %s" % tempdir)
-        path_var.set(temp_path)
-        return
+    # def path_browse(self, path_var):
+    #     cur_path = os.getcwd()
+    #     temp_path = filedialog.askdirectory(parent=self, initialdir=cur_path, title='Please select a directory')
+    #     # if len(temp_path) > 0:
+    #     #     print ("You chose: %s" % tempdir)
+    #     path_var.set(temp_path)
+    #     return
 
-    def img_browse(self):
-        cur_path = os.getcwd()
-        temp_path = filedialog.askopenfilename(parent=self, initialdir=cur_path, title='Please select a image file', filetypes=[("PNG","*.png"), ("bmp","*.bmp"), ("JPG","*.jpg")])
-        # if len(temp_path) > 0:
-        #     print ("You chose: %s" % tempdir)
-        if len(temp_path) > 0:            
-            self.img_path.set(temp_path)
-        return
+    # def img_browse(self):
+    #     cur_path = os.getcwd()
+    #     temp_path = filedialog.askopenfilename(parent=self, initialdir=cur_path, title='Please select a image file', filetypes=[("PNG","*.png"), ("bmp","*.bmp"), ("JPG","*.jpg")])
+    #     # if len(temp_path) > 0:
+    #     #     print ("You chose: %s" % tempdir)
+    #     if len(temp_path) > 0:            
+    #         self.img_path.set(temp_path)
+    #     return
 
-    def img_load(self):        
-        img_path = self.img_path.get()
-        if len(img_path) > 0:
-            self.dist_eval.raw_img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
-            self.update_img(Image.fromarray((self.dist_eval.raw_img).astype(np.uint8)))
-            self.console(f'Image File: {img_path} Loaded')
-            self.reset()
-            self.enable_btn_group(self.grid_extract_btn_list)
-        return
+    # def img_load(self):        
+    #     img_path = self.img_path.get()
+    #     if len(img_path) > 0:
+    #         self.dist_eval.raw_img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+    #         self.update_img(Image.fromarray((self.dist_eval.raw_img).astype(np.uint8)))
+    #         self.controller.msg_box.console(f'Image File: {img_path} Loaded')
+    #         self.reset()
+    #         self.enable_btn_group(self.grid_extract_btn_list)
+    #     return
     
     def extract_grid(self):
+        
+        self.dist_eval.raw_img = self.img_file_load.image
+        
         grid_extract_paras = self.grid_extract_settings.output_parsed_vals()                
         output_msg = self.dist_eval.std_grid_gen(*grid_extract_paras[0:3])
-        self.console(output_msg)
+        self.controller.msg_box.console(output_msg)
         output_msg = self.dist_eval.img_grid_extract(*grid_extract_paras[3:])
-        self.console(output_msg)
+        self.controller.msg_box.console(output_msg)
         
         if self.dist_eval.extracted_pts_count == self.dist_eval.std_grid_pts_count:
             output_msg = f'Standard Grid Points: {self.dist_eval.std_grid_pts_count}\n'
             output_msg += f'Extracted Points: {self.dist_eval.extracted_pts_count}\n'
-            self.console(output_msg)
+            self.controller.msg_box.console(output_msg)
             self.enable_btn_group(self.grid_sort_btn_list)
         else:
             output_msg = f'Standard Grid Points: {self.dist_eval.std_grid_pts_count}\n'
             output_msg += f'Extracted Points: {self.dist_eval.extracted_pts_count}\n'
             output_msg += f'Incorrect extracted point count!'
-            self.console(output_msg)
+            self.controller.msg_box.console(output_msg)
         
         
         return
@@ -229,16 +251,9 @@ class Distortion(NetsFrame):
         grid_sort_paras = self.grid_sort_settings.output_parsed_vals()
         self.dist_eval.sort_dist_grid(*grid_sort_paras)
         self.dist_eval.draw_coords_index(0.8)
-        self.console('Extracted Grid Sorted')
+        self.controller.msg_box.console('Extracted Grid Sorted')
         self.dist_analyze_btn.config(state='enable')
-        # if self.dist_eval.extracted_pts_count == self.dist_eval.std_grid_pts_count:
-        #     grid_sort_paras = self.grid_sort_settings.output_parsed_vals()
-        #     self.dist_eval.sort_dist_grid(*grid_sort_paras)
-        #     self.dist_eval.draw_coords_index(0.8)
-        #     self.console('Extracted Grid Sorted')
-        #     self.dist_analyze_btn.config(state='enable')
-        # else:
-        #     self.console(f'Incorrect extracted point count (std_grid: {self.dist_eval.std_grid_pts_count}, extracted: {self.dist_eval.extracted_pts_count})')
+        
         return
 
     def preview_grid_on(self):
@@ -269,7 +284,7 @@ class Distortion(NetsFrame):
         output_msg = self.dist_eval.dist_eval()
         self.enable_btn_group(self.dist_analysis_btn_list)
         # print(output_msg)
-        self.console(output_msg)
+        self.controller.msg_box.console(output_msg)
         return
     
     def show_dist_mesh(self, mesh_output_type):
@@ -305,17 +320,26 @@ class Distortion(NetsFrame):
     def save_mesh(self):
         if self.dist_eval.dist_rel or self.dist_eval.dist_diff is None:
             output_msg = f'Merit mesh not available!'
-            self.console(output_msg)
+            self.controller.msg_box.console(output_msg)
             return
         timestr = time.strftime("%Y%m%d-%H-%M-%S")
         rel_filename = f'Relative Distortion Mesh_{timestr}'
         np.save(self.output_path + rel_filename, self.dist_eval.dist_rel)
         output_msg = f'Mesh file {rel_filename} saved'
-        self.console(output_msg)
+        self.controller.msg_box.console(output_msg)
 
         diff_filename = f'Absolute Distortion Mesh_{timestr}'
         np.save(self.output_path + diff_filename, self.dist_eval.dist_diff)
         output_msg = f'Mesh file {diff_filename} saved'
-        self.console(output_msg)
+        self.controller.msg_box.console(output_msg)
         
         return
+
+class Controller():
+    def __init__(self, msg_box, preset_file_load, img_file_load, output_path, preview_canvas):
+        self.msg_box = msg_box
+        self.msg_box = msg_box
+        self.preset_file_load = preset_file_load
+        self.output_file_path = output_path
+        self.img_file_load = img_file_load
+        self.preview_canvas = preview_canvas

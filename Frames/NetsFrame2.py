@@ -61,11 +61,11 @@ class NetsFrame2(Frame):
                 
         # Preset Save / Load
         self.preset_file_load = PresetFileLoad(self.settings)
-        self.preset_file_load.pack(side='top', expand=1, fill='x')
+        self.preset_file_load.pack(side='top', expand=1, fill='x', pady=5)
 
         # Image Loading
         self.img_file_load = ImgFileLoad(self.settings, self.load_img)
-        self.img_file_load.pack(side='top', expand=1, fill='both')
+        self.img_file_load.pack(side='top', expand=1, fill='x', pady=5)
         
 
     
