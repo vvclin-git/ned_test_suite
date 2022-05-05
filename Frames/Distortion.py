@@ -1,4 +1,6 @@
 import imp
+
+from numpy import pad
 from Frames.NetsFrame2 import *
 from Widgets.ParameterTab import *
 import os
@@ -15,6 +17,7 @@ from Widgets.PathBrowse import *
 import matplotlib
 from matplotlib import pyplot as plt
 from functools import partial
+from PIL import ImageDraw
 # from NED_Chart import *
 
 OUTPUT_PATH = f'{os.getcwd()}\\Output'
@@ -32,44 +35,11 @@ class Distortion(NetsFrame2):
         self.grid_extract_paras = self.presets['grid_extract_paras']
         self.grid_sort_paras = self.presets['grid_sort_paras']
         
-        # self.output_path = tk.StringVar()        
-        # self.output_path.set(OUTPUT_PATH)        
-        # self.preset_path.set(PRESET_PATH)
-        # self.mesh_output_path = tk.StringVar()
-        # self.mesh_output_path.set(MESH_OUTPUT_PATH)
-        # self.img_path = tk.StringVar()
         self.mesh_output_type = tk.IntVar()
         self.mesh_output_type.set(1)        
         # self.raw_img = None
-        self.buttons = []
-        
-        # # preset button event handler config
-        # self.preset_save_btn.configure(command=self.save_preset)
-        # self.preset_load_btn.configure(command=self.load_preset)
-
-        # # Image Loading 
-        # self.img_load_frame = LabelFrame(self.settings, text='Image Loading', padding=(5, 5, 5, 5))
-        # self.img_load_frame.pack(expand=True, fill='x', pady=10, side='top')
-        
-        
-        # self.img_load_input_frame = Frame(self.img_load_frame)
-        # self.img_load_input_frame.pack(side='top', expand=True, fill='both')
-        # self.img_load_btn_frame = Frame(self.img_load_frame)
-        # self.img_load_btn_frame.pack(side='top', expand=True, fill='both')
-        
-        # self.img_path_label = Label(self.img_load_input_frame, text='Image Path')
-        # self.img_path_label.pack(side='left', padx=5, pady=5)
-        # self.img_path_input = Entry(self.img_load_input_frame, textvariable=self.img_path)        
-        # self.img_path_input.pack(side='left', expand=True, fill='x', padx=5, pady=5)
-
-        # img_load_btn = Button(self.img_load_btn_frame, text='Load', style='Buttons.TButton', command=self.img_load)
-        # img_load_btn.pack(side='right', padx=2, pady=5)
-        # img_browse_btn = Button(self.img_load_btn_frame, text='Browse...', style='Buttons.TButton', command=self.img_browse)        
-        # img_browse_btn.pack(side='right', padx=2, pady=5)
-        
-        # Output Path
-        self.output_path = PathBrowse(self.settings)
-        self.output_path.pack(expand=1, fill='x', pady=5)
+        self.buttons = []       
+        self.tmp_canvas_img = None        
 
         # Grid Extraction Settings
         self.grid_extract_frame = LabelFrame(self.settings, text='Grid Extraction Settings', padding=(5, 5, 5, 5))
@@ -81,8 +51,7 @@ class Distortion(NetsFrame2):
 
         self.grid_extract_btn_frame = Frame(self.grid_extract_frame)
         self.grid_extract_btn_frame.pack(side='top', expand=True, fill='both')
-        # self.extract_preview_btn = Button(self.grid_extract_btn_frame, text='Preview', style='Buttons.TButton', command=None)
-        # self.extract_preview_btn.pack(side='right', padx=2, pady=5)
+        
         self.extract_preview_btn = ToggleBtn(self.grid_extract_btn_frame, 'Preview On', 'Preview Off', self.preview_grid_on, self.preview_grid_off)
         self.extract_preview_btn.pack(side='right', padx=2, pady=5)
         
@@ -93,7 +62,7 @@ class Distortion(NetsFrame2):
         self.buttons.append(self.grid_extract_btn_list)
 
         # Grid Sorting Settings
-        self.grid_sort_frame = LabelFrame(self.settings, text='Grid Sorting Settings', padding=(5, 5, 5, 5))
+        self.grid_sort_frame = LabelFrame(self.settings, text='Grid Sorting / Ideal Grid Settings', padding=(5, 5, 5, 5))
         self.grid_sort_frame.pack(expand=True, fill='x', pady=5, side='top')
         self.grid_sort_settings = ParameterTab(self.grid_sort_frame, self.grid_sort_paras)
         self.grid_sort_settings.tree.configure(height=3)
@@ -101,10 +70,14 @@ class Distortion(NetsFrame2):
         
         self.grid_sort_btn_frame = Frame(self.grid_sort_frame)
         self.grid_sort_btn_frame.pack(side='top', expand=True, fill='both')
-        # self.sort_preview_btn = Button(self.grid_sort_btn_frame, text='Preview', style='Buttons.TButton', command=None)
-        # self.sort_preview_btn.pack(side='right', padx=2, pady=5)
         
-        self.sort_preview_btn = ToggleBtn(self.grid_sort_btn_frame, 'Preview On', 'Preview Off', self.preview_sort_on, self.preview_sort_off)
+        self.gen_std_grid_btn = Button(self.grid_sort_btn_frame, text='Get Std Grid', command=self.get_std_grid)
+        self.gen_std_grid_btn.pack(side='right', padx=2, pady=5)
+
+        self.center_preview_btn = ToggleBtn(self.grid_sort_btn_frame, 'Center On', 'Center Off', self.preview_center_on, self.preview_center_off)
+        self.center_preview_btn.pack(side='right', padx=2, pady=5)
+
+        self.sort_preview_btn = ToggleBtn(self.grid_sort_btn_frame, 'Index On', 'Index Off', self.preview_sort_on, self.preview_sort_off)
         self.sort_preview_btn.pack(side='right', padx=2, pady=5)
         
         self.grid_sort_btn = Button(self.grid_sort_btn_frame, text='Sort Grid', style='Buttons.TButton', command=self.sort_grid)
@@ -112,24 +85,15 @@ class Distortion(NetsFrame2):
         
         self.grid_sort_btn_list = [self.sort_preview_btn, self.grid_sort_btn]
         self.buttons.append(self.grid_sort_btn_list)
-               
+
+        # Output Path
+        self.output_path = PathBrowse(self.settings)
+        self.output_path.pack(expand=1, fill='x', pady=5)       
 
         # Distortion Analysis
         self.dist_analysis_frame = LabelFrame(self.settings, text='Distortion Analysis', padding=(5, 5, 5, 5))
         self.dist_analysis_frame.pack(side='top', expand=True, fill='x', pady=5)
 
-        # self.mesh_output_frame = Frame(self.dist_analysis_frame)
-        # self.mesh_output_frame.pack(side='top', expand=True, fill='both')
-        
-        # self.mesh_output_label = Label(self.mesh_output_frame, text='Output Path')
-        # self.mesh_output_label.pack(side='left', padx=5, pady=5)
-        
-        # self.mesh_output_path_input = Entry(self.mesh_output_frame, textvariable=self.mesh_output_path)
-        # self.mesh_output_path_input.pack(side='left', expand=True, fill='x', pady=5)
-        
-        # self.mesh_output_path_btn = Button(self.mesh_output_frame, text='Browse...', style='Buttons.TButton', command=partial(self.path_browse, path_var=self.mesh_output_path))
-        # self.mesh_output_path_btn.pack(side='left', padx=2, pady=5)
-        
         self.show_mesh_frame = Frame(self.dist_analysis_frame)
         self.show_mesh_frame.pack(side='right', expand=True, fill='x')        
         
@@ -165,72 +129,18 @@ class Distortion(NetsFrame2):
         self.preset_file_load.preset_path.set(PRESET_PATH)
         self.preset_file_load.load_preset()
         self.preset_file_load.set_controller(self.controller)
-
-        
-    # def load_preset(self):
-    #     f = open(self.preset_path.get(), 'r')
-    #     self.presets = json.load(f)
-    #     f.close()
-    #     self.grid_extract_paras = self.presets['grid_extract_paras']
-    #     self.grid_sort_paras = self.presets['grid_sort_paras']
-    #     self.grid_extract_settings.parameter_chg(self.grid_extract_paras)
-    #     self.grid_sort_settings.parameter_chg(self.grid_sort_paras)
-        
-    #     self.controller.msg_box.console(f'Preset File: {self.preset_path.get()} Loaded')
-    #     return 
-
-    # def save_preset(self):
-    #     if os.path.isfile(self.preset_path.get()):
-    #         chk_overwrite = tk.messagebox.askquestion(title='Confirm Overwrite', message='File already exists, overwrite?')
-    #         if not chk_overwrite:
-    #             return                
-    #     f = open(self.preset_path.get(), 'w')
-    #     for p in self.grid_extract_settings.output_values():
-    #         self.grid_extract_paras[p[0]]['value'] = p[1]
-    #     for p in self.grid_sort_settings.output_values():
-    #         self.grid_sort_paras[p[0]]['value'] = p[1]
-        
-    #     save_preset = {'grid_extract_paras':self.grid_extract_paras, 'grid_sort_paras':self.grid_sort_paras}
-    #     json.dump(save_preset, f)
-    #     f.close()
-    #     self.controller.msg_box.console(f'Preset File: {self.preset_path.get()} Saved')
-    #     return
-
-    # def path_browse(self, path_var):
-    #     cur_path = os.getcwd()
-    #     temp_path = filedialog.askdirectory(parent=self, initialdir=cur_path, title='Please select a directory')
-    #     # if len(temp_path) > 0:
-    #     #     print ("You chose: %s" % tempdir)
-    #     path_var.set(temp_path)
-    #     return
-
-    # def img_browse(self):
-    #     cur_path = os.getcwd()
-    #     temp_path = filedialog.askopenfilename(parent=self, initialdir=cur_path, title='Please select a image file', filetypes=[("PNG","*.png"), ("bmp","*.bmp"), ("JPG","*.jpg")])
-    #     # if len(temp_path) > 0:
-    #     #     print ("You chose: %s" % tempdir)
-    #     if len(temp_path) > 0:            
-    #         self.img_path.set(temp_path)
-    #     return
-
-    # def img_load(self):        
-    #     img_path = self.img_path.get()
-    #     if len(img_path) > 0:
-    #         self.dist_eval.raw_img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
-    #         self.update_img(Image.fromarray((self.dist_eval.raw_img).astype(np.uint8)))
-    #         self.controller.msg_box.console(f'Image File: {img_path} Loaded')
-    #         self.reset()
-    #         self.enable_btn_group(self.grid_extract_btn_list)
-    #     return
     
     def extract_grid(self):
         
-        self.dist_eval.raw_img = self.img_file_load.image
+        self.dist_eval.raw_im = self.img_file_load.image
         
         grid_extract_paras = self.grid_extract_settings.output_parsed_vals()                
-        output_msg = self.dist_eval.std_grid_gen(*grid_extract_paras[0:3])
-        self.controller.msg_box.console(output_msg)
-        output_msg = self.dist_eval.img_grid_extract(*grid_extract_paras[3:])
+        # output_msg = self.dist_eval.std_grid_gen(*grid_extract_paras[0:3])
+        # self.controller.msg_box.console(output_msg)
+        # output_msg = self.dist_eval.img_grid_extract(*grid_extract_paras[3:])
+        output_msg = self.dist_eval.img_grid_extract(*grid_extract_paras[0:3])
+        self.dist_eval.grid_dim = grid_extract_paras[3]
+        self.dist_eval.std_grid_pts_count = self.dist_eval.grid_dim[0] * self.dist_eval.grid_dim[1]
         self.controller.msg_box.console(output_msg)
         
         if self.dist_eval.extracted_pts_count == self.dist_eval.std_grid_pts_count:
@@ -249,36 +159,81 @@ class Distortion(NetsFrame2):
     
     def sort_grid(self):
         grid_sort_paras = self.grid_sort_settings.output_parsed_vals()
-        self.dist_eval.sort_dist_grid(*grid_sort_paras)
+        self.dist_eval.sort_dist_grid(*grid_sort_paras[0:2])
         self.dist_eval.draw_coords_index(0.8)
         self.controller.msg_box.console('Extracted Grid Sorted')
-        self.dist_analyze_btn.config(state='enable')
-        
+        # self.dist_analyze_btn.config(state='enable')
+        x_min_pitch, y_min_pitch = self.dist_eval.get_center_pitch()
+        x_center, y_center = self.dist_eval.get_center_pt()
+        self.mark_center()
+        self.controller.msg_box.console(f'Grid center location: {x_center}, {y_center}')
+        self.controller.msg_box.console(f'Grid pitch at center: {x_min_pitch}, {y_min_pitch}')
+        return
+
+    def get_std_grid(self):
+        grid_sort_paras = self.grid_sort_settings.output_parsed_vals()
+        self.dist_eval.std_grid_gen(*grid_sort_paras[2::])        
+        self.preview_canvas.update_image(Image.fromarray((self.dist_eval.labeled_im).astype(np.uint8)))
+        return
+    
+    def export_grid(self):
+        timestr = time.strftime("%Y%m%d-%H-%M-%S")
+        np.save(f'Standard Grid Coordinate_{timestr}.npy', self.dist_eval.std_grid.coords)
+        np.save(f'Distorted Grid Coordinate_{timestr}.npy', self.dist_eval.dist_grid.coords)
         return
 
     def preview_grid_on(self):
-        if self.dist_eval.labeled_img is None:
+        if self.dist_eval.labeled_im is None:
             return
-        self.update_img(Image.fromarray((self.dist_eval.labeled_img).astype(np.uint8)))
+        self.preview_canvas.update_image(Image.fromarray((self.dist_eval.labeled_im).astype(np.uint8)))
         return
 
     def preview_grid_off(self):
-        if self.dist_eval.labeled_img is None:
+        if self.dist_eval.labeled_im is None:
             return
-        self.update_img(Image.fromarray((self.dist_eval.raw_img).astype(np.uint8)))
+        self.preview_canvas.update_image(Image.fromarray((self.dist_eval.raw_im).astype(np.uint8)))
         return
     
     def preview_sort_on(self):
-        if self.dist_eval.indexed_img is None:
+        if self.dist_eval.indexed_im is None:
             return
-        self.update_img(Image.fromarray((self.dist_eval.indexed_img).astype(np.uint8)))
+        self.preview_canvas.update_image(Image.fromarray((self.dist_eval.indexed_im).astype(np.uint8)))
         return
 
     def preview_sort_off(self):
-        if self.dist_eval.indexed_img is None:
+        if self.dist_eval.indexed_im is None:
             return
-        self.update_img(Image.fromarray((self.dist_eval.indexed_img).astype(np.uint8)))
+        self.preview_canvas.update_image(Image.fromarray((self.dist_eval.indexed_im).astype(np.uint8)))
         return
+
+    def mark_center(self):
+        if self.dist_eval.dist_grid.sorted:
+            draw = ImageDraw.Draw(self.preview_canvas.image)            
+            for p in self.dist_eval.get_center_pts():
+                x, y = p[:]
+                draw.line([x - 5, y, x + 5, y], fill=128)
+                draw.line([x, y - 5, x, y + 5], fill=128)            
+            self.preview_canvas.update_image(self.preview_canvas.image)
+        return
+
+
+    def preview_center_on(self):
+        if self.dist_eval.dist_grid.sorted:
+            x, y = self.dist_eval.get_center_pt()            
+            self.tmp_canvas_img = self.preview_canvas.image.copy()
+            draw = ImageDraw.Draw(self.preview_canvas.image)            
+            draw.line([x - 10, y, x + 10, y], fill=128)
+            draw.line([x, y - 10, x, y + 10], fill=128)
+            self.preview_canvas.update_image(self.preview_canvas.image)
+
+        return
+    
+    def preview_center_off(self):
+        if self.tmp_canvas_img:
+            self.preview_canvas.update_image(self.tmp_canvas_img)
+
+        return
+
 
     def dist_evaluate(self):
         output_msg = self.dist_eval.dist_eval()
@@ -292,28 +247,29 @@ class Distortion(NetsFrame2):
         dist_eval = self.dist_eval.dist_diff                
         # top_dist_rel_ind = np.argsort(-1 * abs(dist_rel))[0:10]
         # top_dist_diff_ind = np.argsort(-1 * abs(dist_eval))[0:10]
-        grid_extract_paras = self.grid_extract_settings.output_parsed_vals()
-        grid_dim = grid_extract_paras[1]
-        chart_res = grid_extract_paras[0]
+        # grid_extract_paras = self.grid_extract_settings.output_parsed_vals()
+        grid_dim = self.dist_eval.grid_dim
+        # chart_res = grid_extract_paras[0]
         if mesh_output_type.get() == 1:
             title = 'Relative Distortion %'
-            fig, _ = self.plot_coords_mesh(title, (dist_rel) * 100, grid_dim, chart_res, 5, -5, 'coolwarm')
+            fig, _ = self.plot_coords_mesh(title, (dist_rel) * 100, grid_dim, 5, -5, 'coolwarm')
             
         elif mesh_output_type.get() == 2:
             title = 'Absolute Distortion %'
-            fig, _ = self.plot_coords_mesh(title, (dist_eval) * 100, grid_dim, chart_res, 5, -5, 'coolwarm')
+            fig, _ = self.plot_coords_mesh(title, (dist_eval) * 100, grid_dim, 5, -5, 'coolwarm')
         # fig.savefig(output_path + 'distorted_dist_rel.png', dpi=600)
         fig.show()
         return
 
-    def plot_coords_mesh(self, title, coords_val, grid_dim, chart_res, vmax, vmin, cmap='viridis'):        
+    def plot_coords_mesh(self, title, coords_val, grid_dim, vmax, vmin, cmap='viridis'):        
         fig, ax = plt.subplots()            
         ax.set_title(title)
-        x = np.linspace(0, chart_res[0], grid_dim[0])
-        y = np.linspace(0, chart_res[1], grid_dim[1])
+        x = np.linspace(0, grid_dim[0], grid_dim[0])
+        y = np.linspace(0, grid_dim[1], grid_dim[1])
         xx, yy = np.meshgrid(x, y)
         coords_val_mesh = coords_val.reshape((grid_dim[1], grid_dim[0]))    
-        c = ax.pcolormesh(xx, yy, coords_val_mesh, cmap=cmap, vmax=vmax, vmin=vmin)        
+        # c = ax.pcolormesh(xx, yy, coords_val_mesh, cmap=cmap, vmax=vmax, vmin=vmin)        
+        c = ax.imshow(coords_val_mesh)
         fig.colorbar(c, ax=ax, fraction=0.046, pad=0.04)
         return fig, ax
 
