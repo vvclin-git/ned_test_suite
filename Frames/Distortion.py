@@ -172,7 +172,8 @@ class Distortion(NetsFrame2):
 
     def get_std_grid(self):
         grid_sort_paras = self.grid_sort_settings.output_parsed_vals()
-        self.dist_eval.std_grid_gen(*grid_sort_paras[2::])        
+        msg_output = self.dist_eval.std_grid_gen(*grid_sort_paras[2::])        
+        self.controller.msg_box.console(msg_output)
         self.preview_canvas.update_image(Image.fromarray((self.dist_eval.labeled_im).astype(np.uint8)))
         return
     

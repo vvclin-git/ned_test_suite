@@ -249,6 +249,10 @@ class Distortion_Eval():
         std_grid_center_pt = np.array(self.std_grid.get_center_pt())
         shift = np.array(center_pt) - std_grid_center_pt
         self.std_grid.shift_coords(shift)
+        if self.std_grid.coords[self.std_grid.coords < 0].size > 0:
+            output_msg = 'Negative coordinate detected, check grid center values'
+            self.std_grid = None
+            return output_msg
         self.grid_dim = grid_dim
         for i in range(len(self.std_grid.coords)):
             cv2.circle(self.labeled_im, (self.std_grid.coords[i, 0].astype('uint'), self.std_grid.coords[i, 1].astype('uint')), 5, (255, 0, 0), -1)
@@ -265,7 +269,7 @@ class Distortion_Eval():
         _, thresh = cv2.threshold(norm_im, thresh_low, thresh_high, cv2.THRESH_BINARY)
         # print(thresh.shape)
         # print(blur_kernel)
-        self.thresh = cv2.medianBlur(thresh, blur_kernel)
+        self.thresh = cv2.medianBlur(thresh, blur_kernel).astype('uint8')
         _, labels, stat, centroids = cv2.connectedComponentsWithStats(self.thresh, connectivity=8)
         labels[labels > 0] = 255
         labels_out = np.stack((np.zeros_like(labels), labels, self.thresh), -1)
@@ -295,7 +299,7 @@ class Distortion_Eval():
         center_pt = np.atleast_2d(self.dist_grid.coords[self.dist_grid.center_ind].squeeze())
         if center_pt.shape[0] > 1:
             center_pt = np.average(center_pt, axis=0)
-        return center_pt
+        return center_pt[0, :]
 
     def dist_eval(self):                
         if not (self.dist_grid.sorted and self.std_grid.sorted):
@@ -334,12 +338,16 @@ class Distortion_Eval():
     
     def get_center_pitch(self):
         if not self.dist_grid.sorted:
-            return None
+            return None        
         center_pt = self.dist_grid.get_center_pt()
         dist_center_dist = self.dist_grid.get_pt_dist(center_pt)
-        center_pts = self.dist_grid.coords[np.argsort(dist_center_dist)].squeeze()[0:3]
-        x_pitch = center_pts[:, 0].max() - center_pts[:, 0].min()
-        y_pitch = center_pts[:, 1].max() - center_pts[:, 1].min()
+        center_pts = self.dist_grid.coords[np.argsort(dist_center_dist)].squeeze()[0:4]
+        if (self.dist_grid.grid_dim[0] % 2 == 1 and self.dist_grid.grid_dim[1] % 2 == 1):
+            x_pitch = max(abs(center_pts[1:4, 0] - center_pts[0, 0]))
+            y_pitch = max(abs(center_pts[1:4, 1] - center_pts[0, 1]))
+        else:
+            x_pitch = center_pts[:, 0].max() - center_pts[:, 0].min()
+            y_pitch = center_pts[:, 1].max() - center_pts[:, 1].min()
         return (x_pitch, y_pitch)
 
 
