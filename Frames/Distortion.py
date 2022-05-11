@@ -61,6 +61,10 @@ class Distortion(NetsFrame2):
         self.grid_extract_btn_list = [self.extract_preview_btn, self.grid_extract_btn]
         self.buttons.append(self.grid_extract_btn_list)
 
+        # Output Path
+        self.output_path = PathBrowse(self.settings)
+        self.output_path.pack(expand=1, fill='x', pady=5) 
+
         # Grid Sorting Settings
         self.grid_sort_frame = LabelFrame(self.settings, text='Grid Sorting / Ideal Grid Settings', padding=(5, 5, 5, 5))
         self.grid_sort_frame.pack(expand=True, fill='x', pady=5, side='top')
@@ -71,6 +75,9 @@ class Distortion(NetsFrame2):
         self.grid_sort_btn_frame = Frame(self.grid_sort_frame)
         self.grid_sort_btn_frame.pack(side='top', expand=True, fill='both')
         
+        self.export_grid_btn = Button(self.grid_sort_btn_frame, text='Export Grid', command=self.export_grid)
+        self.export_grid_btn.pack(side='right', padx=2, pady=5)
+
         self.gen_std_grid_btn = Button(self.grid_sort_btn_frame, text='Get Std Grid', command=self.get_std_grid)
         self.gen_std_grid_btn.pack(side='right', padx=2, pady=5)
 
@@ -86,9 +93,7 @@ class Distortion(NetsFrame2):
         self.grid_sort_btn_list = [self.sort_preview_btn, self.grid_sort_btn]
         self.buttons.append(self.grid_sort_btn_list)
 
-        # Output Path
-        self.output_path = PathBrowse(self.settings)
-        self.output_path.pack(expand=1, fill='x', pady=5)       
+              
 
         # Distortion Analysis
         self.dist_analysis_frame = LabelFrame(self.settings, text='Distortion Analysis', padding=(5, 5, 5, 5))
@@ -178,9 +183,17 @@ class Distortion(NetsFrame2):
         return
     
     def export_grid(self):
-        timestr = time.strftime("%Y%m%d-%H-%M-%S")
-        np.save(f'Standard Grid Coordinate_{timestr}.npy', self.dist_eval.std_grid.coords)
-        np.save(f'Distorted Grid Coordinate_{timestr}.npy', self.dist_eval.dist_grid.coords)
+        output_path = self.output_path.get_path()
+        if len(output_path) == 0:
+            self.controller.msg_box.console('No file output, output path not specified')
+            return
+        timestr = time.strftime("%Y%m%d-%H-%M-%S")        
+        np.save(f'{output_path}Standard Grid Coordinate_{timestr}.npy', self.dist_eval.std_grid.coords)
+        output_msg = f'Standard grid file Standard Grid Coordinate_{timestr}.npy saved'
+        self.controller.msg_box.console(output_msg)
+        np.save(f'{output_path}Distorted Grid Coordinate_{timestr}.npy', self.dist_eval.dist_grid.coords)
+        output_msg = f'Distorted grid file Distorted Grid Coordinate_{timestr}.npy saved'
+        self.controller.msg_box.console(output_msg)
         return
 
     def preview_grid_on(self):
@@ -257,7 +270,7 @@ class Distortion(NetsFrame2):
             
         elif mesh_output_type.get() == 2:
             title = 'Absolute Distortion %'
-            fig, _ = self.plot_coords_mesh(title, (dist_eval) * 100, grid_dim, 5, -5, 'coolwarm')
+            fig, _ = self.plot_coords_mesh(title, (dist_eval), grid_dim, 5, -5, 'coolwarm')
         # fig.savefig(output_path + 'distorted_dist_rel.png', dpi=600)
         fig.show()
         return
@@ -275,18 +288,22 @@ class Distortion(NetsFrame2):
         return fig, ax
 
     def save_mesh(self):
-        if self.dist_eval.dist_rel or self.dist_eval.dist_diff is None:
+        if self.dist_eval.dist_rel is None or self.dist_eval.dist_diff is None:
             output_msg = f'Merit mesh not available!'
             self.controller.msg_box.console(output_msg)
             return
+        output_path = self.output_path.get_path()
+        if len(output_path) == 0:
+            self.controller.msg_box.console('No file output, output path not specified')
+            return
         timestr = time.strftime("%Y%m%d-%H-%M-%S")
         rel_filename = f'Relative Distortion Mesh_{timestr}'
-        np.save(self.output_path + rel_filename, self.dist_eval.dist_rel)
+        np.save(f'{output_path}\\{rel_filename}', self.dist_eval.dist_rel)
         output_msg = f'Mesh file {rel_filename} saved'
         self.controller.msg_box.console(output_msg)
 
         diff_filename = f'Absolute Distortion Mesh_{timestr}'
-        np.save(self.output_path + diff_filename, self.dist_eval.dist_diff)
+        np.save(f'{output_path}\\{diff_filename}', self.dist_eval.dist_diff)
         output_msg = f'Mesh file {diff_filename} saved'
         self.controller.msg_box.console(output_msg)
         

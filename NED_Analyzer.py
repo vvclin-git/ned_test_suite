@@ -244,7 +244,8 @@ class Distortion_Eval():
         # for i in range(len(grid_coords)):
         #     cv2.circle(chart_im, (grid_coords[i, 0], grid_coords[i, 1]), marker_size, (255, 255, 255), -1)
         self.std_grid = Grid(grid_coords, grid_dim)
-        self.std_grid.sorted = True        
+        self.std_grid.sorted = True
+        self.std_grid.center_ind = self.dist_grid.center_ind        
         self.std_grid_pts_count = int(grid_dim[0] * grid_dim[1])
         std_grid_center_pt = np.array(self.std_grid.get_center_pt())
         shift = np.array(center_pt) - std_grid_center_pt
@@ -308,9 +309,10 @@ class Distortion_Eval():
         # self.dist_grid.normalize()
         # self.std_grid.normalize()
         # center_pt = self.get_center_pt()
-        center_pt = self.dist_grid.get_center_pt()
-        std_center_dist = self.std_grid.get_pt_dist(center_pt)
-        dist_center_dist = self.dist_grid.get_pt_dist(center_pt)
+        dist_center_pt = self.dist_grid.get_center_pt()
+        std_center_pt = self.std_grid.get_center_pt()
+        std_center_dist = self.std_grid.get_pt_dist(std_center_pt)
+        dist_center_dist = self.dist_grid.get_pt_dist(dist_center_pt)
         dist_diff = dist_center_dist - std_center_dist
         out = np.zeros_like(std_center_dist)
         np.divide(dist_diff, std_center_dist, out=out, where=std_center_dist!=0)

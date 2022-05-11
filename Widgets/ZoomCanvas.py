@@ -7,7 +7,7 @@ import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
 from matplotlib import container
-from scipy.fftpack import shift
+
 
 class AutoScrollbar(ttk.Scrollbar):
     ''' A scrollbar that hides itself if it's not needed.
