@@ -5,6 +5,7 @@ from Frames.SMTF import *
 from Frames.TestCharts import TestCharts
 from Frames.Distortion import Distortion
 from Widgets.MeshPreviewBox import MeshPreviewBox
+from Frames.Grille import Grille
 import tkinter as tk
 from tkinter.ttk import *
 
@@ -27,6 +28,6 @@ from tkinter.ttk import *
 root = tk.Tk()
 root.geometry('1480x990')
 preview_img_size = (960, 740)
-nets_frame = Distortion(root, preview_img_size)
+nets_frame = Grille(root, preview_img_size)
 nets_frame.pack(expand=1, fill='both')
 root.mainloop()

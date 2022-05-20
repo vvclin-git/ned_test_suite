@@ -355,8 +355,8 @@ class Distortion_Eval():
 
 class Grille_Eval():
     def __init__(self):        
-        self.raw_img = None        
-        self.labeled_img = None        
+        self.raw_im = None        
+        self.labeled_im = None        
         
         self.img_roi_size = None
         self.grille_mc = None
@@ -375,9 +375,9 @@ class Grille_Eval():
         self.roi_grid_coords = np.vstack((roi_grid_xx.flatten(), roi_grid_yy.flatten())).transpose()
 
         self.grille_mc = np.zeros((grid_dim[1], grid_dim[0]))
-
+        self.labeled_im = cv2.cvtColor(self.raw_im, cv2.COLOR_GRAY2RGB)
         for i, c in enumerate(self.roi_grid_coords):
-            cv2.rectangle(self.labeled_img, c, c + self.img_roi_size, (0, 255, 0), 1)            
+            cv2.rectangle(self.labeled_im, c, c + self.img_roi_size, (0, 255, 0), 1)            
             # cv2.imwrite(roi_path + f'ROI_{i}.png', roi)                
         output_msg = f'Grille Contrast Merit Grid Generated\n'
         output_msg += f'FoV Anchor: ({fov_anchor[0]}, {fov_anchor[1]}), FoV Size: {fov_size[0]}x{fov_size[1]}\n'
@@ -390,8 +390,8 @@ class Grille_Eval():
             return output_msg
         else:
             for i, c in enumerate(self.roi_grid_coords):
-                # cv2.rectangle(self.labeled_img, c, c + self.img_roi_size, (0, 255, 0), 1)
-                roi = self.raw_img[c[1]:c[1] + self.img_roi_size[1], c[0]:c[0] + self.img_roi_size[0]]
+                # cv2.rectangle(self.labeled_im, c, c + self.img_roi_size, (0, 255, 0), 1)
+                roi = self.raw_im[c[1]:c[1] + self.img_roi_size[1], c[0]:c[0] + self.img_roi_size[0]]
                 mc = self.get_roi_mc(roi)
                 self.grille_mc[np.unravel_index(i, self.grille_mc.shape)] = mc
                 # cv2.imwrite(roi_path + f'ROI_{i}.png', roi)
