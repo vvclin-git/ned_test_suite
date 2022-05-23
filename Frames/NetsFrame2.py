@@ -70,13 +70,17 @@ class NetsFrame2(Frame):
 
     
     def load_img(self):
-        self.preview_img = Image.fromarray(self.img_file_load.image)
-        self.raw_img = self.img_file_load.image
-        self.preview_canvas.update_image(Image.fromarray((self.img_file_load.image).astype(np.uint8)))
+        self.preview_im = np.zeros_like(self.img_file_load.im)
+        # self.preview_im = np.zeros((*self.img_file_load.im.shape, 3))
+        self.preview_im = cv2.normalize(self.img_file_load.im, self.preview_im, 255, 0, cv2.NORM_INF)
+        self.preview_im = np.dstack([self.preview_im, self.preview_im, self.preview_im])
+        self.preview_img = Image.fromarray(self.preview_im.astype(np.uint8))
+        self.raw_im = self.img_file_load.im
+        self.preview_canvas.update_image(Image.fromarray((self.preview_im).astype(np.uint8)))
         # self.canvas.update()
         # self.canvas.scale_to_canvas()
         msg_output = f'Image loaded from {self.img_file_load.img_path.get()}\n'
-        msg_output += f'Image Resolution: {self.raw_img.shape[1]}x{self.raw_img.shape[0]}'
+        msg_output += f'Image Resolution: {self.raw_im.shape[1]}x{self.raw_im.shape[0]}'
         self.controller.msg_box.console(msg_output)
         return
     

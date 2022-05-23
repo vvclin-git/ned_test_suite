@@ -12,9 +12,8 @@ from functools import partial
 class ImgFileLoad(Frame):
     def __init__(self, window, load_func) -> None:
         super().__init__(window)
-        self.image = None
-        self.img_path = tk.StringVar()
-        
+        self.im = None
+        self.img_path = tk.StringVar()        
 
         self.img_load_frame = LabelFrame(window, text='Image Loading')
         self.img_load_frame.pack(expand=True, fill='x', side='top')
@@ -46,6 +45,6 @@ class ImgFileLoad(Frame):
     def img_load(self, load_func):
         img_path = self.img_path.get()
         if len(img_path) > 0:
-            self.image = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
+            self.im = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
             load_func()
         return

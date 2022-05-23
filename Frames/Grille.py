@@ -24,42 +24,8 @@ class Grille(NetsFrame2):
         self.presets = json.load(f)
         f.close()
         self.grille_eval = Grille_Eval()
-
         self.grille_grid_paras = self.presets['grille_grid_paras']
-
-        # self.output_path = tk.StringVar()        
-        # self.output_path.set(OUTPUT_PATH)        
-        # self.preset_path.set(PRESET_PATH)
-        # self.mesh_output_path = tk.StringVar()
-        # self.mesh_output_path.set(MESH_OUTPUT_PATH)
-        # self.img_path = tk.StringVar()
-        # self.mesh_output_type = tk.IntVar()
-        # self.mesh_output_type.set(1)        
-        # self.raw_img = None
-        self.buttons = []
-        
-        # # preset button event handler config
-        # self.preset_save_btn.configure(command=self.save_preset)
-        # self.preset_load_btn.configure(command=self.load_preset)
-
-        # # Image Loading 
-        # self.img_load_frame = LabelFrame(self.settings, text='Image Loading', padding=(5, 5, 5, 5))
-        # self.img_load_frame.pack(expand=True, fill='x', pady=10, side='top')
-        
-        # self.img_load_input_frame = Frame(self.img_load_frame)
-        # self.img_load_input_frame.pack(side='top', expand=True, fill='both')
-        # self.img_load_btn_frame = Frame(self.img_load_frame)
-        # self.img_load_btn_frame.pack(side='top', expand=True, fill='both')
-        
-        # self.img_path_label = Label(self.img_load_input_frame, text='Image Path')
-        # self.img_path_label.pack(side='left', padx=5, pady=5)
-        # self.img_path_input = Entry(self.img_load_input_frame, textvariable=self.img_path)        
-        # self.img_path_input.pack(side='left', expand=True, fill='x', padx=5, pady=5)
-
-        # img_load_btn = Button(self.img_load_btn_frame, text='Load', style='Buttons.TButton', command=self.img_load)
-        # img_load_btn.pack(side='right', padx=2, pady=5)
-        # img_browse_btn = Button(self.img_load_btn_frame, text='Browse...', style='Buttons.TButton', command=self.img_browse)        
-        # img_browse_btn.pack(side='right', padx=2, pady=5)
+        self.buttons = []              
 
         # Grille Analysis Settings
         self.grille_grid_frame = LabelFrame(self.settings, text='Grille Merit Grid Settings', padding=(5, 5, 5, 5))
@@ -87,18 +53,6 @@ class Grille(NetsFrame2):
         # Grille Contrast Analysis
         self.grille_analysis_frame = LabelFrame(self.settings, text='Grille Contrast Analysis', padding=(5, 5, 5, 5))
         self.grille_analysis_frame.pack(side='top', expand=True, fill='x', pady=10)
-
-        # self.mesh_output_frame = Frame(self.grille_analysis_frame)
-        # self.mesh_output_frame.pack(side='top', expand=True, fill='both')
-        
-        # self.mesh_output_label = Label(self.mesh_output_frame, text='Output Path')
-        # self.mesh_output_label.pack(side='left', padx=5, pady=5)
-        
-        # self.mesh_output_input = Entry(self.mesh_output_frame, textvariable=self.mesh_output_path)
-        # self.mesh_output_input.pack(side='left', expand=True, fill='x', pady=5)
-        
-        # self.mesh_output_btn = Button(self.mesh_output_frame, text='Browse...', style='Buttons.TButton', command=partial(self.path_browse, path_var=self.mesh_output_path))
-        # self.mesh_output_btn.pack(side='left', padx=2, pady=5)
         
         self.show_mesh_frame = Frame(self.grille_analysis_frame)
         self.show_mesh_frame.pack(side='top', expand=True, fill='x')        
@@ -118,7 +72,7 @@ class Grille(NetsFrame2):
         # self.reset()
 
         # Widget Initialization
-        self.grille_eval.raw_im = self.img_file_load.image
+        # self.grille_eval.raw_im = self.img_file_load.image
 
         self.controller = Controller(self.msg_box, self.preset_file_load, self.img_file_load, self.output_path, self.preview_canvas)
 
@@ -129,74 +83,23 @@ class Grille(NetsFrame2):
         self.preset_file_load.load_preset()
         self.preset_file_load.set_controller(self.controller)
 
-    # def load_preset(self):
-    #     f = open(self.preset_path.get(), 'r')
-    #     self.presets = json.load(f)
-    #     f.close()
-    #     self.grille_grid_paras = self.presets['grille_grid_paras']        
-    #     self.grille_grid_settings.parameter_chg(self.grille_grid_paras)
-    #     self.controller.msg_box.console(f'Preset File: {self.preset_path.get()} Loaded')
-    #     return 
-
-    # def save_preset(self):
-    #     if os.path.isfile(self.preset_path.get()):
-    #         chk_overwrite = tk.messagebox.askquestion(title='Confirm Overwrite', message='File already exists, overwrite?')
-    #         if not chk_overwrite:
-    #             return                
-    #     f = open(self.preset_path.get(), 'w')
-    #     for p in self.grille_grid_settings.output_values():
-    #         self.grille_grid_paras[p[0]]['value'] = p[1]
-        
-        
-    #     save_preset = {'grille_grid_paras':self.grille_grid_paras}
-    #     json.dump(save_preset, f)
-    #     f.close()
-    #     self.controller.msg_box.console(f'Preset File: {self.preset_path.get()} Saved')
-    #     return
-
-    # def path_browse(self, path_var):
-    #     cur_path = os.getcwd()
-    #     temp_path = filedialog.askdirectory(parent=self, initialdir=cur_path, title='Please select a directory')
-    #     # if len(temp_path) > 0:
-    #     #     print ("You chose: %s" % tempdir)
-    #     path_var.set(temp_path)
-    #     return
-
-    # def img_browse(self):
-    #     cur_path = os.getcwd()
-    #     temp_path = filedialog.askopenfilename(parent=self, initialdir=cur_path, title='Please select a image file', filetypes=[("PNG","*.png"), ("bmp","*.bmp"), ("JPG","*.jpg")])
-    #     # if len(temp_path) > 0:
-    #     #     print ("You chose: %s" % tempdir)
-    #     if len(temp_path) > 0:            
-    #         self.img_path.set(temp_path)
-    #     return
-
-    # def img_load(self):        
-    #     img_path = self.img_path.get()
-    #     if len(img_path) > 0:
-    #         self.grille_eval.raw_img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
-    #         self.grille_eval.labeled_img = cv2.imread(img_path, cv2.IMREAD_COLOR)
-    #         self.update_img(Image.fromarray((self.grille_eval.raw_img).astype(np.uint8)))
-    #         self.controller.msg_box.console(f'Image File: {img_path} Loaded')
-    #         self.reset()
-    #         self.enable_btn_group(self.grille_grid_btn_list)
-    #     return
-
     def preview_grid_on(self):
-        if self.grille_eval.labeled_img is None:
+        if self.grille_eval.labeled_im is None:
             self.controller.msg_box.console('Preview image not available!')
             return
-        self.update_img(Image.fromarray((self.grille_eval.labeled_img).astype(np.uint8)))
+        self.preview_canvas.update_image(Image.fromarray((self.grille_eval.labeled_im).astype(np.uint8)))
         return
 
     def preview_grid_off(self):
-        if self.grille_eval.labeled_img is None:
+        if self.grille_eval.labeled_im is None:
             self.controller.msg_box.console('Preview image not available!')
             return
-        self.update_img(Image.fromarray((self.grille_eval.raw_img).astype(np.uint8)))
+        self.preview_canvas.update_image(self.preview_img)
         return
 
-    def gen_mc_grid(self):
+    def gen_mc_grid(self):        
+        self.grille_eval.raw_im = self.img_file_load.im
+        self.grille_eval.preview_im = self.preview_im
         grille_grid_paras = self.grille_grid_settings.output_parsed_vals()
         output_msg = self.grille_eval.gen_mc_grid(*grille_grid_paras)
         self.controller.msg_box.console(output_msg)
@@ -206,7 +109,7 @@ class Grille(NetsFrame2):
     def grille_evaluate(self):
         output_msg = self.grille_eval.grille_eval()
         self.controller.msg_box.console(output_msg)
-        self.enable_btn_group(self.grille_analysis_btn_list)
+        # self.enable_btn_group(self.grille_analysis_btn_list)
         return
 
     def show_grille_mesh(self):
@@ -226,7 +129,8 @@ class Grille(NetsFrame2):
         y = np.linspace(0, chart_res[1], grid_dim[1])
         xx, yy = np.meshgrid(x, y)
         coords_val_mesh = coords_val.reshape((grid_dim[1], grid_dim[0]))    
-        c = ax.pcolormesh(xx, yy, coords_val_mesh, cmap=cmap, vmax=vmax, vmin=vmin)        
+        # c = ax.pcolormesh(xx, yy, coords_val_mesh, cmap=cmap, vmax=vmax, vmin=vmin)        
+        c = ax.imshow(coords_val_mesh)
         fig.colorbar(c, ax=ax, fraction=0.046, pad=0.04)
         return fig, ax
     
@@ -235,9 +139,14 @@ class Grille(NetsFrame2):
             output_msg = f'Merit mesh not available!'
             self.controller.msg_box.console(output_msg)
             return
+        output_path = self.output_path.get_path()
+        if len(output_path) == 0:
+            self.controller.msg_box.console('No file output, output path not specified')
+            return
         timestr = time.strftime("%Y%m%d-%H-%M-%S")
         filename = f'Grille Contrast Mesh_{timestr}'
-        np.save(self.output_path + filename, self.grille_eval.grille_mc)
+        # np.save(self.output_path.output_path + filename, self.grille_eval.grille_mc)
+        np.save(f'{output_path}\\{filename}', self.grille_eval.grille_mc)
         output_msg = f'Mesh file {filename} saved'
         self.controller.msg_box.console(output_msg)
         return

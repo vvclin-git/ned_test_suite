@@ -137,7 +137,8 @@ class Distortion(NetsFrame2):
     
     def extract_grid(self):
         
-        self.dist_eval.raw_im = self.img_file_load.image
+        self.dist_eval.raw_im = self.img_file_load.im
+        
         
         grid_extract_paras = self.grid_extract_settings.output_parsed_vals()                
         # output_msg = self.dist_eval.std_grid_gen(*grid_extract_paras[0:3])
@@ -205,7 +206,7 @@ class Distortion(NetsFrame2):
     def preview_grid_off(self):
         if self.dist_eval.labeled_im is None:
             return
-        self.preview_canvas.update_image(Image.fromarray((self.dist_eval.raw_im).astype(np.uint8)))
+        self.preview_canvas.update_image(self.preview_img)
         return
     
     def preview_sort_on(self):
@@ -222,29 +223,31 @@ class Distortion(NetsFrame2):
 
     def mark_center(self):
         if self.dist_eval.dist_grid.sorted:
-            draw = ImageDraw.Draw(self.preview_canvas.image)            
+            draw_img = self.preview_canvas.image.copy()
+            draw = ImageDraw.Draw(draw_img)            
             for p in self.dist_eval.get_center_pts():
                 x, y = p[:]
                 draw.line([x - 5, y, x + 5, y], fill=128)
                 draw.line([x, y - 5, x, y + 5], fill=128)            
-            self.preview_canvas.update_image(self.preview_canvas.image)
+            self.preview_canvas.update_image(draw_img)
         return
 
 
     def preview_center_on(self):
-        if self.dist_eval.dist_grid.sorted:
-            x, y = self.dist_eval.get_center_pt()            
-            self.tmp_canvas_img = self.preview_canvas.image.copy()
-            draw = ImageDraw.Draw(self.preview_canvas.image)            
-            draw.line([x - 10, y, x + 10, y], fill=128)
-            draw.line([x, y - 10, x, y + 10], fill=128)
-            self.preview_canvas.update_image(self.preview_canvas.image)
+        # if self.dist_eval.dist_grid.sorted:
+        #     x, y = self.dist_eval.get_center_pt()            
+        #     self.tmp_canvas_img = self.preview_canvas.image.copy()
+        #     draw = ImageDraw.Draw(self.preview_canvas.image)            
+        #     draw.line([x - 10, y, x + 10, y], fill=128)
+        #     draw.line([x, y - 10, x, y + 10], fill=128)
+        #     self.preview_canvas.update_image(self.preview_canvas.image)
+        self.mark_center()
 
         return
     
     def preview_center_off(self):
-        if self.tmp_canvas_img:
-            self.preview_canvas.update_image(self.tmp_canvas_img)
+        if self.preview_img:
+            self.preview_canvas.update_image(self.preview_img)
 
         return
 

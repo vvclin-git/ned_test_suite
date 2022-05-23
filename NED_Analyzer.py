@@ -355,7 +355,8 @@ class Distortion_Eval():
 
 class Grille_Eval():
     def __init__(self):        
-        self.raw_im = None        
+        self.raw_im = None
+        self.preview_im = None        
         self.labeled_im = None        
         
         self.img_roi_size = None
@@ -375,7 +376,8 @@ class Grille_Eval():
         self.roi_grid_coords = np.vstack((roi_grid_xx.flatten(), roi_grid_yy.flatten())).transpose()
 
         self.grille_mc = np.zeros((grid_dim[1], grid_dim[0]))
-        self.labeled_im = cv2.cvtColor(self.raw_im, cv2.COLOR_GRAY2RGB)
+        # self.labeled_im = cv2.cvtColor(self.raw_im, cv2.COLOR_GRAY2RGB)
+        self.labeled_im = self.preview_im.copy()
         for i, c in enumerate(self.roi_grid_coords):
             cv2.rectangle(self.labeled_im, c, c + self.img_roi_size, (0, 255, 0), 1)            
             # cv2.imwrite(roi_path + f'ROI_{i}.png', roi)                
