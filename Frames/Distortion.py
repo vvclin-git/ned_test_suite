@@ -234,13 +234,7 @@ class Distortion(NetsFrame2):
 
 
     def preview_center_on(self):
-        # if self.dist_eval.dist_grid.sorted:
-        #     x, y = self.dist_eval.get_center_pt()            
-        #     self.tmp_canvas_img = self.preview_canvas.image.copy()
-        #     draw = ImageDraw.Draw(self.preview_canvas.image)            
-        #     draw.line([x - 10, y, x + 10, y], fill=128)
-        #     draw.line([x, y - 10, x, y + 10], fill=128)
-        #     self.preview_canvas.update_image(self.preview_canvas.image)
+        
         self.mark_center()
 
         return

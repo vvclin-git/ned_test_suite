@@ -1,5 +1,5 @@
 from msilib.schema import Control
-import tkinter as tk
+# import tkinter as tk
 from tkinter.ttk import *
 from Frames.Distortion import PRESET_PATH
 from Widgets.MsgBox import MsgBox
@@ -44,7 +44,7 @@ class SMTF(NetsFrame2):
         mtf_extract_frame.pack(side='top', fill='x', pady=5)
         self.se_pattern_paras_tab = ParameterTab(mtf_extract_frame, self.se_paras)        
         self.se_pattern_paras_tab.pack(side='top', expand=1, fill='x')
-        self.mtf_extract_btn = Button(mtf_extract_frame, text='Extract Pattern', command=self.mtf_extract)
+        self.mtf_extract_btn = ttk.Button(mtf_extract_frame, text='Extract Pattern', command=self.mtf_extract)
         self.mtf_extract_btn.pack(side='right', padx=2, pady=5)
         self.mtf_extract_btn.config(state='disable')
         self.disabled_btns.append(self.mtf_extract_btn)
@@ -59,7 +59,7 @@ class SMTF(NetsFrame2):
         mtf_eval_frame.pack(side='top', fill='x', pady=5)
         self.mtf_paras_tab = ParameterTab(mtf_eval_frame, self.mtf_paras)        
         self.mtf_paras_tab.pack(side='top', expand=1, fill='x')
-        self.mtf_eval_btn = Button(mtf_eval_frame, text='Evaluate MTF', command=self.mtf_evaluate)
+        self.mtf_eval_btn = ttk.Button(mtf_eval_frame, text='Evaluate MTF', command=self.mtf_evaluate)
         self.mtf_eval_btn.pack(side='right', padx=2, pady=5)
         self.mtf_eval_btn.config(state='disable')
         self.disabled_btns.append(self.mtf_eval_btn)
@@ -77,15 +77,15 @@ class SMTF(NetsFrame2):
         output_frame.pack(side='top', fill='x', pady=5)
         self.output_paras_tab = ParameterTab(output_frame, self.output_paras)
         self.output_paras_tab.pack(side='top', expand=1, fill='x')
-        self.export_btn = Button(output_frame, text='Export Results', command=self.export)
+        self.export_btn = ttk.Button(output_frame, text='Export Results', command=self.export)
         self.export_btn.pack(side='right', padx=2, pady=5)
         self.export_btn.config(state='disable')
         self.disabled_btns.append(self.export_btn)
-        self.get_mtf_mesh_btn = Button(output_frame, text='Get MTF Mesh', command=self.get_mtf_mesh)
+        self.get_mtf_mesh_btn = ttk.Button(output_frame, text='Get MTF Mesh', command=self.get_mtf_mesh)
         self.get_mtf_mesh_btn.pack(side='right', padx=2, pady=5)
         self.get_mtf_mesh_btn.config(state='disable')
         self.disabled_btns.append(self.get_mtf_mesh_btn)
-        self.get_mtf_grid_btn = Button(output_frame, text='Get MTF Grid', command=self.get_mtf_grid)
+        self.get_mtf_grid_btn = ttk.Button(output_frame, text='Get MTF Grid', command=self.get_mtf_grid)
         self.get_mtf_grid_btn.pack(side='right', padx=2, pady=5)
         self.get_mtf_grid_btn.config(state='disable')
         self.disabled_btns.append(self.get_mtf_grid_btn)
