@@ -82,7 +82,7 @@ class Grid(Coords):
         # pt_vect = np.tile(pt, (len(self.coords), 1))
         # coords_dist = np.sqrt(np.power((self.coords[:, 0] - pt_vect[:, 0]), 2) + np.power((self.coords[:, 1] - pt_vect[:, 1]), 2))
         coords_dist = self.get_pt_dist(pt)
-        neighbors = self.coords[np.argwhere((coords_dist > 0) & (coords_dist < coords_dist[coords_dist.nonzero()].min() * 1.5))]
+        neighbors = self.coords[np.argwhere((coords_dist > 0) & (coords_dist < coords_dist[coords_dist.nonzero()].min() * max_ratio))]
         neighbors = neighbors.squeeze()
         pt_vect = np.tile(pt, (len(neighbors), 1))
         neighbors_theta = abs(np.arctan2((neighbors - pt_vect)[:, 1], (neighbors - pt_vect)[:, 0]))    
@@ -192,6 +192,7 @@ class Distortion_Eval():
         self.thresh = None
         self.labeled_im = None
         self.indexed_im = None
+        self.std_grid_im = None
         self.std_grid = None
         self.dist_grid = None
         self.grid_dim = None
@@ -201,30 +202,7 @@ class Distortion_Eval():
         self.dist_rel = None
         self.dist_diff = None
         self.std_grid_im = None
-    
-    # def std_grid_gen(self, chart_res, grid_dim, padding):    
-    #     chart_res = np.array(chart_res).astype('uint')
-    #     grid_dim = np.array(grid_dim).astype('uint')
-    #     padding = np.array(padding).astype('uint')
-    #     grid_x = np.linspace(0 + padding[0], chart_res[0] - padding[0], grid_dim[0]) 
-    #     grid_y = np.linspace(0 + padding[1], chart_res[1] - padding[1], grid_dim[1])
-    #     grid_xx, grid_yy = np.meshgrid(grid_x, grid_y)    
-    #     grid_pitch = (chart_res - 2 * padding) / (grid_dim - 1)
-    #     output_msg = f'Grid Dimension: {grid_dim[0]} x {grid_dim[1]}, '
-    #     output_msg += f'{grid_dim[0] * grid_dim[1]} points\n'
-    #     output_msg += f'Grid Pitch: {grid_pitch[0]} x {grid_pitch[1]}'
-    #     # print(f'Grid Pitch: {grid_pitch[0]} x {grid_pitch[1]}')
-    #     # chart_im = np.zeros((chart_res[1], chart_res[0], 3))
-    #     self.std_grid_im = np.zeros((chart_res[1], chart_res[0], 3))
-    #     grid_coords = np.vstack((grid_xx.flatten(), grid_yy.flatten())).transpose().astype('int')        
-    #     # for i in range(len(grid_coords)):
-    #     #     cv2.circle(chart_im, (grid_coords[i, 0], grid_coords[i, 1]), marker_size, (255, 255, 255), -1)
-    #     self.std_grid = Grid(grid_coords, grid_dim)
-    #     self.std_grid.sorted = True
-    #     self.grid_dim = grid_dim
-    #     self.std_grid_pts_count = int(grid_dim[0] * grid_dim[1])
-    #     return output_msg   
-    
+        
     def std_grid_gen(self, pitch, grid_dim, center_pt):    
         # chart_res = np.array(chart_res).astype('uint')
         grid_dim = np.array(grid_dim).astype('uint')
@@ -255,8 +233,9 @@ class Distortion_Eval():
             self.std_grid = None
             return output_msg
         self.grid_dim = grid_dim
+        self.std_grid_im = self.labeled_im.copy()
         for i in range(len(self.std_grid.coords)):
-            cv2.circle(self.labeled_im, (self.std_grid.coords[i, 0].astype('uint'), self.std_grid.coords[i, 1].astype('uint')), 5, (255, 0, 0), -1)
+            cv2.circle(self.std_grid_im, (self.std_grid.coords[i, 0].astype('uint'), self.std_grid.coords[i, 1].astype('uint')), 5, (255, 0, 0), -1)
         
         return output_msg   
 
@@ -277,7 +256,10 @@ class Distortion_Eval():
         self.labeled_im = labels_out                
         self.extracted_pts_count = len(centroids) - 1
         self.dist_coords = centroids[1:, :]
-        output_msg = f'{self.extracted_pts_count} connected components extracted from the image'        
+        self.dist_coords_bbox = cv2.boundingRect(self.dist_coords.astype('float32'))
+        output_msg = f'{self.extracted_pts_count} connected components extracted from the image\n'
+        output_msg += f'Bounding Box Anchor: {self.dist_coords_bbox[0]}, {self.dist_coords_bbox[1]}\n'
+        output_msg += f'Bounding Box Dimension: {self.dist_coords_bbox[2]}x{self.dist_coords_bbox[3]}\n'       
         
         return output_msg    
     
@@ -300,7 +282,9 @@ class Distortion_Eval():
         center_pt = np.atleast_2d(self.dist_grid.coords[self.dist_grid.center_ind].squeeze())
         if center_pt.shape[0] > 1:
             center_pt = np.average(center_pt, axis=0)
-        return center_pt[0, :]
+        if len(center_pt.shape) > 1:
+            center_pt = center_pt.squeeze()
+        return center_pt
 
     def dist_eval(self):                
         if not (self.dist_grid.sorted and self.std_grid.sorted):
@@ -312,7 +296,8 @@ class Distortion_Eval():
         dist_center_pt = self.dist_grid.get_center_pt()
         std_center_pt = self.std_grid.get_center_pt()
         std_center_dist = self.std_grid.get_pt_dist(std_center_pt)
-        dist_center_dist = self.dist_grid.get_pt_dist(dist_center_pt)
+        # dist_center_dist = self.dist_grid.get_pt_dist(dist_center_pt)
+        dist_center_dist = self.dist_grid.get_pt_dist(std_center_pt)
         dist_diff = dist_center_dist - std_center_dist
         out = np.zeros_like(std_center_dist)
         np.divide(dist_diff, std_center_dist, out=out, where=std_center_dist!=0)
@@ -326,7 +311,9 @@ class Distortion_Eval():
 
     def draw_coords_index(self, pad_ratio):
         chart_res = (self.raw_im.shape[1], self.raw_im.shape[0])        
-        coords_dim = (((self.dist_coords[:, 0].max() - self.dist_coords[:, 0].min())), ((self.dist_coords[:, 1].max() - self.dist_coords[:, 1].min())))    
+        # coords_dim = (((self.dist_coords[:, 0].max() - self.dist_coords[:, 0].min())), ((self.dist_coords[:, 1].max() - self.dist_coords[:, 1].min())))    
+        # dist_coords_sorted_bbox = cv2.boundingRect(self.dist_coords.astype('float32'))        
+        coords_dim = (self.dist_coords_bbox[2], self.dist_coords_bbox[3])
         scale_factor = (chart_res[0] / coords_dim[0] * pad_ratio, chart_res[1] / coords_dim[1] * pad_ratio)       
         coords_scaled = np.vstack((self.dist_coords[:, 0] * scale_factor[0], self.dist_coords[:, 1] * scale_factor[1])).transpose()    
         coords_scaled_center = np.array([(np.average(coords_scaled[:, 0]), np.average(coords_scaled[:, 1]))])    

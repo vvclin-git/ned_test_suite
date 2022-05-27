@@ -71,9 +71,15 @@ class NetsFrame2(Frame):
     
     def load_img(self):
         self.preview_im = np.zeros_like(self.img_file_load.im)
+        if len(self.preview_im.shape) == 3:
+            if self.preview_im.shape[2] != 3:
+                msg_output = f'Incorrect image channel number, image not loaded.'
+                self.controller.msg_box.console(msg_output)
+                return
         # self.preview_im = np.zeros((*self.img_file_load.im.shape, 3))
-        self.preview_im = cv2.normalize(self.img_file_load.im, self.preview_im, 255, 0, cv2.NORM_INF)
-        self.preview_im = np.dstack([self.preview_im, self.preview_im, self.preview_im])
+        self.preview_im = cv2.normalize(self.img_file_load.im, self.preview_im, 255, 0, cv2.NORM_INF)        
+        if len(self.preview_im.shape) == 2:
+            self.preview_im = np.dstack([self.preview_im, self.preview_im, self.preview_im])
         self.preview_img = Image.fromarray(self.preview_im.astype(np.uint8))
         self.raw_im = self.img_file_load.im
         self.preview_canvas.update_image(Image.fromarray((self.preview_im).astype(np.uint8)))
