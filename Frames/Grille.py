@@ -32,7 +32,7 @@ class Grille(NetsFrame2):
         self.grille_grid_frame.pack(expand=True, fill='x', pady=5, side='top')
         
         self.grille_grid_settings = ParameterTab(self.grille_grid_frame, self.grille_grid_paras)
-        self.grille_grid_settings.tree.configure(height=3)
+        self.grille_grid_settings.fit_height()
         self.grille_grid_settings.pack(expand=True, fill='x', pady=5, side='top')
 
         self.grille_grid_btn_frame = Frame(self.grille_grid_frame)
@@ -44,6 +44,9 @@ class Grille(NetsFrame2):
         self.grille_grid_btn = Button(self.grille_grid_btn_frame, text='Generate Grid', style='Buttons.TButton', command=self.gen_mc_grid)
         self.grille_grid_btn.pack(side='right', padx=2, pady=5)
         
+        self.grille_get_fov_btn = Button(self.grille_grid_btn_frame, text='Get FoV Area', style='Buttons.TButton', command=self.get_fov_bbox)
+        self.grille_get_fov_btn.pack(side='right', padx=2, pady=5)
+
         self.grille_grid_btn_list = [self.grille_grid_preview_btn, self.grille_grid_btn]
         self.buttons.append(self.grille_grid_btn_list)
 
@@ -101,7 +104,7 @@ class Grille(NetsFrame2):
         self.grille_eval.raw_im = self.img_file_load.im
         self.grille_eval.preview_im = self.preview_im
         grille_grid_paras = self.grille_grid_settings.output_parsed_vals()
-        output_msg = self.grille_eval.gen_mc_grid(*grille_grid_paras)
+        output_msg = self.grille_eval.gen_mc_grid(*grille_grid_paras[2::])
         self.controller.msg_box.console(output_msg)
         self.grille_analyze_btn.config(state='enable')
         return
@@ -115,8 +118,8 @@ class Grille(NetsFrame2):
     def show_grille_mesh(self):
         grille_mc_mesh = self.grille_eval.grille_mc
         grille_grid_paras = self.grille_grid_settings.output_parsed_vals()
-        grid_dim = grille_grid_paras[2]
-        chart_res = grille_grid_paras[1]
+        grid_dim = grille_grid_paras[4]
+        chart_res = grille_grid_paras[3]
         title = 'Grille Contrast'
         fig, _ = self.plot_coords_mesh(title, grille_mc_mesh, grid_dim, chart_res, 0, 1, 'coolwarm')
         fig.show()
@@ -150,6 +153,21 @@ class Grille(NetsFrame2):
         output_msg = f'Mesh file {filename} saved'
         self.controller.msg_box.console(output_msg)
         return
+    
+    def get_fov_bbox(self):
+        grille_grid_paras = self.grille_grid_settings.output_parsed_vals()
+        min_threshold = grille_grid_paras[0]
+        max_threshold = grille_grid_paras[1]
+        # thresh = np.zeros_like(self.grille_eval.raw_im)
+        raw_im_norm = np.zeros_like(self.raw_im)
+        raw_im_norm = cv2.normalize(self.raw_im, raw_im_norm, 255, 0, cv2.NORM_INF)
+        _, thresh = cv2.threshold(raw_im_norm, min_threshold, max_threshold, cv2.THRESH_TOZERO)
+        fov_bbox = cv2.boundingRect(thresh.astype('uint8'))
+        output_msg = f'FoV Anchor: ({fov_bbox[0]}, {fov_bbox[1]})\n'
+        output_msg += f'FoV Dimenstion: {fov_bbox[2]}, {fov_bbox[3]}'
+        self.controller.msg_box.console(output_msg)
+        return
+
 
 class Controller():
     def __init__(self, msg_box, preset_file_load, img_file_load, output_path, preview_canvas):

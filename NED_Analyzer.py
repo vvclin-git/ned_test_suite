@@ -395,9 +395,11 @@ class Grille_Eval():
         roi_avg = np.average(roi, 0)    
         roi_peaks, _ = signal.find_peaks(roi_avg, height=(np.average(roi_avg)))
         roi_max = np.average(roi_avg[roi_peaks])
-        roi_valleys, _ = signal.find_peaks(roi_max - roi_avg, height=(np.average(roi_avg)))
+        roi_valleys, _ = signal.find_peaks(roi_max - roi_avg, height=(np.average((roi_max - roi_avg))))
         roi_min = np.average(roi_avg[roi_valleys])
         mc = (roi_max - roi_min) / (roi_max + roi_min)
+        if np.isnan(mc):
+            mc = 0
         return mc    
     
 
