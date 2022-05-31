@@ -93,6 +93,8 @@ class SMTF(NetsFrame2):
         self.show_fov_btn.pack(side='right', padx=2, pady=5)
         self.show_fov_btn.config(state='disable')
         self.disabled_btns.append(self.show_fov_btn)
+        self.get_fov_btn = ttk.Button(output_frame, text='Get FoV', command=self.get_fov_bbox)
+        self.get_fov_btn.pack(side='right', padx=2, pady=5)
         
         # widget interlink & initialization
         self.controller = Controller(self.msg_box, self.img_file_load, self.preset_file_load, self.output_path, self.preview_canvas)
@@ -241,12 +243,13 @@ class SMTF(NetsFrame2):
             return    
 
     def load_img(self):       
-        self.raw_im = self.img_file_load.image 
+        self.raw_im = self.img_file_load.im
         if len(self.raw_im.shape) > 2:
             messagebox.showerror('Incorrect Image Format', 'Only grayscale image is allowed for the analysis!')
             return
         self.preview_im = self.raw_im.copy()       
-        self.preview_im = (self.preview_im // (self.preview_im.max() / 256 + 1)).astype('uint8')
+        # self.preview_im = (self.preview_im // (self.preview_im.max() / 256 + 1)).astype('uint8')
+        self.preview_im = cv2.normalize(self.raw_im, self.preview_im, 255, 0, cv2.NORM_INF)
         self.preview_im = cv2.cvtColor(self.preview_im, cv2.COLOR_GRAY2RGB)
         self.preview_img = Image.fromarray((self.preview_im).astype(np.uint8))
         self.preview_canvas.update_image(self.preview_img)        
@@ -267,7 +270,15 @@ class SMTF(NetsFrame2):
         # self.mtf_vals = np.array(self.smtf_eval.mtf_value_list)
         return
 
-
+    def get_fov_bbox(self):
+        mtf_grid_coords_1 = np.array(self.smtf_eval.pick_list.copy())
+        mtf_grid_coords_2 = mtf_grid_coords_1.copy() + self.smtf_eval.pattern_size
+        mtf_grid_coords = np.vstack([mtf_grid_coords_1[:, 0:2], mtf_grid_coords_2[:, 0:2]])
+        fov_bbox = cv2.boundingRect(mtf_grid_coords.astype('float32'))
+        output_msg = f'FoV Anchor: ({fov_bbox[0]}, {fov_bbox[1]})\n'
+        output_msg += f'FoV Dimenstion: {fov_bbox[2]}, {fov_bbox[3]}'
+        self.controller.msg_box.console(output_msg)
+        return
 
 class Controller():
     def __init__(self, msg_box, img_file_load, preset_file_load, output_path, preview_canvas):
