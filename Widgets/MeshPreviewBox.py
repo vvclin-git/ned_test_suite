@@ -5,7 +5,7 @@ from tkinter.ttk import *
 from PIL import Image, ImageTk
 import sys
 from Widgets.ZoomCanvas import *
-from Widgets.ImgFileLoad import ImgFileLoad
+from Widgets.MeshFileLoad import MeshFileLoad
 
 import json
 from tkinter import filedialog
@@ -13,13 +13,12 @@ from tkinter import filedialog
 class MeshPreviewBox(Frame):
     def __init__(self, window, preview_img_size):
         super().__init__(window)
-
-        self.raw_img = None
+        
         self.preview_img_size = preview_img_size
         self.controller = None
         # Image File Loading Widget
-        self.img_load = ImgFileLoad(self, self.load_img)
-        self.img_load.pack(side='top')
+        self.mesh_load = MeshFileLoad(self, self.load_mesh)
+        self.mesh_load.pack(side='top')
         
         # Preview Image Widget
         self.canvas_frame = Frame(self)
@@ -37,23 +36,35 @@ class MeshPreviewBox(Frame):
         self.canvas = Zoom_Advanced(self.canvas_frame, self.preview_img)
       
 
-    def load_img(self):        
+    def load_mesh(self):          
+        mesh_shape = self.mesh_load.mesh.shape
+        if len(mesh_shape) != 2:
+            if self.controller:
+                msg_output = f'Only 2D mesh is acceptable, no mesh loaded.'                
+                self.controller.msg_box.console(msg_output)
+            return
+        self.mesh_norm = np.zeros_like(self.mesh_load.mesh)
+        self.mesh_norm = cv2.normalize(self.mesh_load.mesh, self.mesh_norm, 255, 0, cv2.NORM_MINMAX)
+        # self.preview_im = np.dstack([self.mesh_norm, self.mesh_norm, self.mesh_norm])        
+        self.preview_im = cv2.applyColorMap(self.mesh_norm.astype('uint8'), cv2.COLORMAP_VIRIDIS)
+        self.preview_im = cv2.cvtColor(self.preview_im, cv2.COLOR_BGR2RGB)
+        self.preview_img = Image.fromarray(self.preview_im.astype('uint8'))
+        
+        self.canvas.update_image(self.preview_img)
+        # self.canvas.update()
+        # self.canvas.scale_to_canvas()
         if self.controller:
-            self.preview_img = Image.fromarray(self.img_load.image)
-            self.raw_img = self.img_load.image
-            self.canvas.update_image(Image.fromarray((self.img_load.image).astype(np.uint8)))
-            # self.canvas.update()
-            # self.canvas.scale_to_canvas()
-            msg_output = f'Mesh image loaded from {self.img_load.img_path.get()}\n'
-            msg_output += f'Mesh resolution: {self.raw_img.shape[1]}x{self.raw_img.shape[0]}'
+            msg_output = f'Mesh loaded from {self.mesh_load.mesh_path.get()}\n'
+            msg_output += f'Mesh Dimension: {mesh_shape[1]}x{mesh_shape[0]}'
             self.controller.msg_box.console(msg_output)
         return
     
     def update_img(self, img):
-        self.preview_img = Image.fromarray(img) 
+        self.preview_img = img 
         self.canvas.update_image(self.preview_img)
-        msg_output = f'Mesh image updaded'
-        self.controller.msg_box.console(msg_output)
+        msg_output = f'Mesh image updated'
+        if self.controller:
+            self.controller.msg_box.console(msg_output)
         return
     
     def set_controller(self, controller):

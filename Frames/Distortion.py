@@ -1,7 +1,7 @@
 import imp
 
 from numpy import pad
-from Frames.NetsFrame2 import *
+from Frames.NetsFrame import *
 from Widgets.ParameterTab import *
 import os
 from tkinter import filedialog
@@ -24,7 +24,7 @@ OUTPUT_PATH = f'{os.getcwd()}\\Output'
 PRESET_PATH = f'{os.getcwd()}\\Presets\\dist_default.json'
 MESH_OUTPUT_PATH = f'{os.getcwd()}\\Output'
 
-class Distortion(NetsFrame2):
+class Distortion(NetsFrame):
     def __init__(self, window, preview_img_size):
         super().__init__(window, preview_img_size)
         f = open(PRESET_PATH, 'r')

@@ -8,7 +8,7 @@
             "options": null
         },
         "Pattern Size": {
-            "value": 80,
+            "value": 180,
             "type": "value",
             "regex": "r'^(0$|[1-9]\\d*$)'",
             "parser": "int(val)",
@@ -26,7 +26,7 @@
             ]
         },
         "Reverse": {
-            "value": "True",
+            "value": "False",
             "type": "list",
             "regex": "r'^True$|^False$'",
             "parser": "eval(val)",
@@ -50,14 +50,14 @@
             ]
         },
         "Threshold": {
-            "value": 0.95,
+            "value": "0.95",
             "type": "value",
             "regex": "r'^((0|[1-9]\\d*)[.]\\d+)$'",
             "parser": "float(val)",
             "options": null
         },
         "IoU Threshold": {
-            "value": 0.01,
+            "value": "0.01",
             "type": "value",
             "regex": "r'^((0|[1-9]\\d*)[.]\\d+)$'",
             "parser": "float(val)",
@@ -65,7 +65,7 @@
         }
     },
     "mtf_paras": {
-        "Sensor Pixel Size (µm)": {
+        "Sensor Pixel Size (um)": {
             "value": "1.85",
             "type": "value",
             "regex": "r'^((0|[1-9]\\d*)[.]\\d+)$'",
@@ -80,7 +80,7 @@
             "options": null
         },
         "MTF Contrast (10-90)": {
-            "value": "30",
+            "value": 30,
             "type": "value",
             "regex": "r'^(0$|[1-9]\\d*$)'",
             "parser": "int(val)",
@@ -91,7 +91,7 @@
         "FoV Anchor": {
             "value": "124,66",
             "type": "value",
-            "regex": "r'^(0|[-]?[1-9]\\*),(0|[-]?[1-9]\\d*)$'",
+            "regex": "r'^(0|[-]?[1-9]\\d*),(0|[-]?[1-9]\\d*)$'",
             "parser": "int(val)",
             "options": null
         },

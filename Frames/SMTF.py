@@ -4,7 +4,7 @@ from tkinter.ttk import *
 from Frames.Distortion import PRESET_PATH
 from Widgets.MsgBox import MsgBox
 from Widgets.ParameterTab import *
-from Frames.NetsFrame2 import NetsFrame2
+from Frames.NetsFrame import NetsFrame
 from Widgets.PathBrowse import PathBrowse
 from Widgets.ToggleBtn import ToggleBtn
 from functools import partial
@@ -21,7 +21,7 @@ OUTPUT_PATH = '.\\Output\\'
 MTF_TEMP_PATH = '.\\Temp\\mtf_roi\\'
 MTF_PATTERN_TEMP_PATH = '.\\Temp\\MTF_Pattern\\'
 
-class SMTF(NetsFrame2):
+class SMTF(NetsFrame):
     def __init__(self, window, preview_img_size):
         super().__init__(window, preview_img_size)
 

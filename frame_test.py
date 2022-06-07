@@ -1,6 +1,6 @@
 
 from Frames.Draper import *
-from Frames.NetsFrame2 import *
+from Frames.NetsFrame import *
 from Frames.SMTF import *
 from Frames.TestCharts import TestCharts
 from Frames.Distortion import Distortion
@@ -27,7 +27,7 @@ from tkinter.ttk import *
 
 root = tk.Tk()
 root.geometry('1480x990')
-preview_img_size = (960, 740)
-nets_frame = Grille(root, preview_img_size)
+preview_img_size = (640, 480)
+nets_frame = NetsFrame(root, preview_img_size)
 nets_frame.pack(expand=1, fill='both')
 root.mainloop()
