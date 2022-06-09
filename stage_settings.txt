@@ -1,4 +1,0 @@
-Pomodoro,Short Break,Pomodoro,Short Break,Pomodoro,Long Break
-Pomodoro,25:00 
-Short Break,05:00
-Long Break,10:00
