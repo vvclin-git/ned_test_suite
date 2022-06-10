@@ -8,6 +8,9 @@ import os
 import json
 from tkinter import filedialog
 
+from Widgets.ChartParaTree import ChartParaTree
+from Widgets.ParameterTab import ParameterTab
+
 class PresetFileLoad(Frame):
     def __init__(self, window):
         super().__init__(window)
@@ -42,10 +45,14 @@ class PresetFileLoad(Frame):
         self.presets = json.load(f)
         f.close()
         if self.controller:
-            self.console(f'Preset File: {self.preset_path.get()} Loaded')
+            self.controller.msg_box.console(f'Preset File: {self.preset_path.get()} Loaded')
         for k in self.presets:
-            self.linked_tabs[k].parameter_chg(self.presets[k])
-            self.linked_tabs[k].fit_height()
+            if k in self.linked_tabs.keys():
+                if type(self.linked_tabs[k]) == ParameterTab:
+                    self.linked_tabs[k].parameter_chg(self.presets[k])
+                    self.linked_tabs[k].fit_height()
+                elif type(self.linked_tabs[k]) == ChartParaTree:
+                    self.linked_tabs[k].parameter_chg(self.presets)
         return
     
     def save_preset(self):
@@ -57,8 +64,15 @@ class PresetFileLoad(Frame):
         f = open(preset_path, 'w')
         
         for k in self.linked_tabs:
-            for p in self.linked_tabs[k].output_values():
-                self.presets[k][p[0]]['value'] = p[1]        
+            if type(self.linked_tabs[k]) == ParameterTab:
+                for p in self.linked_tabs[k].output_values():
+                    self.presets[k][p[0]]['value'] = p[1]
+            elif type(self.linked_tabs[k]) == ChartParaTree:
+                para_out = self.linked_tabs[k].output_values()
+                for t in para_out:
+                    for p in para_out[t]:                        
+                        self.presets[k][t][p]['value'] = para_out[t][p]
+
         
         save_preset = self.presets
         json.dump(save_preset, f)
@@ -79,7 +93,11 @@ class PresetFileLoad(Frame):
     def init_linked_tabs(self, linked_tabs):
         self.linked_tabs = linked_tabs
         for k in self.linked_tabs:
-            self.presets[k] = linked_tabs[k].parameters
+            if type(self.linked_tabs[k]) == ParameterTab:
+                self.presets[k] = linked_tabs[k].parameters
+            elif type(self.linked_tabs[k]) == ChartParaTree:
+                self.presets[k] = linked_tabs[k].tree_paras
+            
     
     def set_controller(self, controller):
         self.controller = controller

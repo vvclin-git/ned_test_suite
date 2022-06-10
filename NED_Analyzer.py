@@ -2,188 +2,19 @@
 import cv2
 from cv2 import COLOR_GRAY2RGB
 import matplotlib.pyplot as plt
-import matplotlib
 import numpy as np
-import time
 from scipy import signal
 from mpl_toolkits.mplot3d import Axes3D
 import subprocess
-
-
-
-class Coords:
-    def __init__(self, coords):
-        self.coords = coords
-        self.orig_coords = coords                
-        return      
-
-    def normalize(self):
-        centroid = self.get_centroid()
-        # centroid_x = np.average(self.coords[:, 0])
-        # centroid_y = np.average(self.coords[:, 1])
-        centroid_dist = self.get_pt_dist(centroid)
-        # centroid_dist = np.sqrt(np.power((self.coords[:, 0] - centroid_x), 2) + np.power((self.coords[:, 1] - centroid_y), 2))
-        nearest_pts = self.coords[centroid_dist.argsort(), :][0:4, :]
-        y_dist = abs(nearest_pts[:, 1] - nearest_pts[0, 1])
-        x_dist = abs(nearest_pts[:, 0] - nearest_pts[0, 0])
-        x_dist.sort()
-        y_dist.sort()
-        min_x_pitch = np.average(x_dist[2:])
-        min_y_pitch = np.average(y_dist[2:])        
-        coords_norm = np.zeros_like(self.coords)
-        coords_norm[:, 0] = self.coords[:, 0] / min_x_pitch
-        coords_norm[:, 1] = self.coords[:, 1] / min_y_pitch
-        self.coords = coords_norm
-        return
-    
-    def get_dim(self):
-        coords_width = self.coords[:, 0].max() - self.coords[:, 0].min()
-        coords_height = self.coords[:, 1].max() - self.coords[:, 1].min()
-        return np.array([coords_width, coords_height])
-
-    def get_pt_dist(self, pt):
-        pt_vect = np.tile(pt, (len(self.coords), 1))
-        center_dist = np.sqrt(np.power((self.coords[:, 0] - pt_vect[:, 0]), 2) + np.power((self.coords[:, 1] - pt_vect[:, 1]), 2))
-        return center_dist
-
-    def get_centroid(self):
-        return np.array([np.average(self.coords[:, 0]), np.average(self.coords[:, 1])])  
-
-    def shift_coords(self, shift):
-        self.coords = self.coords + shift
-        return
-
-    def get_neighbors(self, pt, coords, max_ratio):        
-        coords_dist = self.get_pt_dist(pt)        
-        close_neighbhors = coords_dist[coords_dist < coords_dist.min() * max_ratio]
-        ind = close_neighbhors.argsort()        
-        # neighbors = coords[ind]
-        neighbors = close_neighbhors[ind]
-        return neighbors
-
-    def scale_coords(self, scale):
-        self.coords = self.coords * scale
-        return
-    
-    def restore_coords(self):
-        self.coords = self.orig_coords
-        return
-
-class Grid(Coords):
-    def __init__(self, coords, grid_dim):
-        if (grid_dim[0] * grid_dim[1]) != len(coords):
-            raise Exception(f"Invalid grid dimension! (grid_dim={grid_dim}, coords length={len(coords)})")    
-        super().__init__(coords)
-        self.grid_dim = grid_dim
-        self.sorted = False
-        self.center_ind = None           
-    
-    def get_next_pt(self, pt, dist_angle, max_ratio):    
-        # pt_vect = np.tile(pt, (len(self.coords), 1))
-        # coords_dist = np.sqrt(np.power((self.coords[:, 0] - pt_vect[:, 0]), 2) + np.power((self.coords[:, 1] - pt_vect[:, 1]), 2))
-        coords_dist = self.get_pt_dist(pt)
-        neighbors = self.coords[np.argwhere((coords_dist > 0) & (coords_dist < coords_dist[coords_dist.nonzero()].min() * 1.5))]
-        neighbors = neighbors.squeeze()
-        pt_vect = np.tile(pt, (len(neighbors), 1))
-        neighbors_theta = abs(np.arctan2((neighbors - pt_vect)[:, 1], (neighbors - pt_vect)[:, 0]))    
-        next_pt = np.atleast_2d(neighbors[neighbors_theta.argsort()])[0]
-        
-        if neighbors_theta.min() > np.rad2deg(dist_angle):
-            return None
-        
-        return next_pt
-
-    def sort(self, dist_angle, max_ratio):
-        left_col = self.coords[self.coords[:, 0].argsort()[0:self.grid_dim[1]]]
-        left_col = left_col[(left_col[:, 1]).argsort()]
-        sorted_coords = np.zeros_like(self.coords)
-        ind = 0
-        for p in left_col:        
-            next_pt = p
-            for i in range(self.grid_dim[0]):
-                sorted_coords[ind] = next_pt                    
-                next_pt = self.get_next_pt(next_pt, dist_angle, max_ratio) 
-                ind += 1    
-        self.coords = sorted_coords
-        self.orig_coords = sorted_coords
-        self.sorted = True
-        
-        if self.grid_dim[0] % 2 == 0:
-            center_ind_x = np.array([self.grid_dim[0] / 2 - 1, self.grid_dim[0] / 2]).astype('uint')
-        else:
-            center_ind_x = np.array([int(self.grid_dim[0] / 2)])
-        if self.grid_dim[1] % 2 == 0:
-            center_ind_y = np.array([self.grid_dim[1] / 2 - 1, self.grid_dim[1] / 2]).astype('uint')
-        else:
-            center_ind_y = np.array([int(self.grid_dim[1] / 2)])
-        center_ind_xx, center_ind_yy = np.meshgrid(center_ind_x, center_ind_y)
-        
-        self.center_ind = (center_ind_yy * self.grid_dim[0] + center_ind_xx).flatten()
-        self.left_ind = (center_ind_yy * self.grid_dim[0]).flatten()
-        self.right_ind = (center_ind_yy * self.grid_dim[0] + (self.grid_dim[0] - 1)).flatten()
-        self.top_ind = center_ind_xx.flatten()
-        self.bottom_ind = ((self.grid_dim[1] - 1) * self.grid_dim[0] + center_ind_xx).flatten()
-        
-        return
-
-    def get_center_dim(self):
-        center_width = abs(np.average(self.coords[self.right_ind, 0]) - np.average(self.coords[self.left_ind, 0]))
-        center_height = abs(np.average(self.coords[self.top_ind, 1]) - np.average(self.coords[self.bottom_ind, 1]))
-        return np.array([center_width, center_height])
-
-    def center_grid(self, std_grid):
-        if not self.sorted:
-            print('Coordinate not indexed!')
-            return
-        if np.any(std_grid.grid_dim != self.grid_dim):
-            raise Exception("Invalid grid dimension!") 
-
-        std_grid_center = np.array([np.average(std_grid.coords[self.center_ind, 0]), np.average(std_grid.coords[self.center_ind, 1])])     
-        grid_center = np.array([np.average(self.coords[self.center_ind, 0]), np.average(self.coords[self.center_ind, 1])])        
-        
-        coords_shift = std_grid_center - grid_center
-        self.shift_coords(coords_shift)            
-        return
-
-    def copy(self):
-        return Grid(self.coords, self.grid_dim)
-
-class ROI():
-    def __init__(self, roi_coord, roi_shape, camera_eff, sensor_size, pixel_size, weight):               
-        
-        self.roi_coord = np.array(roi_coord)
-        self.shape = np.array(roi_shape)
-        self.sensor_size = np.array(sensor_size)
-        self.pt1 = self.roi_coord - (self.shape * 0.5).astype('int')
-        self.pt2 = self.roi_coord + (self.shape * 0.5).astype('int')        
-        self.weight = weight
-        
-        pixel_size = np.array(pixel_size)
-        
-        sensor_center_coord_real = (self.sensor_size * 0.5)
-        self.roi_coord_real = self.roi_coord * pixel_size - sensor_center_coord_real
-        self.roi_dist_real = np.linalg.norm(self.roi_coord_real)
-        self.alpha = np.arctan(self.roi_dist_real / camera_eff)
-        if self.roi_coord_real[0] > 0 and self.roi_coord_real[1] > 0:
-            self.phi = np.arctan(self.roi_coord_real[0] / self.roi_coord_real[1])
-        elif self.roi_coord_real[0] > 0 and self.roi_coord_real[1] == 0:
-            self.phi = np.pi * 0.5
-        elif self.roi_coord_real[0] > 0 and self.roi_coord_real[1] < 0:
-            self.phi = np.pi + np.arctan(self.roi_coord_real[0] / self.roi_coord_real[1])
-        elif self.roi_coord_real[0] <= 0 and self.roi_coord_real[1] < 0:
-            self.phi = np.pi + np.arctan(self.roi_coord_real[0] / self.roi_coord_real[1])
-        elif self.roi_coord_real[0] < 0 and self.roi_coord_real[1] == 0:
-            self.phi = np.pi * 1.5
-        elif self.roi_coord_real[0] <= 0 and self.roi_coord_real[1] > 0:
-            self.phi = 2 * np.pi + np.arctan(self.roi_coord_real[0] / self.roi_coord_real[1])
-
+from NED_Types import *
 
 class Distortion_Eval():
     def __init__(self):        
-        self.raw_img = None
+        self.raw_im = None
         self.thresh = None
-        self.labeled_img = None
-        self.indexed_img = None
+        self.labeled_im = None
+        self.indexed_im = None
+        self.std_grid_im = None
         self.std_grid = None
         self.dist_grid = None
         self.grid_dim = None
@@ -193,85 +24,102 @@ class Distortion_Eval():
         self.dist_rel = None
         self.dist_diff = None
         self.std_grid_im = None
-        self.chart_res = None
-
-    def std_grid_gen(self, chart_res, grid_dim, padding):    
-        chart_res = np.array(chart_res).astype('uint')
+        
+    def std_grid_gen(self, pitch, grid_dim, center_pt):    
+        # chart_res = np.array(chart_res).astype('uint')
         grid_dim = np.array(grid_dim).astype('uint')
-        padding = np.array(padding).astype('uint')
-        grid_x = np.linspace(0 + padding[0], chart_res[0] - padding[0], grid_dim[0]) 
-        grid_y = np.linspace(0 + padding[1], chart_res[1] - padding[1], grid_dim[1])
+        # padding = np.array(padding).astype('uint')
+        grid_x = np.linspace(0, (grid_dim[0] - 1) * pitch[0], grid_dim[0]) 
+        grid_y = np.linspace(0, (grid_dim[1] - 1) * pitch[1], grid_dim[1])
+        
         grid_xx, grid_yy = np.meshgrid(grid_x, grid_y)    
-        grid_pitch = (chart_res - 2 * padding) / (grid_dim - 1)
+        
         output_msg = f'Grid Dimension: {grid_dim[0]} x {grid_dim[1]}, '
         output_msg += f'{grid_dim[0] * grid_dim[1]} points\n'
-        output_msg += f'Grid Pitch: {grid_pitch[0]} x {grid_pitch[1]}'
-        # print(f'Grid Pitch: {grid_pitch[0]} x {grid_pitch[1]}')
-        self.std_grid_im = np.zeros((chart_res[1], chart_res[0], 3))
+        output_msg += f'Grid Pitch: {pitch[0]} x {pitch[1]}'
+        # # print(f'Grid Pitch: {grid_pitch[0]} x {grid_pitch[1]}')
+        # # chart_im = np.zeros((chart_res[1], chart_res[0], 3))
+        # self.std_grid_im = np.zeros((chart_res[1], chart_res[0], 3))
         grid_coords = np.vstack((grid_xx.flatten(), grid_yy.flatten())).transpose().astype('int')        
         # for i in range(len(grid_coords)):
         #     cv2.circle(self.labeled_img, (grid_coords[i, 0], grid_coords[i, 1]), 10, (0, 255, 0), -1)
         self.std_grid = Grid(grid_coords, grid_dim)
         self.std_grid.sorted = True
-        self.grid_dim = grid_dim
+        self.std_grid.center_ind = self.dist_grid.center_ind        
         self.std_grid_pts_count = int(grid_dim[0] * grid_dim[1])
+        std_grid_center_pt = np.array(self.std_grid.get_center_pt())
+        shift = np.array(center_pt) - std_grid_center_pt
+        self.std_grid.shift_coords(shift)
+        if self.std_grid.coords[self.std_grid.coords < 0].size > 0:
+            output_msg = 'Negative coordinate detected, check grid center values'
+            self.std_grid = None
+            return output_msg
+        self.grid_dim = grid_dim
+        self.std_grid_im = self.labeled_im.copy()
+        for i in range(len(self.std_grid.coords)):
+            cv2.circle(self.std_grid_im, (self.std_grid.coords[i, 0].astype('uint'), self.std_grid.coords[i, 1].astype('uint')), 5, (255, 0, 0), -1)
+        
         return output_msg   
-    
+
+
     def img_grid_extract(self, thresh_low, thresh_high, blur_kernel):
-        _, thresh = cv2.threshold(self.raw_img, thresh_low, thresh_high, cv2.THRESH_BINARY)
+        if len(self.raw_im.shape) > 2:
+            output_msg = 'Grid extraction failed: only grayscale image is acceptable'
+            return output_msg
+        norm_im = np.zeros_like(self.raw_im)
+        norm_im = cv2.normalize(self.raw_im, norm_im, 255, 0, cv2.NORM_INF)    
+        _, thresh = cv2.threshold(norm_im, thresh_low, thresh_high, cv2.THRESH_BINARY)
         # print(thresh.shape)
         # print(blur_kernel)
-        self.thresh = cv2.medianBlur(thresh, blur_kernel)
+        self.thresh = cv2.medianBlur(thresh, blur_kernel).astype('uint8')
         _, labels, stat, centroids = cv2.connectedComponentsWithStats(self.thresh, connectivity=8)
         labels[labels > 0] = 255
         labels_out = np.stack((np.zeros_like(labels), labels, self.thresh), -1)
-        self.labeled_img = labels_out                
+        self.labeled_im = labels_out                
         self.extracted_pts_count = len(centroids) - 1
-        self.dist_coords = centroids
-        output_msg = f'{self.extracted_pts_count} connected components extracted from the image'        
-        print(output_msg)
+        self.dist_coords = centroids[1:, :]
+        self.dist_coords_bbox = cv2.boundingRect(self.dist_coords.astype('float32'))
+        output_msg = f'{self.extracted_pts_count} connected components extracted from the image\n'
+        output_msg += f'Bounding Box Anchor: {self.dist_coords_bbox[0]}, {self.dist_coords_bbox[1]}\n'
+        output_msg += f'Bounding Box Dimension: {self.dist_coords_bbox[2]}x{self.dist_coords_bbox[3]}\n'       
+        
         return output_msg    
     
     def sort_dist_grid(self, dist_angle, max_ratio):
-        self.dist_grid = Grid(self.dist_coords[1:, :], self.grid_dim)
+        # self.dist_grid = Grid(self.dist_coords[1:, :], self.grid_dim)
+        self.dist_grid = Grid(self.dist_coords[:, :], self.grid_dim)
         self.dist_grid.sort(dist_angle, max_ratio)
-        self.dist_coords = self.dist_grid.coords
+        self.dist_coords = self.dist_grid.coords        
+        return
+    
+    def get_center_pts(self):
+        if not self.dist_grid.sorted:
+            return None
+        center_pts = np.atleast_2d(self.dist_grid.coords[self.dist_grid.center_ind].squeeze())
+        return center_pts
+
+    def get_center_pt(self):
+        if not self.dist_grid.sorted:
+            return None
         center_pt = np.atleast_2d(self.dist_grid.coords[self.dist_grid.center_ind].squeeze())
         if center_pt.shape[0] > 1:
             center_pt = np.average(center_pt, axis=0)
-        dist_center_dist = self.dist_grid.get_pt_dist(center_pt)
-        center_pts = self.dist_grid.coords[np.argsort(dist_center_dist)].squeeze()[0:3]
-        # center_pts = center_pts[np.argsort(center_pts, axis=0)[:, 0], :]
-        # grid_pitch = np.array([abs(center_pts[1, 0] - center_pts[2, 0]), abs(center_pts[0, 1] - center_pts[1, 1])])
-        # grid_pitch = np.array([abs(center_pts[:, 0].max() - center_pts[:, 0].min()), abs(center_pts[:, 1].max() - center_pts[:, 1].min())])
-        # grid_size = (grid_pitch * (self.grid_dim - 1)).astype('uint')
-        # grid_anchor = ((self.chart_res - grid_size) * 0.5).astype('uint')
-        # grid_x = np.linspace(grid_anchor[0], grid_anchor[0] + grid_size[0], self.grid_dim[0]) 
-        # grid_y = np.linspace(grid_anchor[1], grid_anchor[1] + grid_size[1], self.grid_dim[1])
-        # grid_xx, grid_yy = np.meshgrid(grid_x, grid_y)
-        # grid_coords = np.vstack((grid_xx.flatten(), grid_yy.flatten())).transpose().astype('int') 
-        # self.std_grid = Grid(grid_coords, self.grid_dim)
-        # self.std_grid.sort(0, 1.5)
-        # self.std_grid.center_grid(self.dist_grid)
-        # grid_coords = self.std_grid.coords.astype('uint')        
-        # for i in range(len(grid_coords)):
-        #     cv2.circle(self.labeled_img, (grid_coords[i, 0], grid_coords[i, 1]), 10, (0, 255, 0), -1)
-        for i in range(len(self.dist_grid.coords)):
-            cv2.circle(self.labeled_img, (self.dist_grid.coords[i, 0].astype('uint'), self.dist_grid.coords[i, 1].astype('uint')), 5, (255, 0, 0), -1)
-        return
+        if len(center_pt.shape) > 1:
+            center_pt = center_pt.squeeze()
+        return center_pt
 
     def dist_eval(self):                
         if not (self.dist_grid.sorted and self.std_grid.sorted):
             output_msg = 'The grid must be sorted first'
             return output_msg
-        self.dist_grid.normalize()
-        self.std_grid.normalize()
-        center_pt = self.std_grid.coords[self.dist_grid.center_ind].squeeze()
-        if center_pt.shape[0] > 1:
-            center_pt = np.average(center_pt, axis=0)
-        
-        std_center_dist = self.std_grid.get_pt_dist(center_pt)
-        dist_center_dist = self.dist_grid.get_pt_dist(center_pt)
+        # self.dist_grid.normalize()
+        # self.std_grid.normalize()
+        # center_pt = self.get_center_pt()
+        dist_center_pt = self.dist_grid.get_center_pt()
+        std_center_pt = self.std_grid.get_center_pt()
+        std_center_dist = self.std_grid.get_pt_dist(std_center_pt)
+        # dist_center_dist = self.dist_grid.get_pt_dist(dist_center_pt)
+        dist_center_dist = self.dist_grid.get_pt_dist(std_center_pt)
         dist_diff = dist_center_dist - std_center_dist
         out = np.zeros_like(std_center_dist)
         np.divide(dist_diff, std_center_dist, out=out, where=std_center_dist!=0)
@@ -286,25 +134,41 @@ class Distortion_Eval():
         return output_msg
 
     def draw_coords_index(self, pad_ratio):
-        chart_res = (self.raw_img.shape[1], self.raw_img.shape[0])        
-        coords_dim = (((self.dist_coords[:, 0].max() - self.dist_coords[:, 0].min())), ((self.dist_coords[:, 1].max() - self.dist_coords[:, 1].min())))    
+        chart_res = (self.raw_im.shape[1], self.raw_im.shape[0])        
+        # coords_dim = (((self.dist_coords[:, 0].max() - self.dist_coords[:, 0].min())), ((self.dist_coords[:, 1].max() - self.dist_coords[:, 1].min())))    
+        # dist_coords_sorted_bbox = cv2.boundingRect(self.dist_coords.astype('float32'))        
+        coords_dim = (self.dist_coords_bbox[2], self.dist_coords_bbox[3])
         scale_factor = (chart_res[0] / coords_dim[0] * pad_ratio, chart_res[1] / coords_dim[1] * pad_ratio)       
         coords_scaled = np.vstack((self.dist_coords[:, 0] * scale_factor[0], self.dist_coords[:, 1] * scale_factor[1])).transpose()    
         coords_scaled_center = np.array([(np.average(coords_scaled[:, 0]), np.average(coords_scaled[:, 1]))])    
         coords_shift = np.array([chart_res]) / 2 - coords_scaled_center    
         coords_output = (coords_scaled + np.tile(coords_shift, (len(coords_scaled), 1))).astype('uint')
-        self.indexed_img = np.zeros((chart_res[1], chart_res[0], 3), dtype='uint8')    
+        self.indexed_im = np.zeros((chart_res[1], chart_res[0], 3))    
         for i, p in enumerate(coords_output):        
-            cv2.putText(self.indexed_img, str(i), (p[0], p[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 255, 255), 1, cv2.LINE_AA)
+            cv2.putText(self.indexed_im, str(i), (p[0], p[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 255, 255), 1, cv2.LINE_AA)
         
         return
-
+    
+    def get_center_pitch(self):
+        if not self.dist_grid.sorted:
+            return None        
+        center_pt = self.dist_grid.get_center_pt()
+        dist_center_dist = self.dist_grid.get_pt_dist(center_pt)
+        center_pts = self.dist_grid.coords[np.argsort(dist_center_dist)].squeeze()[0:4]
+        if (self.dist_grid.grid_dim[0] % 2 == 1 and self.dist_grid.grid_dim[1] % 2 == 1):
+            x_pitch = max(abs(center_pts[1:4, 0] - center_pts[0, 0]))
+            y_pitch = max(abs(center_pts[1:4, 1] - center_pts[0, 1]))
+        else:
+            x_pitch = center_pts[:, 0].max() - center_pts[:, 0].min()
+            y_pitch = center_pts[:, 1].max() - center_pts[:, 1].min()
+        return (x_pitch, y_pitch)
 
 
 class Grille_Eval():
     def __init__(self):        
-        self.raw_img = None        
-        self.labeled_img = None        
+        self.raw_im = None
+        self.preview_im = None        
+        self.labeled_im = None        
         
         self.img_roi_size = None
         self.grille_mc = None
@@ -323,9 +187,10 @@ class Grille_Eval():
         self.roi_grid_coords = np.vstack((roi_grid_xx.flatten(), roi_grid_yy.flatten())).transpose()
 
         self.grille_mc = np.zeros((grid_dim[1], grid_dim[0]))
-
+        # self.labeled_im = cv2.cvtColor(self.raw_im, cv2.COLOR_GRAY2RGB)
+        self.labeled_im = self.preview_im.copy()
         for i, c in enumerate(self.roi_grid_coords):
-            cv2.rectangle(self.labeled_img, c, c + self.img_roi_size, (0, 255, 0), 1)            
+            cv2.rectangle(self.labeled_im, c, c + self.img_roi_size, (0, 255, 0), 1)            
             # cv2.imwrite(roi_path + f'ROI_{i}.png', roi)                
         output_msg = f'Grille Contrast Merit Grid Generated\n'
         output_msg += f'FoV Anchor: ({fov_anchor[0]}, {fov_anchor[1]}), FoV Size: {fov_size[0]}x{fov_size[1]}\n'
@@ -338,8 +203,8 @@ class Grille_Eval():
             return output_msg
         else:
             for i, c in enumerate(self.roi_grid_coords):
-                # cv2.rectangle(self.labeled_img, c, c + self.img_roi_size, (0, 255, 0), 1)
-                roi = self.raw_img[c[1]:c[1] + self.img_roi_size[1], c[0]:c[0] + self.img_roi_size[0]]
+                # cv2.rectangle(self.labeled_im, c, c + self.img_roi_size, (0, 255, 0), 1)
+                roi = self.raw_im[c[1]:c[1] + self.img_roi_size[1], c[0]:c[0] + self.img_roi_size[0]]
                 mc = self.get_roi_mc(roi)
                 self.grille_mc[np.unravel_index(i, self.grille_mc.shape)] = mc
                 # cv2.imwrite(roi_path + f'ROI_{i}.png', roi)
@@ -354,9 +219,11 @@ class Grille_Eval():
         roi_avg = np.average(roi, 0)    
         roi_peaks, _ = signal.find_peaks(roi_avg, height=(np.average(roi_avg)))
         roi_max = np.average(roi_avg[roi_peaks])
-        roi_valleys, _ = signal.find_peaks(roi_max - roi_avg, height=(np.average(roi_avg)))
+        roi_valleys, _ = signal.find_peaks(roi_max - roi_avg, height=(np.average((roi_max - roi_avg))))
         roi_min = np.average(roi_avg[roi_valleys])
         mc = (roi_max - roi_min) / (roi_max + roi_min)
+        if np.isnan(mc):
+            mc = 0
         return mc    
     
 

@@ -5,8 +5,12 @@ import cv2
 import numpy as np
 from tkinter.ttk import *
 from PIL import Image, ImageTk
+from Widgets.ParameterTab import ParameterTab
 from Widgets.ZoomCanvas import *
 from Widgets.ImgFileLoad import ImgFileLoad
+from Widgets.MsgBox import MsgBox
+from Widgets.PresetFileLoad import PresetFileLoad
+from Widgets.PathBrowse import PathBrowse
 import os
 import json
 from tkinter import filedialog
@@ -48,88 +52,42 @@ class NetsFrame(Frame):
         # Message Output     
         msg_frame = LabelFrame(output, text='Output Message', style='TLabelframe')  
         msg_frame.grid(row=1, column=0, sticky='NEWS')
-                
-        self.msg_output = tk.Text(msg_frame, height=10, state='disabled')
-        self.msg_output.pack(side=tk.LEFT, expand=True, fill='both')
-        msg_scroll = Scrollbar(msg_frame, orient=tk.VERTICAL, command=self.msg_output.yview)
-        self.msg_output['yscrollcommand'] = msg_scroll.set
-        msg_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        self.msg_box = MsgBox(msg_frame)        
+        self.msg_box.pack(side='top', expand=1, fill='both')        
         
         # Settings Container Settings        
         self.settings = Frame(self, style='Settings.TFrame', padding=(10, 10))        
         self.settings.grid(row=0, column=1, sticky='NEW')
                 
         # Preset Save / Load
-        self.preset_frame = LabelFrame(self.settings, text='Parameter Preset', padding=(5, 5, 5, 5))
-        self.preset_frame.pack(expand=True, fill='x', pady=5, side='top')
+        self.preset_file_load = PresetFileLoad(self.settings)
+        self.preset_file_load.pack(side='top', expand=1, fill='x', pady=5)
 
-        self.preset_input_frame = Frame(self.preset_frame)
-        self.preset_input_frame.pack(side='top', expand=True, fill='both')
-        self.preset_btn_frame = Frame(self.preset_frame)
-        self.preset_btn_frame.pack(side='top', expand=True, fill='both')
+        # Image Loading
+        self.img_file_load = ImgFileLoad(self.settings, self.load_img)
+        self.img_file_load.pack(side='top', expand=1, fill='x', pady=5)
         
-        self.preset_path_label = Label(self.preset_input_frame, text='Preset Path')
-        self.preset_path_label.pack(side='left', padx=5, pady=5)
-        self.preset_path_input = Entry(self.preset_input_frame, textvariable=self.preset_path)
-        self.preset_path_input.pack(side='left', padx=5, pady=5, expand=True, fill='both')
-                
 
-        self.preset_save_btn = Button(self.preset_btn_frame, text='Save As...', style='Buttons.TButton', command=self.save_preset)        
-        self.preset_save_btn.pack(side='right', padx=2, pady=5)
-        self.preset_load_btn = Button(self.preset_btn_frame, text='Load...', style='Buttons.TButton', command=self.load_preset)
-        self.preset_load_btn.pack(side='right', padx=2, pady=5)
-        self.preset_browse_btn = Button(self.preset_btn_frame, text='Browse...', style='Buttons.TButton', command=self.browse_preset)
-        self.preset_browse_btn.pack(side='right', padx=2, pady=5)
-
-        # self.buttons = Frame(self, style='Buttons.TFrame', width=500, height=240)
-        # self.buttons = Frame(self, style='Buttons.TFrame')
-        # self.buttons.grid(row=1, column=1, sticky='EW')
     
-    def console(self, msg, cr=True):
-        self.msg_output.config(state='normal')
-        if cr:
-            self.msg_output.insert('end', msg + '\n')
-        else:
-            self.msg_output.insert('end', msg)
-        self.msg_output.config(state='disabled')
-        return
-    
-    def console_clr(self):
-        self.msg_output.config(state='normal')
-        self.msg_output.delete('1.0', 'end')
-        self.msg_output.config(state='disabled')
-    
-    def update_img(self, img):
-        self.preview_canvas.update_image(img)
-        return
-    
-    def browse_preset(self):
-        cur_path = os.getcwd()
-        temp_path = filedialog.askopenfilename(parent=self, initialdir=cur_path, title='Please select a JSON file', filetypes=[("JSON files","*.json")])
-        # if len(temp_path) > 0:
-        #     print ("You chose: %s" % tempdir)
-        if len(temp_path) > 0:            
-            self.preset_path.set(temp_path)
-        return
-    
-    def load_preset(self):
-        f = open(self.preset_path.get(), 'r')
-        self.presets = json.load(f)
-        f.close()
-        self.console(f'Preset File: {self.preset_path.get()} Loaded')
-        return
-
-    def save_preset(self):
-        preset_path = self.preset_path.get()
-        if os.path.isfile(preset_path):
-            chk_overwrite = tk.messagebox.askquestion(title='Confirm Overwrite', message='File already exists, overwrite?')
-            if not chk_overwrite:
-                return                
-        f = open(preset_path, 'w')
-        save_preset = self.presets
-        json.dump(save_preset, f)
-        f.close()
-        self.console(f'Preset File: {preset_path} Saved')
+    def load_img(self):
+        self.preview_im = np.zeros_like(self.img_file_load.im)
+        if len(self.preview_im.shape) == 3:
+            if self.preview_im.shape[2] != 3:
+                msg_output = f'Incorrect image channel number, image not loaded.'
+                self.controller.msg_box.console(msg_output)
+                return
+        # self.preview_im = np.zeros((*self.img_file_load.im.shape, 3))
+        self.preview_im = cv2.normalize(self.img_file_load.im, self.preview_im, 255, 0, cv2.NORM_INF)        
+        if len(self.preview_im.shape) == 2:
+            self.preview_im = np.dstack([self.preview_im, self.preview_im, self.preview_im])
+        self.preview_img = Image.fromarray(self.preview_im.astype(np.uint8))
+        self.raw_im = self.img_file_load.im
+        self.preview_canvas.update_image(Image.fromarray((self.preview_im).astype(np.uint8)))
+        # self.canvas.update()
+        # self.canvas.scale_to_canvas()
+        msg_output = f'Image loaded from {self.img_file_load.img_path.get()}\n'
+        msg_output += f'Image Resolution: {self.raw_im.shape[1]}x{self.raw_im.shape[0]}'
+        self.controller.msg_box.console(msg_output)
         return
     
     def reset(self):

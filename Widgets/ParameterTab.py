@@ -6,14 +6,6 @@ import re
 import cv2
 from tkinter import messagebox
 
-regex_dim = re.compile(r'^\d+x\d+$')
-regex_dim_float = re.compile(r'^\d+.\d+x\d+.\d+$')
-regex_coord = re.compile(r'^\d+,\d+$')
-regex_color = re.compile(r'^\d+,\d+,\d+$')
-regex_float = re.compile(r'^[-]*\d+[.]\d+$')
-regex_list = re.compile(r'(.+?)(?:,|$)')
-regex_int = re.compile(r'^[-]*[1-9]\d*$')
-regex_cv = re.compile(r'^cv2?[.]')
 
 class ParameterTab(ttk.Frame):
     def __init__(self, parent, parameters):

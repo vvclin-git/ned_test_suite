@@ -1,1 +1,73 @@
+<<<<<<< HEAD
 {"grid_extract_paras": {"Test Chart Resolution": {"value": "4000x3000", "type": "value", "regex": "r'^\\d+x\\d+$'", "parser": "(int(val.split('x')[0]), int(val.split('x')[1]))", "options": null}, "Test Grid Dimension": {"value": "32x18", "type": "value", "regex": "r'^\\d+x\\d+$'", "parser": "(int(val.split('x')[0]), int(val.split('x')[1]))", "options": null}, "Test Chart Padding": {"value": "0x0", "type": "value", "regex": "r'^\\d+x\\d+$'", "parser": "(int(val.split('x')[0]), int(val.split('x')[1]))", "options": null}, "Low Threshold": {"value": 25, "type": "value", "regex": "r'^[-]*[1-9]\\d*$'", "parser": "int(val)", "options": null}, "High Threshold": {"value": 255, "type": "value", "regex": "r'^[-]*[1-9]\\d*$'", "parser": "int(val)", "options": null}, "Median Kernel Size": {"value": 5, "type": "value", "regex": "r'^[-]*[1-9]\\d*$'", "parser": "int(val)", "options": null}}, "grid_sort_paras": {"Path Angle": {"value": 30, "type": "value", "regex": "r'^[-]*\\d+[.]\\d+$'", "parser": "float(val)", "options": null}, "Radius Ratio": {"value": "1.5", "type": "value", "regex": "r'^[-]*\\d+[.]\\d+$'", "parser": "float(val)", "options": null}}}
+=======
+{
+    "grid_extract_paras": {
+        "Low Threshold": {
+            "value": 25,
+            "type": "value",
+            "regex": "r'^[1-9]\\d*$'",
+            "parser": "int(val)",
+            "options": null
+        },
+        "High Threshold": {
+            "value": 255,
+            "type": "value",
+            "regex": "r'^[1-9]\\d*$'",
+            "parser": "int(val)",
+            "options": null
+        },
+        "Median Kernel Size": {
+            "value": 5,
+            "type": "value",
+            "regex": "r'^[1-9]\\d*$'",
+            "parser": "int(val)",
+            "options": null
+        },
+        "Test Grid Dimension": {
+            "value": "65x37",
+            "type": "value",
+            "regex": "r'^(0|[1-9]\\d*)x(0|[1-9]\\d*)$'",
+            "parser": "(int(val.split('x')[0]), int(val.split('x')[1]))",
+            "options": null
+        }
+    },
+    "grid_sort_paras": {
+        "Path Angle": {
+            "value": 30,
+            "type": "value",
+            "regex": "r'^((0|[1-9]\\d*)[.]\\d+)$'",
+            "parser": "float(val)",
+            "options": null
+        },
+        "Radius Ratio": {
+            "value": "1.5",
+            "type": "value",
+            "regex": "r'^((0|[1-9]\\d*)[.]\\d+)$'",
+            "parser": "float(val)",
+            "options": null
+        },
+        "Std Chart Pitch": {
+            "value": "28.60x32.64",
+            "type": "value",
+            "regex": "r'^((0|[1-9]\\d*)[.]\\d+)x((0|[1-9]\\d*)[.]\\d+)$'",
+            "parser": "(float(val.split('x')[0]), float(val.split('x')[1]))",
+            "options": null
+        },
+        "Std Grid Dimension": {
+            "value": "65x37",
+            "type": "value",
+            "regex": "r'^(0|[1-9]\\d*)x(0|[1-9]\\d*)$'",
+            "parser": "(int(val.split('x')[0]), int(val.split('x')[1]))",
+            "options": null
+        },
+        "Std Chart Center": {
+            "value": "1124.392,690.996",
+            "type": "value",
+            "regex": "r'^([-]?(0|[1-9]\\d*)[.]\\d+),([-]?(0|[1-9]\\d*)[.]\\d+)$'",
+            "parser": "float(val)",
+            "options": null
+        }
+    }
+}
+>>>>>>> mvc

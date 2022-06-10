@@ -1,10 +1,10 @@
 from msilib.schema import Control
-import tkinter as tk
+# import tkinter as tk
 from tkinter.ttk import *
 from Frames.Distortion import PRESET_PATH
 from Widgets.MsgBox import MsgBox
 from Widgets.ParameterTab import *
-from Frames.NetsFrame2 import NetsFrame2
+from Frames.NetsFrame import NetsFrame
 from Widgets.PathBrowse import PathBrowse
 from Widgets.ToggleBtn import ToggleBtn
 from functools import partial
@@ -21,7 +21,7 @@ OUTPUT_PATH = '.\\Output\\'
 MTF_TEMP_PATH = '.\\Temp\\mtf_roi\\'
 MTF_PATTERN_TEMP_PATH = '.\\Temp\\MTF_Pattern\\'
 
-class SMTF(NetsFrame2):
+class SMTF(NetsFrame):
     def __init__(self, window, preview_img_size):
         super().__init__(window, preview_img_size)
 
@@ -44,7 +44,7 @@ class SMTF(NetsFrame2):
         mtf_extract_frame.pack(side='top', fill='x', pady=5)
         self.se_pattern_paras_tab = ParameterTab(mtf_extract_frame, self.se_paras)        
         self.se_pattern_paras_tab.pack(side='top', expand=1, fill='x')
-        self.mtf_extract_btn = Button(mtf_extract_frame, text='Extract Pattern', command=self.mtf_extract)
+        self.mtf_extract_btn = ttk.Button(mtf_extract_frame, text='Extract Pattern', command=self.mtf_extract)
         self.mtf_extract_btn.pack(side='right', padx=2, pady=5)
         self.mtf_extract_btn.config(state='disable')
         self.disabled_btns.append(self.mtf_extract_btn)
@@ -59,7 +59,7 @@ class SMTF(NetsFrame2):
         mtf_eval_frame.pack(side='top', fill='x', pady=5)
         self.mtf_paras_tab = ParameterTab(mtf_eval_frame, self.mtf_paras)        
         self.mtf_paras_tab.pack(side='top', expand=1, fill='x')
-        self.mtf_eval_btn = Button(mtf_eval_frame, text='Evaluate MTF', command=self.mtf_evaluate)
+        self.mtf_eval_btn = ttk.Button(mtf_eval_frame, text='Evaluate MTF', command=self.mtf_evaluate)
         self.mtf_eval_btn.pack(side='right', padx=2, pady=5)
         self.mtf_eval_btn.config(state='disable')
         self.disabled_btns.append(self.mtf_eval_btn)
@@ -77,15 +77,15 @@ class SMTF(NetsFrame2):
         output_frame.pack(side='top', fill='x', pady=5)
         self.output_paras_tab = ParameterTab(output_frame, self.output_paras)
         self.output_paras_tab.pack(side='top', expand=1, fill='x')
-        self.export_btn = Button(output_frame, text='Export Results', command=self.export)
+        self.export_btn = ttk.Button(output_frame, text='Export Results', command=self.export)
         self.export_btn.pack(side='right', padx=2, pady=5)
         self.export_btn.config(state='disable')
         self.disabled_btns.append(self.export_btn)
-        self.get_mtf_mesh_btn = Button(output_frame, text='Get MTF Mesh', command=self.get_mtf_mesh)
+        self.get_mtf_mesh_btn = ttk.Button(output_frame, text='Get MTF Mesh', command=self.get_mtf_mesh)
         self.get_mtf_mesh_btn.pack(side='right', padx=2, pady=5)
         self.get_mtf_mesh_btn.config(state='disable')
         self.disabled_btns.append(self.get_mtf_mesh_btn)
-        self.get_mtf_grid_btn = Button(output_frame, text='Get MTF Grid', command=self.get_mtf_grid)
+        self.get_mtf_grid_btn = ttk.Button(output_frame, text='Get MTF Grid', command=self.get_mtf_grid)
         self.get_mtf_grid_btn.pack(side='right', padx=2, pady=5)
         self.get_mtf_grid_btn.config(state='disable')
         self.disabled_btns.append(self.get_mtf_grid_btn)
@@ -93,6 +93,8 @@ class SMTF(NetsFrame2):
         self.show_fov_btn.pack(side='right', padx=2, pady=5)
         self.show_fov_btn.config(state='disable')
         self.disabled_btns.append(self.show_fov_btn)
+        self.get_fov_btn = ttk.Button(output_frame, text='Get FoV', command=self.get_fov_bbox)
+        self.get_fov_btn.pack(side='right', padx=2, pady=5)
         
         # widget interlink & initialization
         self.controller = Controller(self.msg_box, self.img_file_load, self.preset_file_load, self.output_path, self.preview_canvas)
@@ -241,12 +243,13 @@ class SMTF(NetsFrame2):
             return    
 
     def load_img(self):       
-        self.raw_im = self.img_file_load.image 
+        self.raw_im = self.img_file_load.im
         if len(self.raw_im.shape) > 2:
             messagebox.showerror('Incorrect Image Format', 'Only grayscale image is allowed for the analysis!')
             return
         self.preview_im = self.raw_im.copy()       
-        self.preview_im = (self.preview_im // (self.preview_im.max() / 256 + 1)).astype('uint8')
+        # self.preview_im = (self.preview_im // (self.preview_im.max() / 256 + 1)).astype('uint8')
+        self.preview_im = cv2.normalize(self.raw_im, self.preview_im, 255, 0, cv2.NORM_INF)
         self.preview_im = cv2.cvtColor(self.preview_im, cv2.COLOR_GRAY2RGB)
         self.preview_img = Image.fromarray((self.preview_im).astype(np.uint8))
         self.preview_canvas.update_image(self.preview_img)        
@@ -267,7 +270,15 @@ class SMTF(NetsFrame2):
         # self.mtf_vals = np.array(self.smtf_eval.mtf_value_list)
         return
 
-
+    def get_fov_bbox(self):
+        mtf_grid_coords_1 = np.array(self.smtf_eval.pick_list.copy())
+        mtf_grid_coords_2 = mtf_grid_coords_1.copy() + self.smtf_eval.pattern_size
+        mtf_grid_coords = np.vstack([mtf_grid_coords_1[:, 0:2], mtf_grid_coords_2[:, 0:2]])
+        fov_bbox = cv2.boundingRect(mtf_grid_coords.astype('float32'))
+        output_msg = f'FoV Anchor: ({fov_bbox[0]}, {fov_bbox[1]})\n'
+        output_msg += f'FoV Dimenstion: {fov_bbox[2]}, {fov_bbox[3]}'
+        self.controller.msg_box.console(output_msg)
+        return
 
 class Controller():
     def __init__(self, msg_box, img_file_load, preset_file_load, output_path, preview_canvas):
