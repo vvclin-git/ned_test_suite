@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-{"grid_extract_paras": {"Test Chart Resolution": {"value": "4000x3000", "type": "value", "regex": "r'^\\d+x\\d+$'", "parser": "(int(val.split('x')[0]), int(val.split('x')[1]))", "options": null}, "Test Grid Dimension": {"value": "32x18", "type": "value", "regex": "r'^\\d+x\\d+$'", "parser": "(int(val.split('x')[0]), int(val.split('x')[1]))", "options": null}, "Test Chart Padding": {"value": "0x0", "type": "value", "regex": "r'^\\d+x\\d+$'", "parser": "(int(val.split('x')[0]), int(val.split('x')[1]))", "options": null}, "Low Threshold": {"value": 25, "type": "value", "regex": "r'^[-]*[1-9]\\d*$'", "parser": "int(val)", "options": null}, "High Threshold": {"value": 255, "type": "value", "regex": "r'^[-]*[1-9]\\d*$'", "parser": "int(val)", "options": null}, "Median Kernel Size": {"value": 5, "type": "value", "regex": "r'^[-]*[1-9]\\d*$'", "parser": "int(val)", "options": null}}, "grid_sort_paras": {"Path Angle": {"value": 30, "type": "value", "regex": "r'^[-]*\\d+[.]\\d+$'", "parser": "float(val)", "options": null}, "Radius Ratio": {"value": "1.5", "type": "value", "regex": "r'^[-]*\\d+[.]\\d+$'", "parser": "float(val)", "options": null}}}
-=======
 {
     "grid_extract_paras": {
         "Low Threshold": {
@@ -70,4 +67,3 @@
         }
     }
 }
->>>>>>> mvc

@@ -90,7 +90,7 @@ class Distortion(NetsFrame):
         self.grid_sort_btn = Button(self.grid_sort_btn_frame, text='Sort Grid', style='Buttons.TButton', command=self.sort_grid)
         self.grid_sort_btn.pack(side='right', padx=2, pady=5)
         
-        self.grid_sort_btn_list = [self.sort_preview_btn, self.grid_sort_btn, self.export_grids_btn]
+        self.grid_sort_btn_list = [self.sort_preview_btn, self.grid_sort_btn, self.export_grid_btn]
         self.buttons.append(self.grid_sort_btn_list)
 
               
