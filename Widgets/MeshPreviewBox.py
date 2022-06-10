@@ -55,13 +55,16 @@ class MeshPreviewBox(Frame):
         # self.canvas.scale_to_canvas()
         if self.controller:
             msg_output = f'Mesh loaded from {self.mesh_load.mesh_path.get()}\n'
+            msg_output += f'Mesh Data Type: {self.mesh_load.mesh.dtype}\n'
+            msg_output += f'Min Value: {self.mesh_load.mesh.min()}\n'
+            msg_output += f'Max Value: {self.mesh_load.mesh.max()}\n'
             msg_output += f'Mesh Dimension: {mesh_shape[1]}x{mesh_shape[0]}'
             self.controller.msg_box.console(msg_output)
         return
     
     def update_img(self, img):
-        self.preview_img = img 
-        self.canvas.update_image(self.preview_img)
+        # self.preview_img = img 
+        self.canvas.update_image(img)
         msg_output = f'Mesh image updated'
         if self.controller:
             self.controller.msg_box.console(msg_output)

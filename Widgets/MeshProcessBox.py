@@ -45,14 +45,10 @@ class MeshProcessBox(MeshPreviewBox):
     def process_mesh(self):        
         process_paras = self.process_paras_tab.output_parsed_vals()
         kernel_size, threshold_val, max_threshold_val, epsilon = process_paras        
-        self.preview_img = self.preview_img.copy()
-        self.raw_img = self.preview_img.copy()
-        # self.preview_img = cv2.cvtColor(self.raw_img, cv2.COLOR_GRAY2RGB)
-        # if self.preview_img.dtype != 'uint8':
-        #     self.preview_img = self.preview_img.astype('uint8')
-        mesh_blurred = self.mesh_load.mesh.copy()
+        # self.raw_img = self.preview_img.copy()        
+        mesh_blurred = self.mesh_load.mesh.copy().astype('float32')
         if kernel_size > 0 and (kernel_size + 1) % 2 == 0:
-            mesh_blurred = cv2.medianBlur(self.mesh_load.mesh, kernel_size)        
+            mesh_blurred = cv2.medianBlur(mesh_blurred, kernel_size)        
         # thresholding
         _, thresh = cv2.threshold(mesh_blurred, threshold_val, max_threshold_val, cv2.THRESH_BINARY)
         if thresh.dtype != 'uint8':
@@ -70,28 +66,30 @@ class MeshProcessBox(MeshPreviewBox):
         contour_im = np.dstack([contour_im, contour_im[:, :, 1]])
         # contour_im = cv2.cvtColor(contour_im, cv2.COLOR_RGB2RGBA)
         # contour_img = Image.fromarray(contour_im, mode='RGBA')
-        contour_img = Image.fromarray(contour_im)        
+        contour_img = Image.fromarray(contour_im.astype('uint8'))        
         self.controller.msg_box.console(f'{len(self.border_coords)} Points Extracted')
         contour_img = contour_img.convert('RGBA')
-        self.preview_img = self.preview_img.convert('RGBA')
-        self.preview_img = Image.alpha_composite(self.preview_img, contour_img)
+        # self.overlay_img = self.preview_img.copy().convert('RGBA')
+        self.overlay_img = Image.new('RGBA', self.preview_img.size)
+        # self.overlay_img = Image.alpha_composite(self.preview_img.convert('RGBA'), contour_img)
+        self.overlay_img = Image.alpha_composite(self.preview_img.copy().convert('RGBA'), contour_img)
         if self.preview:
-            self.update_img(self.preview_img)
+            self.update_img(self.overlay_img)
         return
     
     def preview_on(self):
-        if self.preview_img is None:
+        if self.overlay_img is None:
             return
         self.preview = True
-        self.update_img(self.preview_img)
+        self.update_img(self.overlay_img)
 
         return
 
     def preview_off(self):
-        if self.preview_img is None:
+        if self.overlay_img is None:
             return
         self.preview = False
-        self.update_img(self.raw_img)
+        self.update_img(self.preview_img)
         return
     
     def set_mesh(self):
