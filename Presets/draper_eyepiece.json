@@ -1,0 +1,122 @@
+{
+    "pupil_mesh_paras": {
+        "Blur Kernel Size": {
+            "value": 1,
+            "type": "value",
+            "regex": "r'^(0$|[1-9]\\d*$)'",
+            "parser": "int(val)",
+            "options": null
+        },
+        "Threshold Value": {
+            "value": "100.0",
+            "type": "value",
+            "regex": "r'^([-]?(0|[1-9]\\d*)[.]\\d+)$'",
+            "parser": "float(val)",
+            "options": null
+        },
+        "Max Threshold Value": {
+            "value": "255.0",
+            "type": "value",
+            "regex": "r'^([-]?(0|[1-9]\\d*)[.]\\d+)$'",
+            "parser": "float(val)",
+            "options": null
+        },
+        "Contour Approx Epsilon": {
+            "value": "0.0015",
+            "type": "value",
+            "regex": "r'^((0|[1-9]\\d*)[.]\\d+)$'",
+            "parser": "float(val)",
+            "options": null
+        }
+    },
+    "far_mesh_paras": {
+        "Blur Kernel Size": {
+            "value": 1,
+            "type": "value",
+            "regex": "r'^(0$|[1-9]\\d*$)'",
+            "parser": "int(val)",
+            "options": null
+        },
+        "Threshold Value": {
+            "value": "100.0",
+            "type": "value",
+            "regex": "r'^([-]?(0|[1-9]\\d*)[.]\\d+)$'",
+            "parser": "float(val)",
+            "options": null
+        },
+        "Max Threshold Value": {
+            "value": "255.0",
+            "type": "value",
+            "regex": "r'^([-]?(0|[1-9]\\d*)[.]\\d+)$'",
+            "parser": "float(val)",
+            "options": null
+        },
+        "Contour Approx Epsilon": {
+            "value": "0.001",
+            "type": "value",
+            "regex": "r'^((0|[1-9]\\d*)[.]\\d+)$'",
+            "parser": "float(val)",
+            "options": null
+        }
+    },
+    "draper_paras": {
+        "Sensor Resolution": {
+            "value": "4000x3000",
+            "type": "value",
+            "regex": "r'^(0|[1-9]\\d*)x(0|[1-9]\\d*)$'",
+            "parser": "(int(val.split('x')[0]), int(val.split('x')[1]))",
+            "options": null
+        },
+        "Sensor Size": {
+            "value": "7.4x5.55",
+            "type": "value",
+            "regex": "r'^((0|[1-9]\\d*)[.]\\d+)x((0|[1-9]\\d*)[.]\\d+)$'",
+            "parser": "(float(val.split('x')[0]), float(val.split('x')[1]))",
+            "options": null
+        },
+        "Camera Eff": {
+            "value": "8.0",
+            "type": "value",
+            "regex": "r'^((0|[1-9]\\d*)[.]\\d+)$'",
+            "parser": "float(val)",
+            "options": null
+        },
+        "Far Mesh Distance": {
+            "value": "145.0",
+            "type": "value",
+            "regex": "r'^((0|[1-9]\\d*)[.]\\d+)$'",
+            "parser": "float(val)",
+            "options": null
+        }
+    },
+    "eyebox_view_paras": {
+        "Project Plane Grid": {
+            "value": "-10.0:10.0:21",
+            "type": "value",
+            "regex": "r'^((0|[1-9]\\d*)[.]\\d+):((0|[1-9]\\d*)[.]\\d+):(0|[1-9]\\d*)$'",
+            "parser": "(float(val.split(':')[0]), float(val.split(':')[1]), int(val.split(':')[2]))",
+            "options": null
+        },
+        "3D View Angle": {
+            "value": "35,135",
+            "type": "value",
+            "regex": "r'^(0$|[-]?[1-9]\\d*$)'",
+            "parser": "int(val)",
+            "options": null
+        },
+        "Plot Range": {
+            "value": "20.0:20.0:20",
+            "type": "value",
+            "regex": "r'^((0|[1-9]\\d*)[.]\\d+):((0|[1-9]\\d*)[.]\\d+):(0|[1-9]\\d*)$'",
+            "parser": "(float(val.split(':')[0]), float(val.split(':')[1]), int(val.split(':')[2]))",
+            "options": null
+        },
+        "Aperture Depth": {
+            "value": "2.0:10.0:5",
+            "type": "value",
+            "regex": "r'^((0|[1-9]\\d*)[.]\\d+):((0|[1-9]\\d*)[.]\\d+):(0|[1-9]\\d*)$'",
+            "parser": "(float(val.split(':')[0]), float(val.split(':')[1]), int(val.split(':')[2]))",
+            "options": null
+        }
+    }
+}
