@@ -321,7 +321,7 @@ class SMTF_Eval():
         iou = area_inter / area_union
         return iou, coord_inter, shape_inter
     
-    def get_mtf_mesh(self):
+    def get_mtf_mesh(self, font_scale, thickness):
         mesh_size = len(self.pick_list)
         self.mtf_value_list = []
         
@@ -335,7 +335,7 @@ class SMTF_Eval():
             self.controller.msg_box.console(f'MTF value of ROI {i} at {pt[0]}, {pt[1]}: {mtf_value}')
             self.controller.msg_box.update()           
             self.mtf_value_list.append(mtf_value)
-            cv2.putText(self.extracted_label_im, str(mtf_value), (pt[0], pt[1]), fontScale=0.25, thickness=1, fontFace=font, color=(0, 255, 255), lineType=cv2.LINE_AA)
+            cv2.putText(self.extracted_label_im, str(mtf_value), (pt[0], pt[1]), fontScale=font_scale, thickness=thickness, fontFace=font, color=(0, 255, 255), lineType=cv2.LINE_AA)
         
     
     

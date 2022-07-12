@@ -72,13 +72,14 @@ class Grid(Coords):
         # pt_vect = np.tile(pt, (len(self.coords), 1))
         # coords_dist = np.sqrt(np.power((self.coords[:, 0] - pt_vect[:, 0]), 2) + np.power((self.coords[:, 1] - pt_vect[:, 1]), 2))
         coords_dist = self.get_pt_dist(pt)
-        neighbors = self.coords[np.argwhere((coords_dist > 0) & (coords_dist < coords_dist[coords_dist.nonzero()].min() * max_ratio))]
+        # neighbors = self.coords[np.argwhere((coords_dist > 0) & (coords_dist < coords_dist[coords_dist.nonzero()].min() * max_ratio))]
+        neighbors = self.coords[np.argsort(coords_dist)][1:5]
         neighbors = neighbors.squeeze()
         pt_vect = np.tile(pt, (len(neighbors), 1))
         neighbors_theta = abs(np.arctan2((neighbors - pt_vect)[:, 1], (neighbors - pt_vect)[:, 0]))    
         next_pt = np.atleast_2d(neighbors[neighbors_theta.argsort()])[0]
         
-        if neighbors_theta.min() > np.rad2deg(dist_angle):
+        if neighbors_theta.min() > np.deg2rad(dist_angle):
             return None
         
         return next_pt
@@ -86,16 +87,18 @@ class Grid(Coords):
     def sort(self, dist_angle, max_ratio):
         left_col = self.coords[self.coords[:, 0].argsort()[0:self.grid_dim[1]]]
         left_col = left_col[(left_col[:, 1]).argsort()]
-        sorted_coords = np.zeros_like(self.coords)
+        self.sorted_coords = np.zeros_like(self.coords)
         ind = 0
         for p in left_col:        
             next_pt = p
             for i in range(self.grid_dim[0]):
-                sorted_coords[ind] = next_pt                    
-                next_pt = self.get_next_pt(next_pt, dist_angle, max_ratio) 
+                self.sorted_coords[ind] = next_pt                    
+                next_pt = self.get_next_pt(next_pt, dist_angle, max_ratio)
+                # if next_pt is None:
+                #     print(f'Unable to find the next point of point {ind} at {p}') 
                 ind += 1    
-        self.coords = sorted_coords
-        self.orig_coords = sorted_coords
+        self.coords = self.sorted_coords
+        self.orig_coords = self.sorted_coords
         self.sorted = True
         
         if self.grid_dim[0] % 2 == 0:

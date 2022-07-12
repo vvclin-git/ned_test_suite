@@ -20,6 +20,7 @@ from Widgets.EyeboxVolEval import EyeboxVolEval
 
 PRESET_PATH = '.\\Presets\\draper_default.json'
 OUTPUT_PATH = '.\\Output\\'
+Image.MAX_IMAGE_PIXELS = None
 
 class Draper(Frame):
     def __init__(self, window, draper_preview_size):

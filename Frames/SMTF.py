@@ -177,9 +177,9 @@ class SMTF(NetsFrame):
         pass
 
     def mtf_evaluate(self):
-        pixel_size, threshold, mtf_contrast = self.mtf_paras_tab.output_parsed_vals()
+        pixel_size, threshold, mtf_contrast, font_scale, thickness = self.mtf_paras_tab.output_parsed_vals()
         self.smtf_eval.set_mtf_analysis_paras(pixel_size, threshold, mtf_contrast)
-        self.smtf_eval.get_mtf_mesh()
+        self.smtf_eval.get_mtf_mesh(font_scale, thickness)
         self.mtf_eval_preview_btn.config(state='active')        
         self.extracted_label_img = Image.fromarray((self.smtf_eval.extracted_label_im).astype(np.uint8))
         coords = np.array(self.smtf_eval.pick_list)
