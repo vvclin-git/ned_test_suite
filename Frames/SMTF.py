@@ -278,6 +278,8 @@ class SMTF(NetsFrame):
         output_msg = f'FoV Anchor: ({fov_bbox[0]}, {fov_bbox[1]})\n'
         output_msg += f'FoV Dimenstion: {fov_bbox[2]}, {fov_bbox[3]}'
         self.controller.msg_box.console(output_msg)
+        self.output_paras_tab.submit_value('FoV Anchor', f'{fov_bbox[0]},{fov_bbox[1]}')
+        self.output_paras_tab.submit_value('FoV Dimension', f'{fov_bbox[2]}x{fov_bbox[3]}')
         return
 
 class Controller():

@@ -166,6 +166,8 @@ class Grille(NetsFrame):
         output_msg = f'FoV Anchor: ({fov_bbox[0]}, {fov_bbox[1]})\n'
         output_msg += f'FoV Dimenstion: {fov_bbox[2]}, {fov_bbox[3]}'
         self.controller.msg_box.console(output_msg)
+        self.grille_grid_settings.submit_value('Field of View Anchor', f'{fov_bbox[0]},{fov_bbox[1]}')
+        self.grille_grid_settings.submit_value('Field of View Dimension', f'{fov_bbox[2]}x{fov_bbox[3]}')        
         return
 
 

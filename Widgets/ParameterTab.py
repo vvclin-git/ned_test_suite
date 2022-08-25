@@ -1,7 +1,8 @@
 
 import tkinter as tk
-from tkinter import Button, ttk
+from tkinter import Button, Entry, ttk
 import re
+from typing import Text
 
 import cv2
 from tkinter import messagebox
@@ -32,6 +33,7 @@ class ParameterTab(ttk.Frame):
             column = self.tree.identify_column(event.x)  # identify column
             item = self.tree.identify_row(event.y)  # identify item                
             # print(self.tree.item(item)['tags'])
+            print(item)
             if column == '#2': # only value column is allowed for editing
                 x, y, width, height = self.tree.bbox(item, column) 
                 value = self.tree.set(item, column)
@@ -126,6 +128,17 @@ class ParameterTab(ttk.Frame):
         self.tree.delete(*self.tree.get_children())
         return
     
+    def submit_value(self, parameter, value):        
+        for p in self.tree.get_children():
+            if self.tree.item(p)['values'][0] == parameter:
+                # print(self.tree.item(p))
+                regex = re.compile(eval(self.parameters[parameter]['regex']))
+                if regex.search(value):                    
+                    self.tree.set(p, '#2', value)
+                else:
+                    raise TypeError('Incorrect data format')
+        return
+    
     def parameter_chg(self, selected_parameters):
         self.clear()
         self.parameters = selected_parameters
@@ -133,7 +146,7 @@ class ParameterTab(ttk.Frame):
             # print(p)            
             self.tree.insert("", "end", values=(p, selected_parameters[p]['value']), tags=selected_parameters[p]['type'])
         return
-    
+
     def fit_height(self):
         height = len(self.parameters)
         self.tree.configure(height=height)
@@ -163,6 +176,20 @@ if __name__ == '__main__':
         for v in parsed:
             print(f'Type: {type(v)}, Value: {v}')
     
+    def submit_val_test():
+        parameter = para_input.get()
+        value = val_input.get()
+        para_tab.submit_value(parameter, value)
+
     parse_test_btn = Button(root, text='Print Parsed Values', command=print_parsed_vals)
     parse_test_btn.pack()
+    
+    submit_test_btn = Button(root, text='Submit Test', command=submit_val_test)
+    submit_test_btn.pack()
+
+    para_input = Entry(root)
+    para_input.pack()
+    val_input = Entry(root)
+    val_input.pack()
+    
     root.mainloop()

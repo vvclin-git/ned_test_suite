@@ -174,6 +174,8 @@ class Distortion(NetsFrame):
         self.mark_center()
         self.controller.msg_box.console(f'Grid center location: {x_center}, {y_center}')
         self.controller.msg_box.console(f'Grid pitch at center: {x_min_pitch}, {y_min_pitch}')
+        self.grid_sort_settings.submit_value('Std Chart Center', f'{x_center},{y_center}')
+        self.grid_sort_settings.submit_value('Std Chart Pitch', f'{x_min_pitch}x{y_min_pitch}')
         return
 
     def get_std_grid(self):
