@@ -2,14 +2,25 @@
 # Advanced zoom example. Like in Google Maps.
 # It zooms only a tile, but not the whole image. So the zoomed tile occupies
 # constant memory and not crams it with a huge resized image for the large zooms.
+from ast import Del
 from msilib.schema import CheckBox
 import random
 import tkinter as tk
-from tkinter import Checkbutton, Frame, ttk
+from tkinter import Button, Checkbutton, Frame, ttk
 from PIL import Image, ImageTk
 from matplotlib import container
 import cv2
 import numpy as np
+from collections import namedtuple
+from dataclasses import dataclass
+
+# Overlay = namedtuple('Overlay', ['im', 'chk', 'btn'])
+
+@dataclass
+class Overlay:
+    im: np.ndarray
+    chk: int
+    btn: Button
 
 class AutoScrollbar(ttk.Scrollbar):
     ''' A scrollbar that hides itself if it's not needed.
@@ -59,14 +70,15 @@ class Zoom_Advanced(ttk.Frame):
         # self.image = Image.open(path)  # open image
         self.image = image  # open image
         self.im = np.asarray(self.image)[:, :, ::-1]
-        self.overlays = []
-        self.overlays_chk_vals = []
+        self.overlays = {}
+        # self.overlays_chk_vals = []
         self.width, self.height = self.image.size
         self.imscale = 1.0  # scale for the canvaas image
         self.delta = 1.3  # zoom magnitude
         # Put image into container rectangle and use it to set proper coordinates to the image
         self.container = self.canvas.create_rectangle(0, 0, self.width, self.height, width=0, tags='container')
         self.imageid = None
+        
         # Plot some optional random rectangles for the test purposes
         # minsize, maxsize, number = 5, 20, 10
         # for n in range(number):
@@ -76,7 +88,10 @@ class Zoom_Advanced(ttk.Frame):
         #     y1 = y0 + random.randint(minsize, maxsize)
         #     color = ('red', 'orange', 'yellow', 'green', 'blue')[random.randint(0, 4)]
         #     self.canvas.create_rectangle(x0, y0, x1, y1, fill=color, activefill='black')
+        
+        # overlay control widgets
         self.overlay_ctrl_frame = Frame(self.canvas)
+        self.overlay_ctrl_frame.bind('<Expose>', self.on_expose)
         self.overlay_ctrl_window = self.canvas.create_window(10, 10, anchor=tk.NW, window=self.overlay_ctrl_frame)        
         self.show_image()
 
@@ -231,30 +246,51 @@ class Zoom_Advanced(ttk.Frame):
             output = cv2.add(im_subs, overlay_front)
         return output
     
-    def add_overlay(self, overlay_im, overlay_name):
+    def add_overlay(self, overlay_im, overlay_name):        
         if overlay_im.shape != self.im.shape:
             raise TypeError('inconsistent image types!')
-        self.overlays.append(overlay_im)
-        chk_val = tk.IntVar()
-        chk_btn = ttk.Checkbutton(self.overlay_ctrl_frame, text=overlay_name, variable=chk_val, command=self.output_overlay)
-        chk_btn.pack(side='top')                
-        self.overlays_chk_vals.append(chk_val)
+        # self.overlays.append(overlay_im)
+        if overlay_name not in self.overlays.keys():
+            chk_val = tk.IntVar()            
+            chk_btn = ttk.Checkbutton(self.overlay_ctrl_frame, text=overlay_name, variable=chk_val, command=self.output_overlay)
+            chk_btn.pack(side='top')                
+            self.overlays[overlay_name] = Overlay(im=overlay_im, chk=chk_val, btn=chk_btn)
+        else:
+            self.overlays[overlay_name].im = overlay_im
+        self.overlays[overlay_name].chk.set(1)
+        self.output_overlay()        
         return
 
     def output_overlay(self):
         output = self.im.copy()
-        for i, o in enumerate(self.overlays):
-            print(self.overlays_chk_vals[i].get())
-            if self.overlays_chk_vals[i].get() == 1:
-                output = self.apply_overlay(output, o)
+        for o in self.overlays.values():
+            if o.chk.get() == 1:
+                output = self.apply_overlay(output, o.im)
         self.image = Image.fromarray(output[:, :, ::-1])
         self.show_image()
         return
-        
+
+    def hide_overlay(self):
+        for o in self.overlays.values():
+            o.chk.set(0)
+        self.output_overlay()
+        return
+
     def clean_overlay(self):
         self.image = Image.fromarray(self.im[:, :, ::-1])        
+        for o in self.overlays.values():
+            o.btn.destroy()
+        self.overlays = {}
+        # self.overlay_ctrl_frame.destroy()
+        # self.overlay_ctrl_window.destroy()
         self.show_image()
         return
+    
+    # event handler for children-less widget shrinking
+    def on_expose(self, event):
+        w = event.widget
+        if not w.children:
+            w.configure(height=1)
 
 
 if __name__ == '__main__':
@@ -272,9 +308,29 @@ if __name__ == '__main__':
     cv2.circle(overlay_1, (400, 400), 200, (0, 255, 0), -1)
     cv2.rectangle(overlay_2, (100, 100), (500, 500), (0, 0, 255), -1)
     
-    app.add_overlay(overlay_1, 'overlay_1')
-    app.add_overlay(overlay_2, 'overlay_2')
+    # app.add_overlay(overlay_1, 'overlay_1')
+    # app.add_overlay(overlay_2, 'overlay_2')
     
+
+    def add_overlay_1():
+        overlay_1 = np.zeros_like(im)
+        cv2.circle(overlay_1, (400, 400), 200, (0, 255, 0), -1)
+        app.add_overlay(overlay_1, 'overlay_1')
+        return
+    
+    def add_overlay_2():
+        overlay_2 = np.zeros_like(im)
+        cv2.rectangle(overlay_2, (100, 100), (500, 500), (0, 0, 255), -1)
+        app.add_overlay(overlay_2, 'overlay_2')
+        return
+
+    def update_overlay_2():
+        overlay_2 = np.zeros_like(im)
+        cv2.rectangle(overlay_2, (100, 100), (500, 500), (0, 0, 255), 1)
+        app.add_overlay(overlay_2, 'overlay_2')
+        return
+
+
     print(app.canvas.winfo_height(), app.canvas.winfo_width())
     app.canvas.configure(width=640, height=480)
     app.show_image()
@@ -282,11 +338,16 @@ if __name__ == '__main__':
     test_btn.pack(side='top')
     test_btn_2 = tk.Button(root, text='test_2', command=app.center_view)
     test_btn_2.pack(side='top')
-    test_btn_3 = tk.Button(root, text='test_3', command=app.output_overlay)
+    test_btn_3 = tk.Button(root, text='add overlay 1', command=add_overlay_1)
     test_btn_3.pack(side='top')
-    test_btn_4 = tk.Button(root, text='test_4', command=app.clean_overlay)
+    test_btn_4 = tk.Button(root, text='add overlay 1', command=add_overlay_2)
     test_btn_4.pack(side='top')
-    
+    test_btn_5 = tk.Button(root, text='update overlay 2', command=update_overlay_2)
+    test_btn_5.pack(side='top')
+    test_btn_6 = tk.Button(root, text='hide overlay', command=app.hide_overlay)
+    test_btn_6.pack(side='top')
+    test_btn_7 = tk.Button(root, text='clean overlay', command=app.clean_overlay)
+    test_btn_7.pack(side='top')
     
     chk_box_frame = ttk.Frame(app)
     chk_box_frame.pack(side='top')
