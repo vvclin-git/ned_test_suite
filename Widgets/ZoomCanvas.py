@@ -2,19 +2,15 @@
 # Advanced zoom example. Like in Google Maps.
 # It zooms only a tile, but not the whole image. So the zoomed tile occupies
 # constant memory and not crams it with a huge resized image for the large zooms.
-from ast import Del
-from msilib.schema import CheckBox
+
 import random
 import tkinter as tk
-from tkinter import Button, Checkbutton, Frame, ttk
+from tkinter.ttk import *
 from PIL import Image, ImageTk
 from matplotlib import container
 import cv2
 import numpy as np
-from collections import namedtuple
 from dataclasses import dataclass
-
-# Overlay = namedtuple('Overlay', ['im', 'chk', 'btn'])
 
 @dataclass
 class Overlay:
@@ -22,7 +18,7 @@ class Overlay:
     chk: int
     btn: Button
 
-class AutoScrollbar(ttk.Scrollbar):
+class AutoScrollbar(Scrollbar):
     ''' A scrollbar that hides itself if it's not needed.
         Works only if you use the grid geometry manager '''
     def set(self, lo, hi):
@@ -30,7 +26,7 @@ class AutoScrollbar(ttk.Scrollbar):
             self.grid_remove()
         else:
             self.grid()
-            ttk.Scrollbar.set(self, lo, hi)
+            Scrollbar.set(self, lo, hi)
 
     def pack(self, **kw):
         raise tk.TclError('Cannot use pack with this widget')
@@ -39,11 +35,11 @@ class AutoScrollbar(ttk.Scrollbar):
         raise tk.TclError('Cannot use place with this widget')
 
 
-class Zoom_Advanced(ttk.Frame):
+class Zoom_Advanced(Frame):
     ''' Advanced zoom of the image '''
     def __init__(self, mainframe, image):
         ''' Initialize the main Frame '''
-        ttk.Frame.__init__(self, master=mainframe)
+        Frame.__init__(self, master=mainframe)
         # self.master.title('Zoom with mouse wheel')
         # Vertical and horizontal scrollbars for canvas
         self.vbar = AutoScrollbar(self.master, orient='vertical')
@@ -209,16 +205,30 @@ class Zoom_Advanced(ttk.Frame):
         return    
 
     def update_image(self, img):
-        # self.canvas.itemconfig(self.imageid, image=img)
-        # self.canvas.imagetk = img
         self.image = img
-        self.overlays = []
+        self.im = np.asarray(img)        
         self.width, self.height = self.image.size
         self.container = self.canvas.create_rectangle(0, 0, self.width, self.height, width=0, tags='container')
+        self.clean_overlay()
         self.show_image()
         self.update()
         self.scale_to_canvas()
+        return
         # print(f'after loading horizontal scroll location: {self.hbar.get()}, vertical scroll location: {self.vbar.get()}')
+    
+    def update_im(self, im):
+        im = im[:, :, ::-1].astype('uint8')
+        if im.shape[2] != 3:
+            im = np.dstack((im, im, im))
+        self.image = Image.fromarray(im)
+        self.im = im
+        self.width, self.height = self.image.size
+        self.container = self.canvas.create_rectangle(0, 0, self.width, self.height, width=0, tags='container')
+        self.clean_overlay()
+        self.show_image()
+        self.update()
+        self.scale_to_canvas()
+        return
     
     def get_contianer_dim(self):
         bbox1 = self.canvas.bbox(self.container)
@@ -252,7 +262,7 @@ class Zoom_Advanced(ttk.Frame):
         # self.overlays.append(overlay_im)
         if overlay_name not in self.overlays.keys():
             chk_val = tk.IntVar()            
-            chk_btn = ttk.Checkbutton(self.overlay_ctrl_frame, text=overlay_name, variable=chk_val, command=self.output_overlay)
+            chk_btn = Checkbutton(self.overlay_ctrl_frame, text=overlay_name, variable=chk_val, command=self.output_overlay)
             chk_btn.pack(side='top')                
             self.overlays[overlay_name] = Overlay(im=overlay_im, chk=chk_val, btn=chk_btn)
         else:
@@ -281,8 +291,6 @@ class Zoom_Advanced(ttk.Frame):
         for o in self.overlays.values():
             o.btn.destroy()
         self.overlays = {}
-        # self.overlay_ctrl_frame.destroy()
-        # self.overlay_ctrl_window.destroy()
         self.show_image()
         return
     
@@ -349,7 +357,7 @@ if __name__ == '__main__':
     test_btn_7 = tk.Button(root, text='clean overlay', command=app.clean_overlay)
     test_btn_7.pack(side='top')
     
-    chk_box_frame = ttk.Frame(app)
+    chk_box_frame = Frame(app)
     chk_box_frame.pack(side='top')
 
     chk_box_1 = Checkbutton(app, text='overlay_1')

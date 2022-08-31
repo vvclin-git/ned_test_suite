@@ -55,9 +55,10 @@ class Distortion_Eval():
             self.std_grid = None
             return output_msg
         self.grid_dim = grid_dim
-        self.std_grid_im = self.labeled_im.copy()
+        # self.std_grid_im = self.labeled_im.copy()
+        self.std_grid_im = np.zeros_like(self.labeled_im)
         for i in range(len(self.std_grid.coords)):
-            cv2.circle(self.std_grid_im, (self.std_grid.coords[i, 0].astype('uint'), self.std_grid.coords[i, 1].astype('uint')), 5, (255, 0, 0), -1)
+            cv2.circle(self.std_grid_im, (self.std_grid.coords[i, 0].astype('uint'), self.std_grid.coords[i, 1].astype('uint')), 5, (0, 0, 255), -1)
         
         return output_msg   
 
@@ -75,7 +76,7 @@ class Distortion_Eval():
         _, labels, stat, centroids = cv2.connectedComponentsWithStats(self.thresh, connectivity=8)
         labels[labels > 0] = 255
         labels_out = np.stack((np.zeros_like(labels), labels, self.thresh), -1)
-        self.labeled_im = labels_out                
+        self.labeled_im = labels_out.astype('uint8')                
         self.extracted_pts_count = len(centroids) - 1
         self.dist_coords = centroids[1:, :]
         self.dist_coords_bbox = cv2.boundingRect(self.dist_coords.astype('float32'))
@@ -143,7 +144,7 @@ class Distortion_Eval():
         coords_scaled_center = np.array([(np.average(coords_scaled[:, 0]), np.average(coords_scaled[:, 1]))])    
         coords_shift = np.array([chart_res]) / 2 - coords_scaled_center    
         coords_output = (coords_scaled + np.tile(coords_shift, (len(coords_scaled), 1))).astype('uint')
-        self.indexed_im = np.zeros((chart_res[1], chart_res[0], 3))    
+        self.indexed_im = np.zeros((chart_res[1], chart_res[0], 3)).astype('uint8')    
         for i, p in enumerate(coords_output):        
             cv2.putText(self.indexed_im, str(i), (p[0], p[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 255, 255), 1, cv2.LINE_AA)
         

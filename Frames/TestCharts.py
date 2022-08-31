@@ -117,12 +117,13 @@ class TestCharts(Frame):
             chart_im, output_msg = self.gen_chart(chart_type, chart_paras[chart_type])
             # np.save('chart_im', chart_im)
             # cv2.imwrite('chart_im_cv.png', chart_im)         
-            if len(chart_im[0][0]) == 3:
-                chart_im_preview = Image.fromarray((chart_im).astype(np.uint8))
-            else:
-                chart_im_preview = Image.fromarray((chart_im[:, :, 0]).astype(np.uint8))
+            # if len(chart_im[0][0]) == 3:
+            #     chart_im_preview = Image.fromarray((chart_im).astype(np.uint8))
+            # else:
+            #     chart_im_preview = Image.fromarray((chart_im[:, :, 0]).astype(np.uint8))
             # chart_im_preview.save('chart_im.png')
-            self.preview_canvas.update_image(chart_im_preview)
+            # self.preview_canvas.update_image(chart_im_preview)
+            self.preview_canvas.update_im(chart_im)
             self.controller.msg_box.console(output_msg)
         return
 

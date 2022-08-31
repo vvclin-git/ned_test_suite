@@ -145,6 +145,7 @@ class Distortion(NetsFrame):
         # self.controller.msg_box.console(output_msg)
         # output_msg = self.dist_eval.img_grid_extract(*grid_extract_paras[3:])
         output_msg = self.dist_eval.img_grid_extract(*grid_extract_paras[0:3])
+        self.preview_canvas.add_overlay(self.dist_eval.labeled_im, 'Labeled Points')
         self.dist_eval.grid_dim = grid_extract_paras[3]
         self.dist_eval.std_grid_pts_count = self.dist_eval.grid_dim[0] * self.dist_eval.grid_dim[1]
         self.controller.msg_box.console(output_msg)
@@ -167,6 +168,7 @@ class Distortion(NetsFrame):
         grid_sort_paras = self.grid_sort_settings.output_parsed_vals()
         self.dist_eval.sort_dist_grid(*grid_sort_paras[0:2])
         self.dist_eval.draw_coords_index(0.8)
+        self.preview_canvas.add_overlay(self.dist_eval.indexed_im, 'Grid Point Index')
         self.controller.msg_box.console('Extracted Grid Sorted')
         # self.dist_analyze_btn.config(state='enable')
         x_min_pitch, y_min_pitch = self.dist_eval.get_center_pitch()
@@ -182,7 +184,8 @@ class Distortion(NetsFrame):
         grid_sort_paras = self.grid_sort_settings.output_parsed_vals()
         msg_output = self.dist_eval.std_grid_gen(*grid_sort_paras[2::])        
         self.controller.msg_box.console(msg_output)
-        self.preview_canvas.update_image(Image.fromarray((self.dist_eval.std_grid_im).astype(np.uint8)))
+        self.preview_canvas.add_overlay(self.dist_eval.std_grid_im, 'Standard Grid')
+        # self.preview_canvas.update_image(Image.fromarray((self.dist_eval.std_grid_im).astype(np.uint8)))
         return
     
     def export_grid(self):
@@ -225,13 +228,16 @@ class Distortion(NetsFrame):
 
     def mark_center(self):
         if self.dist_eval.dist_grid.sorted:
-            draw_img = self.preview_canvas.image.copy()
-            draw = ImageDraw.Draw(draw_img)            
+            center_im = np.zeros_like(self.preview_canvas.im)
+            
+            # draw_img = self.preview_canvas.image.copy()
+            # draw = ImageDraw.Draw(draw_img)            
             for p in self.dist_eval.get_center_pts():
                 x, y = p[:]
-                draw.line([x - 5, y, x + 5, y], fill=128)
-                draw.line([x, y - 5, x, y + 5], fill=128)            
-            self.preview_canvas.update_image(draw_img)
+                cv2.drawMarker(center_im, np.array([x, y], dtype='uint'), markerType=cv2.MARKER_TILTED_CROSS, color=(0, 255, 0), markerSize=20, thickness=1)
+          
+            # self.preview_canvas.update_image(draw_img)
+            self.preview_canvas.add_overlay(center_im, 'Grid Center')
         return
 
 
