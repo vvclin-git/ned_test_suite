@@ -191,10 +191,10 @@ class Grille_Eval():
 
         self.grille_mc = np.zeros((grid_dim[1], grid_dim[0]))
         # self.labeled_im = cv2.cvtColor(self.raw_im, cv2.COLOR_GRAY2RGB)
-        self.labeled_im = self.preview_im.copy()
+        self.labeled_im = self.preview_im.copy().astype('uint8')
         for i, c in enumerate(self.roi_grid_coords):
             cv2.rectangle(self.labeled_im, c, c + self.img_roi_size, (0, 255, 0), 1)            
-            # cv2.imwrite(roi_path + f'ROI_{i}.png', roi)                
+            # cv2.imwrite(roi_path + f'ROI_{i}.png', roi)                        
         output_msg = f'Grille Contrast Merit Grid Generated\n'
         output_msg += f'FoV Anchor: ({fov_anchor[0]}, {fov_anchor[1]}), FoV Size: {fov_size[0]}x{fov_size[1]}\n'
         output_msg += f'Grid Dimension: {grid_dim[0]}x{grid_dim[1]}, Cell Size: {self.img_roi_size[0]}x{self.img_roi_size[1]}\n'

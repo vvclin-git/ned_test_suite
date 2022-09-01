@@ -37,10 +37,7 @@ class Grille(NetsFrame):
 
         self.grille_grid_btn_frame = Frame(self.grille_grid_frame)
         self.grille_grid_btn_frame.pack(side='top', expand=True, fill='both')
-        
-        self.grille_grid_preview_btn = ToggleBtn(self.grille_grid_btn_frame, 'Preview On', 'Preview Off', self.preview_grid_on, self.preview_grid_off)
-        self.grille_grid_preview_btn.pack(side='right', padx=2, pady=5)
-        
+                
         self.grille_grid_btn = Button(self.grille_grid_btn_frame, text='Generate Grid', style='Buttons.TButton', command=self.gen_mc_grid)
         self.grille_grid_btn.pack(side='right', padx=2, pady=5)
         
@@ -84,27 +81,14 @@ class Grille(NetsFrame):
         self.preset_file_load.init_linked_tabs(linked_tabs)
         self.preset_file_load.preset_path.set(PRESET_PATH)
         self.preset_file_load.load_preset()
-        self.preset_file_load.set_controller(self.controller)
-
-    def preview_grid_on(self):
-        if self.grille_eval.labeled_im is None:
-            self.controller.msg_box.console('Preview image not available!')
-            return
-        self.preview_canvas.update_image(Image.fromarray((self.grille_eval.labeled_im).astype(np.uint8)))
-        return
-
-    def preview_grid_off(self):
-        if self.grille_eval.labeled_im is None:
-            self.controller.msg_box.console('Preview image not available!')
-            return
-        self.preview_canvas.update_image(self.preview_img)
-        return
+        self.preset_file_load.set_controller(self.controller)    
 
     def gen_mc_grid(self):        
         self.grille_eval.raw_im = self.img_file_load.im
         self.grille_eval.preview_im = self.preview_im
         grille_grid_paras = self.grille_grid_settings.output_parsed_vals()
         output_msg = self.grille_eval.gen_mc_grid(*grille_grid_paras[2::])
+        self.preview_canvas.add_overlay(self.grille_eval.labeled_im, 'Grille Mesh')
         self.controller.msg_box.console(output_msg)
         self.grille_analyze_btn.config(state='enable')
         return
@@ -165,6 +149,13 @@ class Grille(NetsFrame):
         fov_bbox = cv2.boundingRect(thresh.astype('uint8'))
         output_msg = f'FoV Anchor: ({fov_bbox[0]}, {fov_bbox[1]})\n'
         output_msg += f'FoV Dimenstion: {fov_bbox[2]}, {fov_bbox[3]}'
+        
+        fov_bbox_overlay = np.zeros_like(self.raw_im)
+        fov_bbox_overlay = cv2.cvtColor(fov_bbox_overlay, cv2.COLOR_GRAY2BGR).astype('uint8')
+        bbox_pt1 = (fov_bbox[0], fov_bbox[1])
+        bbox_pt2 = (fov_bbox[0] + fov_bbox[2], fov_bbox[1] + fov_bbox[3])
+        cv2.rectangle(fov_bbox_overlay, bbox_pt1, bbox_pt2, color=(0, 255, 0), thickness=1)
+        self.preview_canvas.add_overlay(fov_bbox_overlay, 'Field of View')
         self.controller.msg_box.console(output_msg)
         self.grille_grid_settings.submit_value('Field of View Anchor', f'{fov_bbox[0]},{fov_bbox[1]}')
         self.grille_grid_settings.submit_value('Field of View Dimension', f'{fov_bbox[2]}x{fov_bbox[3]}')        
