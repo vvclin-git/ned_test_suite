@@ -134,20 +134,22 @@ class Distortion_Eval():
         output_msg += f'Max absolute distortion: {np.max(abs(dist_diff))}'
         return output_msg
 
-    def draw_coords_index(self, pad_ratio):
+    def draw_coords_index(self):
         chart_res = (self.raw_im.shape[1], self.raw_im.shape[0])        
         # coords_dim = (((self.dist_coords[:, 0].max() - self.dist_coords[:, 0].min())), ((self.dist_coords[:, 1].max() - self.dist_coords[:, 1].min())))    
         # dist_coords_sorted_bbox = cv2.boundingRect(self.dist_coords.astype('float32'))        
-        coords_dim = (self.dist_coords_bbox[2], self.dist_coords_bbox[3])
-        scale_factor = (chart_res[0] / coords_dim[0] * pad_ratio, chart_res[1] / coords_dim[1] * pad_ratio)       
-        coords_scaled = np.vstack((self.dist_coords[:, 0] * scale_factor[0], self.dist_coords[:, 1] * scale_factor[1])).transpose()    
-        coords_scaled_center = np.array([(np.average(coords_scaled[:, 0]), np.average(coords_scaled[:, 1]))])    
-        coords_shift = np.array([chart_res]) / 2 - coords_scaled_center    
-        coords_output = (coords_scaled + np.tile(coords_shift, (len(coords_scaled), 1))).astype('uint')
+        # coords_dim = (self.dist_coords_bbox[2], self.dist_coords_bbox[3])
+        # scale_factor = (chart_res[0] / coords_dim[0] * pad_ratio, chart_res[1] / coords_dim[1] * pad_ratio)
+        # scale_factor = (1, 1)
+        # coords_scaled = np.vstack((self.dist_coords[:, 0] * scale_factor[0], self.dist_coords[:, 1] * scale_factor[1])).transpose()    
+        # coords_scaled_center = np.array([(np.average(coords_scaled[:, 0]), np.average(coords_scaled[:, 1]))])    
+        # coords_shift = np.array([chart_res]) / 2 - coords_scaled_center    
+        # coords_output = (coords_scaled + np.tile(coords_shift, (len(coords_scaled), 1))).astype('uint')
+        # coords_output = coords_scaled.astype('uint')
+        coords_output = np.vstack((self.dist_coords[:, 0], self.dist_coords[:, 1])).transpose().astype('uint')    
         self.indexed_im = np.zeros((chart_res[1], chart_res[0], 3)).astype('uint8')    
         for i, p in enumerate(coords_output):        
-            cv2.putText(self.indexed_im, str(i), (p[0], p[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 255, 255), 1, cv2.LINE_AA)
-        
+            cv2.putText(self.indexed_im, str(i), (p[0], p[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.25, (0, 255, 255), 1, cv2.LINE_AA)        
         return
     
     def get_center_pitch(self):

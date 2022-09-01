@@ -74,7 +74,7 @@ class Zoom_Advanced(Frame):
         # Put image into container rectangle and use it to set proper coordinates to the image
         self.container = self.canvas.create_rectangle(0, 0, self.width, self.height, width=0, tags='container')
         self.imageid = None
-        
+        self.last_overlay_only = False
         # Plot some optional random rectangles for the test purposes
         # minsize, maxsize, number = 5, 20, 10
         # for n in range(number):
@@ -247,7 +247,7 @@ class Zoom_Advanced(Frame):
     def apply_overlay(self, im, overlay):
         if im.shape != overlay.shape:
             raise TypeError('inconsistent image types!')
-        else:
+        else:            
             overlay_bw = cv2.cvtColor(overlay, cv2.COLOR_BGR2GRAY)
             _, overlay_mask = cv2.threshold(overlay_bw, 5, 255, cv2.THRESH_BINARY)
             overlay_mask_inv = cv2.bitwise_not(overlay_mask)
@@ -259,11 +259,12 @@ class Zoom_Advanced(Frame):
     def add_overlay(self, overlay_im, overlay_name):        
         if overlay_im.shape != self.im.shape:
             raise TypeError('inconsistent image types!')
-        # self.overlays.append(overlay_im)
+        if self.last_overlay_only:
+            self.hide_overlay()
         if overlay_name not in self.overlays.keys():
             chk_val = tk.IntVar()            
             chk_btn = Checkbutton(self.overlay_ctrl_frame, text=overlay_name, variable=chk_val, command=self.output_overlay)
-            chk_btn.pack(side='top')                
+            chk_btn.pack(side='top', expand=1, fill='both')                
             self.overlays[overlay_name] = Overlay(im=overlay_im, chk=chk_val, btn=chk_btn)
         else:
             self.overlays[overlay_name].im = overlay_im
@@ -272,12 +273,13 @@ class Zoom_Advanced(Frame):
         return
 
     def output_overlay(self):
-        output = self.im.copy()
-        for o in self.overlays.values():
-            if o.chk.get() == 1:
-                output = self.apply_overlay(output, o.im)
-        self.image = Image.fromarray(output[:, :, ::-1])
-        self.show_image()
+        if len(self.overlays) > 0:
+            output = self.im.copy()
+            for o in self.overlays.values():
+                if o.chk.get() == 1:
+                    output = self.apply_overlay(output, o.im)
+            self.image = Image.fromarray(output[:, :, ::-1])
+            self.show_image()
         return
 
     def hide_overlay(self):
@@ -329,7 +331,7 @@ if __name__ == '__main__':
     def add_overlay_2():
         overlay_2 = np.zeros_like(im)
         cv2.rectangle(overlay_2, (100, 100), (500, 500), (0, 0, 255), -1)
-        app.add_overlay(overlay_2, 'overlay_2')
+        app.add_overlay(overlay_2, '2')
         return
 
     def update_overlay_2():
@@ -338,6 +340,12 @@ if __name__ == '__main__':
         app.add_overlay(overlay_2, 'overlay_2')
         return
 
+    def toggle_show_last():
+        if app.last_overlay_only:
+            app.last_overlay_only = False
+        else:
+            app.last_overlay_only = True
+        return
 
     print(app.canvas.winfo_height(), app.canvas.winfo_width())
     app.canvas.configure(width=640, height=480)
@@ -348,7 +356,7 @@ if __name__ == '__main__':
     test_btn_2.pack(side='top')
     test_btn_3 = tk.Button(root, text='add overlay 1', command=add_overlay_1)
     test_btn_3.pack(side='top')
-    test_btn_4 = tk.Button(root, text='add overlay 1', command=add_overlay_2)
+    test_btn_4 = tk.Button(root, text='add overlay 2', command=add_overlay_2)
     test_btn_4.pack(side='top')
     test_btn_5 = tk.Button(root, text='update overlay 2', command=update_overlay_2)
     test_btn_5.pack(side='top')
@@ -356,6 +364,8 @@ if __name__ == '__main__':
     test_btn_6.pack(side='top')
     test_btn_7 = tk.Button(root, text='clean overlay', command=app.clean_overlay)
     test_btn_7.pack(side='top')
+    test_btn_8 = tk.Button(root, text='show last only', command=toggle_show_last)
+    test_btn_8.pack(side='top')
     
     chk_box_frame = Frame(app)
     chk_box_frame.pack(side='top')

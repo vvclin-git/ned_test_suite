@@ -47,7 +47,8 @@ class NetsFrame(Frame):
         cv2.putText(img, preview_img_text, preview_img_text_pos, fontFace=cv2.FONT_HERSHEY_SIMPLEX, color=(0, 255, 0), fontScale=1, thickness=1)        
         
         self.preview_img = Image.fromarray(img)        
-        self.preview_canvas = Zoom_Advanced(preview_frame, self.preview_img)             
+        self.preview_canvas = Zoom_Advanced(preview_frame, self.preview_img)
+        self.preview_canvas.last_overlay_only = True             
 
         # Message Output     
         msg_frame = LabelFrame(output, text='Output Message', style='TLabelframe')  

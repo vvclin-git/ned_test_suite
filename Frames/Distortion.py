@@ -51,14 +51,11 @@ class Distortion(NetsFrame):
 
         self.grid_extract_btn_frame = Frame(self.grid_extract_frame)
         self.grid_extract_btn_frame.pack(side='top', expand=True, fill='both')
-        
-        self.extract_preview_btn = ToggleBtn(self.grid_extract_btn_frame, 'Preview On', 'Preview Off', self.preview_grid_on, self.preview_grid_off)
-        self.extract_preview_btn.pack(side='right', padx=2, pady=5)
-        
+                
         self.grid_extract_btn = Button(self.grid_extract_btn_frame, text='Extract Grid', style='Buttons.TButton', command=self.extract_grid)
         self.grid_extract_btn.pack(side='right', padx=2, pady=5)
         
-        self.grid_extract_btn_list = [self.extract_preview_btn, self.grid_extract_btn]
+        self.grid_extract_btn_list = [self.grid_extract_btn]
         self.buttons.append(self.grid_extract_btn_list)
 
         # Output Path
@@ -80,17 +77,11 @@ class Distortion(NetsFrame):
 
         self.gen_std_grid_btn = Button(self.grid_sort_btn_frame, text='Get Std Grid', command=self.get_std_grid)
         self.gen_std_grid_btn.pack(side='right', padx=2, pady=5)
-
-        self.center_preview_btn = ToggleBtn(self.grid_sort_btn_frame, 'Center On', 'Center Off', self.preview_center_on, self.preview_center_off)
-        self.center_preview_btn.pack(side='right', padx=2, pady=5)
-
-        self.sort_preview_btn = ToggleBtn(self.grid_sort_btn_frame, 'Index On', 'Index Off', self.preview_sort_on, self.preview_sort_off)
-        self.sort_preview_btn.pack(side='right', padx=2, pady=5)
         
         self.grid_sort_btn = Button(self.grid_sort_btn_frame, text='Sort Grid', style='Buttons.TButton', command=self.sort_grid)
         self.grid_sort_btn.pack(side='right', padx=2, pady=5)
         
-        self.grid_sort_btn_list = [self.sort_preview_btn, self.grid_sort_btn, self.export_grid_btn]
+        self.grid_sort_btn_list = [self.grid_sort_btn, self.export_grid_btn]
         self.buttons.append(self.grid_sort_btn_list)
 
               
@@ -135,15 +126,9 @@ class Distortion(NetsFrame):
         self.preset_file_load.load_preset()
         self.preset_file_load.set_controller(self.controller)
     
-    def extract_grid(self):
-        
-        self.dist_eval.raw_im = self.img_file_load.im
-        
-        
-        grid_extract_paras = self.grid_extract_settings.output_parsed_vals()                
-        # output_msg = self.dist_eval.std_grid_gen(*grid_extract_paras[0:3])
-        # self.controller.msg_box.console(output_msg)
-        # output_msg = self.dist_eval.img_grid_extract(*grid_extract_paras[3:])
+    def extract_grid(self):        
+        self.dist_eval.raw_im = self.img_file_load.im.copy()
+        grid_extract_paras = self.grid_extract_settings.output_parsed_vals()
         output_msg = self.dist_eval.img_grid_extract(*grid_extract_paras[0:3])
         self.preview_canvas.add_overlay(self.dist_eval.labeled_im, 'Labeled Points')
         self.dist_eval.grid_dim = grid_extract_paras[3]
@@ -167,10 +152,9 @@ class Distortion(NetsFrame):
     def sort_grid(self):
         grid_sort_paras = self.grid_sort_settings.output_parsed_vals()
         self.dist_eval.sort_dist_grid(*grid_sort_paras[0:2])
-        self.dist_eval.draw_coords_index(0.8)
+        self.dist_eval.draw_coords_index()
         self.preview_canvas.add_overlay(self.dist_eval.indexed_im, 'Grid Point Index')
-        self.controller.msg_box.console('Extracted Grid Sorted')
-        # self.dist_analyze_btn.config(state='enable')
+        self.controller.msg_box.console('Extracted Grid Sorted')        
         x_min_pitch, y_min_pitch = self.dist_eval.get_center_pitch()
         x_center, y_center = self.dist_eval.get_center_pt()
         self.mark_center()
@@ -200,59 +184,16 @@ class Distortion(NetsFrame):
         np.save(f'{output_path}Distorted Grid Coordinate_{timestr}.npy', self.dist_eval.dist_grid.coords)
         output_msg = f'Distorted grid file Distorted Grid Coordinate_{timestr}.npy saved'
         self.controller.msg_box.console(output_msg)
-        return
-
-    def preview_grid_on(self):
-        if self.dist_eval.labeled_im is None:
-            return
-        self.preview_canvas.update_image(Image.fromarray((self.dist_eval.labeled_im).astype(np.uint8)))
-        return
-
-    def preview_grid_off(self):
-        if self.dist_eval.labeled_im is None:
-            return
-        self.preview_canvas.update_image(self.preview_img)
-        return
-    
-    def preview_sort_on(self):
-        if self.dist_eval.indexed_im is None:
-            return
-        self.preview_canvas.update_image(Image.fromarray((self.dist_eval.indexed_im).astype(np.uint8)))
-        return
-
-    def preview_sort_off(self):
-        if self.dist_eval.indexed_im is None:
-            return
-        self.preview_canvas.update_image(Image.fromarray((self.dist_eval.indexed_im).astype(np.uint8)))
-        return
+        return  
 
     def mark_center(self):
         if self.dist_eval.dist_grid.sorted:
-            center_im = np.zeros_like(self.preview_canvas.im)
-            
-            # draw_img = self.preview_canvas.image.copy()
-            # draw = ImageDraw.Draw(draw_img)            
+            center_im = np.zeros_like(self.preview_canvas.im)             
             for p in self.dist_eval.get_center_pts():
                 x, y = p[:]
-                cv2.drawMarker(center_im, np.array([x, y], dtype='uint'), markerType=cv2.MARKER_TILTED_CROSS, color=(0, 255, 0), markerSize=20, thickness=1)
-          
-            # self.preview_canvas.update_image(draw_img)
+                cv2.drawMarker(center_im, np.array([x, y], dtype='uint'), markerType=cv2.MARKER_TILTED_CROSS, color=(0, 255, 0), markerSize=20, thickness=1)          
             self.preview_canvas.add_overlay(center_im, 'Grid Center')
         return
-
-
-    def preview_center_on(self):
-        
-        self.mark_center()
-
-        return
-    
-    def preview_center_off(self):
-        if self.preview_img:
-            self.preview_canvas.update_image(self.preview_img)
-
-        return
-
 
     def dist_evaluate(self):
         output_msg = self.dist_eval.dist_eval()
