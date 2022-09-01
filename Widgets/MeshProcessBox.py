@@ -36,8 +36,7 @@ class MeshProcessBox(MeshPreviewBox):
         # self.process_btn_frame.pack(side='top', expand=1, fill='x')
         # self.set_mesh_btn = Button(self.process_btn_frame, text='Set Mesh', command=self.set_mesh)
         # self.set_mesh_btn.pack(side='right')
-        self.preview_btn = ToggleBtn(self, 'Preview On', 'Preview Off', self.preview_on, self.preview_off)
-        self.preview_btn.pack(side='right', padx=(2, 0))
+
         self.process_btn = Button(self, text='Process', command=self.process_mesh)
         self.process_btn.pack(side='right', padx=2)
         
@@ -61,36 +60,12 @@ class MeshProcessBox(MeshPreviewBox):
         self.border_coords = np.zeros((len(approx_contours[0]), len(approx_contours[0][0][0]) + 1))
         self.border_coords[:, 0:2] = np.squeeze(approx_contours[0])
         contour_im = np.zeros_like(mesh_blurred)
-        contour_im = np.dstack([contour_im, contour_im, contour_im])
-        cv2.drawContours(contour_im, approx_contours, 0, (0, 255, 0), thickness=2)
-        contour_im = np.dstack([contour_im, contour_im[:, :, 1]])
-        # contour_im = cv2.cvtColor(contour_im, cv2.COLOR_RGB2RGBA)
-        # contour_img = Image.fromarray(contour_im, mode='RGBA')
-        contour_img = Image.fromarray(contour_im.astype('uint8'))        
-        self.controller.msg_box.console(f'{len(self.border_coords)} Points Extracted')
-        contour_img = contour_img.convert('RGBA')
-        # self.overlay_img = self.preview_img.copy().convert('RGBA')
-        self.overlay_img = Image.new('RGBA', self.preview_img.size)
-        # self.overlay_img = Image.alpha_composite(self.preview_img.convert('RGBA'), contour_img)
-        self.overlay_img = Image.alpha_composite(self.preview_img.copy().convert('RGBA'), contour_img)
-        if self.preview:
-            self.update_img(self.overlay_img)
-        return
-    
-    def preview_on(self):
-        if self.overlay_img is None:
-            return
-        self.preview = True
-        self.update_img(self.overlay_img)
+        contour_im = cv2.cvtColor(contour_im, cv2.COLOR_GRAY2BGR).astype('uint8')        
+        cv2.drawContours(contour_im, approx_contours, 0, (0, 255, 0), thickness=1)
+        self.canvas.add_overlay(contour_im, 'Contour')        
+        self.controller.msg_box.console(f'{len(self.border_coords)} Points Extracted')        
+        return    
 
-        return
-
-    def preview_off(self):
-        if self.overlay_img is None:
-            return
-        self.preview = False
-        self.update_img(self.preview_img)
-        return
     
     def set_mesh(self):
         return
