@@ -48,10 +48,10 @@ class SMTF(NetsFrame):
         self.mtf_extract_btn.pack(side='right', padx=2, pady=5)
         self.mtf_extract_btn.config(state='disable')
         self.disabled_btns.append(self.mtf_extract_btn)
-        self.mtf_extract_preview_btn = ToggleBtn(mtf_extract_frame, on_txt='Preview On', off_txt='Preview off', on_cmd=partial(self.mtf_extract_preview, True), off_cmd=partial(self.mtf_extract_preview, False))
-        self.mtf_extract_preview_btn.pack(side='right', padx=2, pady=5)
-        self.mtf_extract_preview_btn.config(state='disable')
-        self.disabled_btns.append(self.mtf_extract_preview_btn)
+        # self.mtf_extract_preview_btn = ToggleBtn(mtf_extract_frame, on_txt='Preview On', off_txt='Preview off', on_cmd=partial(self.mtf_extract_preview, True), off_cmd=partial(self.mtf_extract_preview, False))
+        # self.mtf_extract_preview_btn.pack(side='right', padx=2, pady=5)
+        # self.mtf_extract_preview_btn.config(state='disable')
+        # self.disabled_btns.append(self.mtf_extract_preview_btn)
 
 
         # MTF Evaluation
@@ -63,10 +63,10 @@ class SMTF(NetsFrame):
         self.mtf_eval_btn.pack(side='right', padx=2, pady=5)
         self.mtf_eval_btn.config(state='disable')
         self.disabled_btns.append(self.mtf_eval_btn)
-        self.mtf_eval_preview_btn = ToggleBtn(mtf_eval_frame, on_txt='Preview On', off_txt='Preview off', on_cmd=partial(self.mtf_eval_preview, True), off_cmd=partial(self.mtf_eval_preview, False))
-        self.mtf_eval_preview_btn.pack(side='right', padx=2, pady=5)
-        self.mtf_eval_preview_btn.config(state='disable')
-        self.disabled_btns.append(self.mtf_eval_preview_btn)
+        # self.mtf_eval_preview_btn = ToggleBtn(mtf_eval_frame, on_txt='Preview On', off_txt='Preview off', on_cmd=partial(self.mtf_eval_preview, True), off_cmd=partial(self.mtf_eval_preview, False))
+        # self.mtf_eval_preview_btn.pack(side='right', padx=2, pady=5)
+        # self.mtf_eval_preview_btn.config(state='disable')
+        # self.disabled_btns.append(self.mtf_eval_preview_btn)
        
         # output
         
@@ -89,10 +89,10 @@ class SMTF(NetsFrame):
         self.get_mtf_grid_btn.pack(side='right', padx=2, pady=5)
         self.get_mtf_grid_btn.config(state='disable')
         self.disabled_btns.append(self.get_mtf_grid_btn)
-        self.show_fov_btn = ToggleBtn(output_frame, on_txt='FoV on', off_txt='FoV off', on_cmd=partial(self.show_fov, True), off_cmd=partial(self.show_fov, False))
-        self.show_fov_btn.pack(side='right', padx=2, pady=5)
-        self.show_fov_btn.config(state='disable')
-        self.disabled_btns.append(self.show_fov_btn)
+        # self.show_fov_btn = ToggleBtn(output_frame, on_txt='FoV on', off_txt='FoV off', on_cmd=partial(self.show_fov, True), off_cmd=partial(self.show_fov, False))
+        # self.show_fov_btn.pack(side='right', padx=2, pady=5)
+        # self.show_fov_btn.config(state='disable')
+        # self.disabled_btns.append(self.show_fov_btn)
         self.get_fov_btn = ttk.Button(output_frame, text='Get FoV', command=self.get_fov_bbox)
         self.get_fov_btn.pack(side='right', padx=2, pady=5)
         
@@ -168,10 +168,11 @@ class SMTF(NetsFrame):
         edge_angle, self.pattern_size, line_type, reverse, method, threshold, iou_thresh = self.se_pattern_paras_tab.output_parsed_vals()
         self.smtf_eval.pattern_size = self.pattern_size
         self.smtf_eval.get_se_patterns(edge_angle, self.pattern_size, line_type, reverse, method, threshold, iou_thresh)
-        self.extracted_label_img = Image.fromarray((self.smtf_eval.extracted_label_im).astype(np.uint8))
-        if self.mtf_extract_preview_btn.toggle_stat:
-            self.preview_canvas.update_image(self.extracted_label_img)
-        self.mtf_extract_preview_btn.config(state='active')
+        self.preview_canvas.add_overlay(self.smtf_eval.extracted_im_labeled, 'Extracted SMTF Patterns')
+        #  self.extracted_label_img = Image.fromarray((self.smtf_eval.extracted_label_im).astype(np.uint8))
+        # if self.mtf_extract_preview_btn.toggle_stat:
+        #     self.preview_canvas.update_image(self.extracted_label_img)
+        # self.mtf_extract_preview_btn.config(state='active')
         self.mtf_eval_btn.config(state='active')
         self.show_fov_btn.config(state='active')
         pass
@@ -180,8 +181,9 @@ class SMTF(NetsFrame):
         pixel_size, threshold, mtf_contrast, font_scale, thickness = self.mtf_paras_tab.output_parsed_vals()
         self.smtf_eval.set_mtf_analysis_paras(pixel_size, threshold, mtf_contrast)
         self.smtf_eval.get_mtf_mesh(font_scale, thickness)
-        self.mtf_eval_preview_btn.config(state='active')        
-        self.extracted_label_img = Image.fromarray((self.smtf_eval.extracted_label_im).astype(np.uint8))
+        # self.mtf_eval_preview_btn.config(state='active')        
+        # self.extracted_label_img = Image.fromarray((self.smtf_eval.extracted_label_im).astype(np.uint8))
+        self.preview_canvas.add_overlay(self.smtf_eval.mtf_val_im, 'MTF Values')
         coords = np.array(self.smtf_eval.pick_list)
         mtf_vals = np.array(self.smtf_eval.mtf_value_list)
         np.save('coords.npy', coords)        
@@ -190,38 +192,38 @@ class SMTF(NetsFrame):
         self.export_btn.config(state='active')
         pass
 
-    def mtf_extract_preview(self, preview):
-        if preview:
-            self.preview_canvas.update_image(self.extracted_label_img)
-        else:
-            self.preview_canvas.update_image(self.preview_img)
-        return
+    # def mtf_extract_preview(self, preview):
+    #     if preview:
+    #         self.preview_canvas.update_image(self.extracted_label_img)
+    #     else:
+    #         self.preview_canvas.update_image(self.preview_img)
+    #     return
 
-    def mtf_eval_preview(self, preview):
-        if preview:
-            self.preview_canvas.update_image(self.extracted_label_img)
-        else:
-            self.preview_canvas.update_image(self.preview_img)
-        return
+    # def mtf_eval_preview(self, preview):
+    #     if preview:
+    #         self.preview_canvas.update_image(self.extracted_label_img)
+    #     else:
+    #         self.preview_canvas.update_image(self.preview_img)
+    #     return
     
-    def show_fov(self, preview):
-        if preview:
-            self.pre_preview_img = self.preview_canvas.image
-            fov_anchor, fov_dim, _, _, _ = self.output_paras_tab.output_parsed_vals()
-            fov_anchor = np.array(fov_anchor)
-            fov_dim = np.array(fov_dim)
-            fov_pt1 = fov_anchor
-            fov_pt2 = fov_anchor + fov_dim        
-            if self.smtf_eval.extracted_label_im is not None:
-                fov_preview_im = self.smtf_eval.extracted_label_im.copy()
-            else:
-                fov_preview_im = self.preview_im.copy()
-            cv2.rectangle(fov_preview_im, fov_pt1, fov_pt2, color=(0, 255, 0), thickness=2)
-            fov_preview_img = Image.fromarray((fov_preview_im).astype(np.uint8))
-            self.preview_canvas.update_image(fov_preview_img)
-        else:
-            self.preview_canvas.update_image(self.pre_preview_img)
-        return
+    # def show_fov(self, preview):
+    #     if preview:
+    #         self.pre_preview_img = self.preview_canvas.image
+    #         fov_anchor, fov_dim, _, _, _ = self.output_paras_tab.output_parsed_vals()
+    #         fov_anchor = np.array(fov_anchor)
+    #         fov_dim = np.array(fov_dim)
+    #         fov_pt1 = fov_anchor
+    #         fov_pt2 = fov_anchor + fov_dim        
+    #         if self.smtf_eval.extracted_label_im is not None:
+    #             fov_preview_im = self.smtf_eval.extracted_label_im.copy()
+    #         else:
+    #             fov_preview_im = self.preview_im.copy()
+    #         cv2.rectangle(fov_preview_im, fov_pt1, fov_pt2, color=(0, 255, 0), thickness=2)
+    #         fov_preview_img = Image.fromarray((fov_preview_im).astype(np.uint8))
+    #         self.preview_canvas.update_image(fov_preview_img)
+    #     else:
+    #         self.preview_canvas.update_image(self.pre_preview_img)
+    #     return
     
     def export(self):
         output_path = self.output_path.output_path.get()
@@ -273,8 +275,14 @@ class SMTF(NetsFrame):
     def get_fov_bbox(self):
         mtf_grid_coords_1 = np.array(self.smtf_eval.pick_list.copy())
         mtf_grid_coords_2 = mtf_grid_coords_1.copy() + self.smtf_eval.pattern_size
-        mtf_grid_coords = np.vstack([mtf_grid_coords_1[:, 0:2], mtf_grid_coords_2[:, 0:2]])
-        fov_bbox = cv2.boundingRect(mtf_grid_coords.astype('float32'))
+        mtf_grid_coords = np.vstack([mtf_grid_coords_1[:, 0:2], mtf_grid_coords_2[:, 0:2]])        
+        fov_bbox = cv2.boundingRect(mtf_grid_coords.astype('float32'))        
+        fov_bbox_overlay = np.zeros_like(self.raw_im)
+        fov_bbox_overlay = cv2.cvtColor(fov_bbox_overlay, cv2.COLOR_GRAY2BGR).astype('uint8')
+        bbox_pt1 = (fov_bbox[0], fov_bbox[1])
+        bbox_pt2 = (fov_bbox[0] + fov_bbox[2], fov_bbox[1] + fov_bbox[3])
+        cv2.rectangle(fov_bbox_overlay, bbox_pt1, bbox_pt2, color=(0, 255, 0), thickness=1)
+        self.preview_canvas.add_overlay(fov_bbox_overlay, 'Field of View')
         output_msg = f'FoV Anchor: ({fov_bbox[0]}, {fov_bbox[1]})\n'
         output_msg += f'FoV Dimenstion: {fov_bbox[2]}, {fov_bbox[3]}'
         self.controller.msg_box.console(output_msg)

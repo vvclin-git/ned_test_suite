@@ -67,8 +67,8 @@ class NED_Test_Suite(tk.Tk):
         tab_control.add(tab_test_charts, text='Test Charts', )
         tab_control.add(tab_distortion, text='Distortion Analysis')
         tab_control.add(tab_grille, text='Grille Contrast Analysis')
-        tab_control.add(tab_draper, text='Draper Eyebox Evaluation')
         tab_control.add(tab_smtf, text='Slanted Edge MTF Analysis')
+        tab_control.add(tab_draper, text='Draper Eyebox Evaluation')        
         tab_control.pack(expand=1, fill='both')
 
 

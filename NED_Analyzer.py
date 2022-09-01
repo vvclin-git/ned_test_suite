@@ -241,7 +241,8 @@ class SMTF_Eval():
         self.se_pattern_path = se_pattern_path
         self.raw_im = None
         self.extracted_im = None
-        self.extracted_label_im = None
+        self.extracted_im_labeled = None
+        self.mtf_val_im = None
         self.controller = None
         self.pattern_size = None
         pass
@@ -267,8 +268,9 @@ class SMTF_Eval():
         # method = eval('cv2.TM_CCOEFF_NORMED')
         se_pattern_im = self.draw_se_pattern(edge_angle, pattern_size, line_type, reverse)
         self.extracted_im = self.raw_im.copy()
-        self.extracted_im = (self.extracted_im // (self.extracted_im.max() / 256 + 1)).astype('uint8')
-        self.extracted_label_im = cv2.cvtColor(self.extracted_im, cv2.COLOR_GRAY2RGB)
+        # self.extracted_im = (self.extracted_im // (self.extracted_im.max() / 256 + 1)).astype('uint8')
+        self.extracted_im = cv2.normalize(self.extracted_im, self.extracted_im, 255, 0, cv2.NORM_INF)
+        self.extracted_im_labeled = cv2.cvtColor(self.extracted_im, cv2.COLOR_GRAY2RGB)
         stat = cv2.imwrite(self.se_pattern_path + 'se_pattern.png', se_pattern_im)
         se_pattern = cv2.imread(self.se_pattern_path + 'se_pattern.png', cv2.IMREAD_GRAYSCALE)        
         res_se_pattern = cv2.matchTemplate(self.extracted_im, se_pattern, method)       
@@ -285,7 +287,7 @@ class SMTF_Eval():
         
         self.controller.msg_box.console('')
         for pt in self.pick_list:
-            cv2.rectangle(self.extracted_label_im, (int(pt[0]), int(pt[1])), (int(pt[0]) + pattern_size, int(pt[1]) + pattern_size), (0,255,255), 1)
+            cv2.rectangle(self.extracted_im_labeled, (int(pt[0]), int(pt[1])), (int(pt[0]) + pattern_size, int(pt[1]) + pattern_size), (0,255,255), 1)
         
         # cv2.imwrite('labeled.png', self.labeled_img)      
                      
@@ -327,7 +329,7 @@ class SMTF_Eval():
     def get_mtf_mesh(self, font_scale, thickness):
         mesh_size = len(self.pick_list)
         self.mtf_value_list = []
-        
+        self.mtf_val_im = np.zeros_like(self.extracted_im_labeled)
         font = cv2.FONT_HERSHEY_SIMPLEX
         for i, pt in enumerate(self.pick_list):
             h, w = self.pattern_size, self.pattern_size
@@ -337,8 +339,8 @@ class SMTF_Eval():
             mtf_value = self.mtf_analyzer(f'roi_{i}.png')            
             self.controller.msg_box.console(f'MTF value of ROI {i} at {pt[0]}, {pt[1]}: {mtf_value}')
             self.controller.msg_box.update()           
-            self.mtf_value_list.append(mtf_value)
-            cv2.putText(self.extracted_label_im, str(mtf_value), (pt[0], pt[1]), fontScale=font_scale, thickness=thickness, fontFace=font, color=(0, 255, 255), lineType=cv2.LINE_AA)
+            self.mtf_value_list.append(mtf_value)            
+            cv2.putText(self.mtf_val_im, str(mtf_value), (pt[0], pt[1]), fontScale=font_scale, thickness=thickness, fontFace=font, color=(0, 255, 255), lineType=cv2.LINE_AA)
         
     
     

@@ -37,14 +37,14 @@ class Grille(NetsFrame):
 
         self.grille_grid_btn_frame = Frame(self.grille_grid_frame)
         self.grille_grid_btn_frame.pack(side='top', expand=True, fill='both')
-                
+
         self.grille_grid_btn = Button(self.grille_grid_btn_frame, text='Generate Grid', style='Buttons.TButton', command=self.gen_mc_grid)
         self.grille_grid_btn.pack(side='right', padx=2, pady=5)
         
         self.grille_get_fov_btn = Button(self.grille_grid_btn_frame, text='Get FoV Area', style='Buttons.TButton', command=self.get_fov_bbox)
         self.grille_get_fov_btn.pack(side='right', padx=2, pady=5)
 
-        self.grille_grid_btn_list = [self.grille_grid_preview_btn, self.grille_grid_btn]
+        self.grille_grid_btn_list = [self.grille_grid_btn]
         self.buttons.append(self.grille_grid_btn_list)
 
         # Output Path
