@@ -36,7 +36,7 @@ class MeshProcessBox(MeshPreviewBox):
         # self.process_btn_frame.pack(side='top', expand=1, fill='x')
         # self.set_mesh_btn = Button(self.process_btn_frame, text='Set Mesh', command=self.set_mesh)
         # self.set_mesh_btn.pack(side='right')
-
+        self.canvas.last_overlay_only = False
         self.process_btn = Button(self, text='Process', command=self.process_mesh)
         self.process_btn.pack(side='right', padx=2)
         
@@ -61,8 +61,13 @@ class MeshProcessBox(MeshPreviewBox):
         self.border_coords[:, 0:2] = np.squeeze(approx_contours[0])
         contour_im = np.zeros_like(mesh_blurred)
         contour_im = cv2.cvtColor(contour_im, cv2.COLOR_GRAY2BGR).astype('uint8')        
+        contour_vts_im = contour_im.copy()
         cv2.drawContours(contour_im, approx_contours, 0, (0, 255, 0), thickness=1)
-        self.canvas.add_overlay(contour_im, 'Contour')        
+        self.canvas.add_overlay(contour_im, 'Contour')                 
+        vertices = approx_contours[0].squeeze()
+        for v in vertices:
+            cv2.drawMarker(contour_vts_im, v, (0, 0, 255), cv2.MARKER_TILTED_CROSS, 10, 1)                
+        self.canvas.add_overlay(contour_vts_im, 'Contour Vertices')               
         self.controller.msg_box.console(f'{len(self.border_coords)} Points Extracted')        
         return    
 
