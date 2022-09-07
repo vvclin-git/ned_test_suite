@@ -62,12 +62,22 @@ class ChartParaTree(Frame):
                     chart_type = item.split('_')[0]
                     para_name = item.split('_')[1]
                     regex = re.compile(eval(self.chart_parameters[chart_type][para_name]['regex']))
-                    if regex.search(entry.get()):
+                    
+                    if len(entry.get().split(';')) > 0:
+                        entry_list = entry.get().split(';')
+                        for e in entry_list:
+                            if not regex.search(e):
+                                messagebox.showinfo('Input Validation', 'Wrong input format!')
+                                return
                         self.tree.set(item, column, entry.get())
                         entry.destroy()
                     else:
-                        messagebox.showinfo('Input Validation', 'Wrong input format!')
-                        return
+                        if regex.search(entry.get()):
+                            self.tree.set(item, column, entry.get())
+                            entry.destroy()
+                        else:
+                            messagebox.showinfo('Input Validation', 'Wrong input format!')
+                            return
 
             else:
                 return
@@ -135,13 +145,15 @@ class ChartParaTree(Frame):
         for t in self.tree.get_children():
             if self.tree.item(t)['values'][1] == 'Yes':                
                 output[t] = []
+                variant = False
                 for p in self.tree.get_children(t):
                     # print(p)
                     para_name = p.split('_')[1]
                     chart_type = p.split('_')[0]
                     parser = self.chart_parameters[chart_type][para_name]['parser']
                     val = str(self.tree.item(p)['values'][0])
-                    if len(val.split(',')) > 1:
+                    if len(val.split(';')) > 1:
+                        variant = True
                         parsed = self.list_parser(val, parser)
                     else:
                         if parser:
@@ -149,12 +161,18 @@ class ChartParaTree(Frame):
                         else:
                             parsed = val
                     output[t].append(parsed)
+                if variant:
+                    var_list = []
+                    var = []
+                    self.get_para_var(var, output[t], var_list)
+                output[t] = var_list
+
         # print(output)
         return output
 
     def list_parser(self, in_str, parser):
         output = []
-        in_str_list = in_str.split(',')
+        in_str_list = in_str.split(';')
         for val in in_str_list:
             if parser:
                 parsed = eval(parser)
@@ -162,6 +180,31 @@ class ChartParaTree(Frame):
                 parsed = val
             output.append(parsed)
         return output
+    
+    def get_para_var(self, para_list_var, para_list, output):    
+        # print(para_list_var, para_list)
+        # base case: return the variant when the code reach the end of the tree
+        if len(para_list) == 0:            
+            output.append(para_list_var)
+            return output
+
+        # recursive case: keep digging and growing the output
+        p = para_list[0]
+        # branching when there's a list
+        if type(p) == list:            
+            for e in p:
+                para_list_var_next = para_list_var.copy()
+                para_list_var_next.append(e)                            
+                para_list_next = para_list.copy()
+                para_list_next.pop(0)           
+                self.get_para_var(para_list_var_next, para_list_next, output)
+        # going to the next element when there isn't
+        else:
+            para_list_var_next = para_list_var.copy()
+            para_list_var_next.append(p) 
+            para_list_next = para_list.copy()
+            para_list_next.pop(0)
+            self.get_para_var(para_list_var_next, para_list_next, output)
 
     def clear(self):
         self.tree.delete(*self.tree.get_children())
