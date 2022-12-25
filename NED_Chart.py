@@ -101,6 +101,16 @@ def gen_checkerboard(chart_res, grid_dim, begin_with, padding):
 
     return chart_im, output_msg, grid_coords
 
+def draw_se_MTF_pattern_1(chart_im, center, edge_angle, pattern_size, line_type):    
+    anchor = center - 0.5 * pattern_size
+    pt1 = anchor + np.array([0, pattern_size])
+    pt2 = pt1 + np.array([0.5 * pattern_size * (1 - np.tan(np.radians(edge_angle))), 0])
+    pt3 = pt2 + np.array([0.5 * pattern_size * (np.tan(np.radians(edge_angle))), -pattern_size])    
+    pts = np.array([anchor, pt1, pt2, pt3, anchor]).astype('int32')
+    pts = np.expand_dims(pts, axis=1)  
+    cv2.fillPoly(chart_im, [pts], color=(255, 255, 255), lineType=line_type)
+    return chart_im, None
+
 def draw_se_MTF_pattern(chart_im, center, edge_angle, pattern_size, line_type):    
     anchor = center - 0.5 * pattern_size
     pt1 = anchor + np.array([0, pattern_size])

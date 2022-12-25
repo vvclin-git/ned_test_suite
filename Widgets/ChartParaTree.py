@@ -165,7 +165,7 @@ class ChartParaTree(Frame):
                     var_list = []
                     var = []
                     self.get_para_var(var, output[t], var_list)
-                output[t] = var_list
+                    output[t] = var_list
 
         # print(output)
         return output
@@ -263,8 +263,12 @@ if __name__=='__main__':
     def reload():
         para_tree.parameter_chg(tree_paras)
 
-
-    test_btn = Button(root, text='Test', command=para_tree.output_values)
+    def test():
+        parsed = para_tree.output_parsed_vals()
+        for c in parsed.keys():
+            print(parsed[c])
+    
+    test_btn = Button(root, text='Test', command=test)
     test_btn.pack(side='right')
     clear_btn = Button(root, text='Clear', command=para_tree.clear)
     clear_btn.pack(side='right')
