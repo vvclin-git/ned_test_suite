@@ -20,3 +20,8 @@ Widgets/__pycache__/
 __pycache__/
 # __pycache__/NED_Analyzer.cpython-39.pyc
 Temp/mTF_Pattern/
+Temp/MTF_ROI/
+Temp/MTF_ROI/annotated/
+Output/
+Input/
+Temp/mTF_Pattern/
