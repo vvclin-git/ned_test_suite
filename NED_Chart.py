@@ -80,22 +80,26 @@ def gen_checkerboard(chart_res, grid_dim, begin_with, padding):
     chart_im = np.zeros((chart_res[1], chart_res[0], 3))
     grid_coords = np.vstack((grid_xx.flatten(), grid_yy.flatten())).transpose().astype('int')
     
-    fill_val = {'black':0, 'white':255}
-    prev_fill = fill_val[begin_with]
+    fill_val_start = {'black':0, 'white':1}
+    fill_val = fill_val_start[begin_with]    
 
     for i, p in enumerate(grid_coords):
         pt_1 = np.array([p[0], p[1]])
-        pt_2 = pt_1 + grid_pitch
-        # switch between 0 and 1 while filling
+        pt_2 = pt_1 + grid_pitch                
+        cv2.rectangle(chart_im, [*pt_1], [*pt_2], ([fill_val * 255] * 3), -1)        
+        prev_fill = fill_val
+        # for even column number
+        if grid_dim[0] % 2 == 0:
+            # the filled color should repeat itself in the beginning of the next row
+            if ((i + 1) % grid_dim[0]) == 0:
+                if prev_fill == 1:
+                    prev_fill = 0
+                else:
+                    prev_fill = 1
         if prev_fill == 0:
             fill_val = 1
         else:
-            fill_val = 0
-        # continue the filling for grid with even numbered column
-        if i % grid_dim[0] == 0 and grid_dim[0] % 2 == 0:
-            fill_val = prev_fill
-        cv2.rectangle(chart_im, [*pt_1], [*pt_2], ([fill_val * 255] * 3), -1)        
-        prev_fill = fill_val
+            fill_val = 0    
     
     grid_coords = (grid_coords + grid_pitch * 0.5).astype('uint')
 
