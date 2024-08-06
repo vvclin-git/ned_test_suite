@@ -113,11 +113,15 @@ class TestCharts(Frame):
     def preview_chart(self):        
         chart_type = self.chart_para_tree.selected_chart
         if len(chart_type) > 0:
-            chart_paras = self.chart_para_tree.output_parsed_vals()
-            if type(chart_paras[chart_type]) == list:
+            chart_paras, variant = self.chart_para_tree.output_parsed_vals(preview=True)           
+            if variant:
                 chart_im, output_msg = self.gen_chart(chart_type, chart_paras[chart_type][0])
             else:
                 chart_im, output_msg = self.gen_chart(chart_type, chart_paras[chart_type])
+            # if type(chart_paras[chart_type]) == list:
+            #     chart_im, output_msg = self.gen_chart(chart_type, chart_paras[chart_type][0])
+            # else:
+            #     chart_im, output_msg = self.gen_chart(chart_type, chart_paras[chart_type])
             # np.save('chart_im', chart_im)
             # cv2.imwrite('chart_im_cv.png', chart_im)         
             # if len(chart_im[0][0]) == 3:
@@ -142,11 +146,12 @@ class TestCharts(Frame):
         output_name = ''
         timestr = time.strftime("%Y%m%d-%H-%M-%S")
         
-        chart_paras = self.chart_para_tree.output_parsed_vals()
+        chart_paras, variant = self.chart_para_tree.output_parsed_vals(preview=False)
         self.controller.msg_box.console(f'Output Path: {output_path}')
         for t in chart_paras:
             self.controller.msg_box.console(f'Generating {t}...')
-            if type(chart_paras[t]) == list:
+            if variant:
+            # if type(chart_paras[t]) == list:
                 for v in chart_paras[t]:
                     chart_im, output_msg = self.gen_chart(t, v)
                     output_name = self.gen_output_name(output_msg)

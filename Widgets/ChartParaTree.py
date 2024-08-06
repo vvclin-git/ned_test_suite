@@ -140,35 +140,36 @@ class ChartParaTree(Frame):
         # print(output)
         return output
 
-    def output_parsed_vals(self):
+    def output_parsed_vals(self, preview):
         output = {}
         for t in self.tree.get_children():
-            if self.tree.item(t)['values'][1] == 'Yes':                
-                output[t] = []
-                variant = False
-                for p in self.tree.get_children(t):
-                    # print(p)
-                    para_name = p.split('_')[1]
-                    chart_type = p.split('_')[0]
-                    parser = self.chart_parameters[chart_type][para_name]['parser']
-                    val = str(self.tree.item(p)['values'][0])
-                    if len(val.split(';')) > 1:
-                        variant = True
-                        parsed = self.list_parser(val, parser)
+            if not preview and self.tree.item(t)['values'][1] != 'Yes':
+                continue                
+            output[t] = []
+            variant = False
+            for p in self.tree.get_children(t):
+                # print(p)
+                para_name = p.split('_')[1]
+                chart_type = p.split('_')[0]
+                parser = self.chart_parameters[chart_type][para_name]['parser']
+                val = str(self.tree.item(p)['values'][0])
+                if len(val.split(';')) > 1:
+                    variant = True
+                    parsed = self.list_parser(val, parser)
+                else:
+                    if parser:
+                        parsed = eval(parser)
                     else:
-                        if parser:
-                            parsed = eval(parser)
-                        else:
-                            parsed = val
-                    output[t].append(parsed)
-                if variant:
-                    var_list = []
-                    var = []
-                    self.get_para_var(var, output[t], var_list)
+                        parsed = val
+                output[t].append(parsed)
+            if variant:
+                var_list = []
+                var = []
+                self.get_para_var(var, output[t], var_list)
                 output[t] = var_list
 
         # print(output)
-        return output
+        return output, variant
 
     def list_parser(self, in_str, parser):
         output = []
