@@ -1,4 +1,3 @@
-from msilib.schema import Control
 # import tkinter as tk
 from tkinter.ttk import *
 from Frames.Distortion import PRESET_PATH

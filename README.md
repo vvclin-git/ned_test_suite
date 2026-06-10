@@ -2,6 +2,17 @@
 
 A test suite for near-eye display evaluation.
 
+## Requirements
+
+- Python 3.12
+- Tkinter support in the local Python installation
+
+## Install
+
+```powershell
+uv sync
+```
+
 Main Components:
 * Test Pattern Generator
   * Reticle

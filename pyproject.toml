@@ -1,0 +1,13 @@
+[project]
+name = "ned-test-suite"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "matplotlib>=3.9",
+    "numpy>=2.0",
+    "opencv-python>=4.10",
+    "pillow>=10.4",
+    "scipy>=1.14",
+]

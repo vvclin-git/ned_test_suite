@@ -1,4 +1,3 @@
-import imp
 from Frames.NetsFrame import *
 from Widgets.ParameterTab import *
 import os

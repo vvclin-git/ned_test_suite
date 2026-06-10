@@ -51,13 +51,13 @@ def gen_grille(chart_res, width, orient):
     print(f'Grid Dimension: {grid_dim[0]} x {grid_dim[1]}, ', end='')
     print(f'Grid Pitch: {grid_pitch[0]} x {grid_pitch[1]}')
     print(f'Grille Size: {grille_size[0]} x {grille_size[1]}')
-    chart_im = np.zeros((chart_res[1], chart_res[0], 1)).astype('uint8')
+    chart_im = np.zeros((chart_res[1], chart_res[0], 1), dtype='uint8')
     grid_coords = np.vstack((grid_xx.flatten(), grid_yy.flatten())).transpose().astype('int')
 
     for p in grid_coords:
-        pt_1 = np.array([p[0], p[1]])
-        pt_2 = pt_1 + grille_size - 1
-        cv2.rectangle(chart_im, [*pt_1], [*pt_2], (255), -1)
+        pt_1 = (int(p[0]), int(p[1]))
+        pt_2 = (int(p[0] + grille_size[0] - 1), int(p[1] + grille_size[1] - 1))
+        cv2.rectangle(chart_im, pt_1, pt_2, 255, -1)
         
     return chart_im, output_msg, grid_coords
 
@@ -77,16 +77,17 @@ def gen_checkerboard(chart_res, grid_dim, begin_with, padding):
     print(f'Grid Dimension: {grid_dim[0]} x {grid_dim[1]}, ', end='')
     print(f'Square Size: {grid_pitch[0]} x {grid_pitch[1]}')    
     print(f'Padding: {padding[0]}x{padding[1]}')
-    chart_im = np.zeros((chart_res[1], chart_res[0], 3))
+    chart_im = np.zeros((chart_res[1], chart_res[0], 3), dtype='uint8')
     grid_coords = np.vstack((grid_xx.flatten(), grid_yy.flatten())).transpose().astype('int')
     
     fill_val_start = {'black':0, 'white':1}
     fill_val = fill_val_start[begin_with]    
 
     for i, p in enumerate(grid_coords):
-        pt_1 = np.array([p[0], p[1]])
-        pt_2 = pt_1 + grid_pitch                
-        cv2.rectangle(chart_im, [*pt_1], [*pt_2], ([fill_val * 255] * 3), -1)        
+        pt_1 = (int(p[0]), int(p[1]))
+        pt_2 = (int(p[0] + grid_pitch[0]), int(p[1] + grid_pitch[1]))
+        fill_color = (fill_val * 255, fill_val * 255, fill_val * 255)
+        cv2.rectangle(chart_im, pt_1, pt_2, fill_color, -1)
         prev_fill = fill_val
         # for even column number
         if grid_dim[0] % 2 == 0:

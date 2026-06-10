@@ -1,5 +1,3 @@
-import imp
-
 from numpy import pad
 from Frames.NetsFrame import *
 from Widgets.ParameterTab import *
